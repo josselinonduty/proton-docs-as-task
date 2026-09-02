@@ -46,7 +46,7 @@ export function EditableBoard({ model, onChange, onClose }: EditableBoardProps) 
         </div>
 
         <div className="pdt-board__controls">
-          <button className="pdt-close" onClick={onClose} aria-label="Close board">
+          <button className="pdt-btn" onClick={onClose} aria-label="Close board">
             Back to doc ✕
           </button>
         </div>
@@ -70,7 +70,7 @@ export function EditableBoard({ model, onChange, onClose }: EditableBoardProps) 
               <span className="pdt-column__count">{column.tasks.length}</span>
               <button
                 type="button"
-                className="pdt-icon-btn"
+                className="pdt-btn pdt-btn-icon"
                 title="Delete column"
                 aria-label="Delete column"
                 onClick={() => {

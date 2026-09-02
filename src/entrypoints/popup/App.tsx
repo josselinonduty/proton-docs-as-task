@@ -75,21 +75,21 @@ export function App() {
         </div>
       </header>
 
-      <label className="pp-toggle">
+      <label className="pdt-switch-row pp-toggle">
         <span>Enabled</span>
         <input type="checkbox" checked={settings.enabled} onChange={toggleEnabled} />
-        <span className="pp-switch" aria-hidden="true" />
+        <span className="pdt-switch" aria-hidden="true" />
       </label>
 
       <div className="pp-status">
-        {tab.state === 'loading' && <p className="pp-muted">Checking this tab…</p>}
+        {tab.state === 'loading' && <p className="pdt-text-weak">Checking this tab…</p>}
         {tab.state === 'not-docs' && (
-          <p className="pp-muted">
+          <p className="pdt-text-weak">
             Open a document on <strong>docs.proton.me</strong> to use the board.
           </p>
         )}
         {tab.state === 'inactive' && (
-          <p className="pp-muted">
+          <p className="pdt-text-weak">
             This document isn't a task board yet. Make its first line{' '}
             <code>{settings.markers[0]}</code> to activate it.
           </p>
@@ -100,7 +100,7 @@ export function App() {
               <strong>{tab.status.boardTitle || 'Task board'}</strong> is active —{' '}
               {tab.status.doneCount}/{tab.status.taskCount} done.
             </p>
-            <button className="pp-btn pp-btn--primary" onClick={toggleBoard}>
+            <button className="pdt-btn pdt-btn-primary pp-btn" onClick={toggleBoard}>
               {tab.status.visible ? 'Hide board' : 'Show board'}
             </button>
           </div>
@@ -108,7 +108,7 @@ export function App() {
       </div>
 
       <footer className="pp-foot">
-        <button className="pp-link" onClick={() => browser.runtime.openOptionsPage()}>
+        <button className="pdt-link" onClick={() => browser.runtime.openOptionsPage()}>
           Settings &amp; syntax guide
         </button>
       </footer>

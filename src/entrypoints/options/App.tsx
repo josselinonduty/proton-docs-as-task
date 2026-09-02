@@ -59,7 +59,7 @@ export function App() {
         {saved && <span className="op-saved">Saved ✓</span>}
       </header>
 
-      <section className="op-card">
+      <section className="op-card pdt-card">
         <h2>General</h2>
         <label className="op-row">
           <div>
@@ -68,6 +68,7 @@ export function App() {
           </div>
           <input
             type="checkbox"
+            className="pdt-native-check"
             checked={settings.enabled}
             onChange={(e) => persist({ enabled: e.target.checked })}
           />
@@ -80,6 +81,7 @@ export function App() {
           </div>
           <input
             type="checkbox"
+            className="pdt-native-check"
             checked={settings.autoShow}
             onChange={(e) => persist({ autoShow: e.target.checked })}
           />
@@ -91,6 +93,7 @@ export function App() {
             <div className="op-row__hint">How cards are laid out into columns.</div>
           </div>
           <select
+            className="pdt-select"
             value={settings.grouping}
             onChange={(e) => persist({ grouping: e.target.value as Settings['grouping'] })}
           >
@@ -100,7 +103,7 @@ export function App() {
         </label>
       </section>
 
-      <section className="op-card">
+      <section className="op-card pdt-card">
         <h2>Activation markers</h2>
         <p className="op-hint">
           A document becomes a task board when its <strong>first non-empty line</strong> starts with
@@ -108,33 +111,37 @@ export function App() {
           <code>#!tasks Sprint 42</code>.
         </p>
         <textarea
-          className="op-textarea"
+          className="pdt-textarea"
           rows={4}
           value={markersText}
           onChange={(e) => setMarkersText(e.target.value)}
           spellCheck={false}
         />
         <div className="op-actions">
-          <button className="op-btn op-btn--primary" onClick={saveMarkers}>
+          <button className="pdt-btn pdt-btn-primary" onClick={saveMarkers}>
             Save markers
           </button>
-          <button className="op-btn" onClick={() => persist({ markers: DEFAULT_SETTINGS.markers })}>
+          <button
+            className="pdt-btn"
+            onClick={() => persist({ markers: DEFAULT_SETTINGS.markers })}
+          >
             Reset to defaults
           </button>
         </div>
       </section>
 
-      <section className="op-card">
+      <section className="op-card pdt-card">
         <h2>Column labels</h2>
         <p className="op-hint">Rename the status columns shown on the board.</p>
         <div className="op-cols">
           {STATUS_ORDER.map((key) => {
             const col = settings.columns.find((c) => c.key === key);
             return (
-              <label key={key} className="op-col">
-                <span className="op-col__key">{key}</span>
+              <label key={key} className="pdt-field">
+                <span className="pdt-field-label">{key}</span>
                 <input
                   type="text"
+                  className="pdt-input"
                   value={col?.label ?? ''}
                   onChange={(e) => updateColumnLabel(key, e.target.value)}
                 />
@@ -143,16 +150,19 @@ export function App() {
           })}
         </div>
         <div className="op-actions">
-          <button className="op-btn op-btn--primary" onClick={saveColumns}>
+          <button className="pdt-btn pdt-btn-primary" onClick={saveColumns}>
             Save labels
           </button>
-          <button className="op-btn" onClick={() => persist({ columns: DEFAULT_SETTINGS.columns })}>
+          <button
+            className="pdt-btn"
+            onClick={() => persist({ columns: DEFAULT_SETTINGS.columns })}
+          >
             Reset to defaults
           </button>
         </div>
       </section>
 
-      <section className="op-card">
+      <section className="op-card pdt-card">
         <h2>Task syntax</h2>
         <p className="op-hint">
           Below the marker line, write your tasks as a checklist. The board updates live as you
