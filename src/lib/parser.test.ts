@@ -70,6 +70,21 @@ describe('extractMeta', () => {
   it('keeps unicode labels', () => {
     expect(extractMeta('Étude #révision').labels).toEqual(['révision']);
   });
+
+  it('extracts a @desc(...) description and keeps it out of the title', () => {
+    const m = extractMeta('Draft spec @priority:high @desc(A short summary) #docs');
+    expect(m.description).toBe('A short summary');
+    expect(m.title).toBe('Draft spec');
+    expect(m.priority).toBe('high');
+    expect(m.labels).toEqual(['docs']);
+  });
+
+  it('unescapes parens inside a description and ignores its inner #tokens', () => {
+    const m = extractMeta('Task @desc(handle \\(edge\\) cases not #alabel)');
+    expect(m.description).toBe('handle (edge) cases not #alabel');
+    expect(m.labels).toEqual([]);
+    expect(m.title).toBe('Task');
+  });
 });
 
 describe('parseDocument', () => {

@@ -5,6 +5,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+Editable task boards (the board can now write back to the document):
+
+- **Convert an empty document** into a task board from a Proton-styled button
+  centered near the top — no need to type the activation marker by hand.
+- **Edit the board without touching the text.** Add, rename and delete columns;
+  add, edit, move and delete tasks; toggle done; and set status, priority, due
+  date, assignee, labels, and a rich single-line description from board controls.
+- While the board is open it is authoritative: edits are serialized back into
+  the Proton (Lexical) editor (debounced), and the board rebuilds from the
+  freshly parsed document each time it is reopened. Descriptions round-trip as a
+  hidden `@desc(...)` token so they never clutter the reading view.
+- The caret in the control you are editing is preserved across write-backs.
+
 Tooling, CI, and documentation hardening (no user-facing behavior changes):
 
 - Added ESLint + Prettier with `lint` / `format` / `format:check` scripts, and

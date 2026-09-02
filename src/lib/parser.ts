@@ -64,14 +64,45 @@ interface Meta {
   priority?: Priority;
   due?: string;
   assignee?: string;
+  description?: string;
   labels: string[];
   title: string;
+}
+
+/**
+ * `@desc(...)` value grammar. The board writes descriptions back into the doc
+ * as a single hidden token; parentheses inside the text are backslash-escaped
+ * so they round-trip cleanly.
+ */
+const DESC_RE = /@desc\(((?:\\.|[^)\\])*)\)/i;
+
+/** Reverse the escaping applied by `encodeDescription`. */
+export function decodeDescription(value: string): string {
+  return value.replace(/\\(.)/g, '$1');
+}
+
+/** Escape a description so it can live inside `@desc(...)` on a single line. */
+export function encodeDescription(value: string): string {
+  return value
+    .replace(/\r\n?/g, '\n')
+    .replace(/\n+/g, ' ')
+    .replace(/[\\)]/g, (c) => `\\${c}`)
+    .trim();
 }
 
 /** Pull all recognized inline metadata tokens out of a task's text. */
 export function extractMeta(input: string): Meta {
   let text = input;
   const labels: string[] = [];
+
+  // Description: @desc(...) with backslash-escaped parens. Pulled first so its
+  // free-form contents can't be mistaken for labels or other metadata tokens.
+  let description: string | undefined;
+  const descMatch = DESC_RE.exec(text);
+  if (descMatch) {
+    description = decodeDescription(descMatch[1] ?? '').trim() || undefined;
+    text = text.replace(descMatch[0], ' ');
+  }
 
   // Labels: `#label` anywhere (word chars + dashes). Collect all.
   text = text.replace(/(^|\s)#([\p{L}\p{N}_-]+)/gu, (_all, pre, label) => {
@@ -116,6 +147,7 @@ export function extractMeta(input: string): Meta {
     priority: priorityValue,
     due: due.value || undefined,
     assignee: assignee.value || undefined,
+    description,
     labels,
     title: text.replace(/\s+/g, ' ').trim(),
   };
@@ -201,7 +233,7 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
     if (body === null) continue;
 
     const meta = extractMeta(body);
-    if (meta.title === '' && meta.labels.length === 0) continue;
+    if (meta.title === '' && meta.labels.length === 0 && !meta.description) continue;
 
     const status: StatusKey = meta.status ?? (checked ? 'done' : 'todo');
     // Keep `checked` consistent with a resolved done status.
@@ -217,6 +249,7 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
       priority: meta.priority,
       due: meta.due,
       assignee: meta.assignee,
+      description: meta.description,
       labels: meta.labels,
       section: currentSection,
       sourceLine: i,
