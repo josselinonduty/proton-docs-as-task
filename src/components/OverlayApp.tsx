@@ -161,11 +161,13 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
   if (result.activated) {
     const pending = result.tasks.filter((t) => t.status !== 'done').length;
     return (
-      <button className="pdt-fab" onClick={openBoard} title="Open task board">
-        <span className="pdt-fab__icon" aria-hidden="true">
-          ✓
-        </span>
-        <span className="pdt-fab__label">Tasks</span>
+      <button
+        className="pdt-btn pdt-btn-primary pdt-btn-pill pdt-fab"
+        onClick={openBoard}
+        title="Open task board"
+      >
+        <span aria-hidden="true">✓</span>
+        <span>Tasks</span>
         {pending > 0 && <span className="pdt-fab__badge">{pending}</span>}
       </button>
     );
@@ -175,7 +177,11 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
   if (text.trim() === '') {
     return (
       <div className="pdt-convert" role="region" aria-label="Convert to task board">
-        <button type="button" className="pdt-convert__btn" onClick={convertToTaskDoc}>
+        <button
+          type="button"
+          className="pdt-btn pdt-btn-primary pdt-btn-pill pdt-convert__btn"
+          onClick={convertToTaskDoc}
+        >
           <span className="pdt-convert__icon" aria-hidden="true">
             ✓
           </span>

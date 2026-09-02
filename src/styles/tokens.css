@@ -1,0 +1,106 @@
+/**
+ * Design tokens — shared across the popup, options page and the in-page
+ * board overlay. Values follow Proton's product design language (purple
+ * brand accent, quiet neutral surfaces, pill-shaped primary actions,
+ * generous corner radii) as closely as a font-and-network-free browser
+ * extension reasonably can. See STYLEGUIDE.md for the full rationale.
+ *
+ * Applied to `:root` for normal documents (popup, options) and to
+ * `.pdt-host` for the shadow-DOM board overlay, so every surface reads
+ * from the same palette.
+ */
+
+:root,
+.pdt-host {
+  color-scheme: light dark;
+
+  /* ---------- Brand / interactive ---------- */
+  --pdt-primary: #6d4aff;
+  --pdt-primary-hover: #7c5cff;
+  --pdt-primary-active: #573ae0;
+  --pdt-primary-contrast: #ffffff;
+  --pdt-primary-weak: rgba(109, 74, 255, 0.12);
+
+  /* ---------- Surfaces & text (light) ---------- */
+  --pdt-background-norm: #ffffff;
+  --pdt-background-weak: #f5f5f7;
+  --pdt-background-strong: #ececf1;
+  --pdt-border-norm: #e2e2ea;
+  --pdt-border-weak: #ececf1;
+  --pdt-text-norm: #0c0c14;
+  --pdt-text-weak: #5c5c6e;
+  --pdt-text-hint: #8f8fa3;
+  --pdt-text-invert: #ffffff;
+
+  /* ---------- Signal colors ---------- */
+  --pdt-signal-danger: #dc3251;
+  --pdt-signal-danger-weak: rgba(220, 50, 81, 0.12);
+  --pdt-signal-warning: #ff9900;
+  --pdt-signal-warning-weak: rgba(255, 153, 0, 0.14);
+  --pdt-signal-success: #1ea885;
+  --pdt-signal-success-weak: rgba(30, 168, 133, 0.14);
+  --pdt-signal-info: #5b74e8;
+  --pdt-signal-info-weak: rgba(91, 116, 232, 0.14);
+
+  /* ---------- Elevation ---------- */
+  --pdt-shadow-sm: 0 1px 2px rgba(20, 18, 40, 0.06);
+  --pdt-shadow-md: 0 4px 12px rgba(20, 18, 40, 0.1);
+  --pdt-shadow-lg: 0 10px 30px rgba(20, 18, 40, 0.18);
+
+  /* ---------- Radius ---------- */
+  --pdt-radius-sm: 6px;
+  --pdt-radius-md: 8px;
+  --pdt-radius-lg: 12px;
+  --pdt-radius-xl: 16px;
+  --pdt-radius-pill: 999px;
+
+  /* ---------- Spacing (4px scale) ---------- */
+  --pdt-space-1: 4px;
+  --pdt-space-2: 8px;
+  --pdt-space-3: 12px;
+  --pdt-space-4: 16px;
+  --pdt-space-5: 20px;
+  --pdt-space-6: 24px;
+  --pdt-space-8: 32px;
+
+  /* ---------- Typography ---------- */
+  --pdt-font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --pdt-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --pdt-text-2xs: 11px;
+  --pdt-text-xs: 12px;
+  --pdt-text-sm: 13px;
+  --pdt-text-md: 14px;
+  --pdt-text-lg: 16px;
+  --pdt-text-xl: 20px;
+  --pdt-font-weight-regular: 400;
+  --pdt-font-weight-medium: 600;
+  --pdt-font-weight-bold: 700;
+
+  /* ---------- Motion ---------- */
+  --pdt-transition-fast: 0.12s ease;
+  --pdt-transition-base: 0.15s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  .pdt-host {
+    --pdt-primary: #8266ff;
+    --pdt-primary-hover: #9784ff;
+    --pdt-primary-active: #6d4aff;
+
+    --pdt-background-norm: #201f28;
+    --pdt-background-weak: #16151c;
+    --pdt-background-strong: #2c2b37;
+    --pdt-border-norm: #34333f;
+    --pdt-border-weak: #2a2934;
+    --pdt-text-norm: #edecf2;
+    --pdt-text-weak: #a0a0ad;
+    --pdt-text-hint: #726f82;
+    --pdt-text-invert: #16151c;
+
+    --pdt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --pdt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --pdt-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+}
