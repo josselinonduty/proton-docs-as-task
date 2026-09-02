@@ -10,10 +10,7 @@ export function TaskCard({ task }: { task: Task }) {
   return (
     <article className={`pdt-card pdt-card--${task.status}`}>
       <div className="pdt-card__top">
-        <span
-          className={`pdt-check ${task.checked ? 'pdt-check--on' : ''}`}
-          aria-hidden="true"
-        >
+        <span className={`pdt-check ${task.checked ? 'pdt-check--on' : ''}`} aria-hidden="true">
           {task.checked ? '✓' : ''}
         </span>
         <p className={`pdt-card__title ${task.checked ? 'pdt-card__title--done' : ''}`}>
@@ -29,9 +26,7 @@ export function TaskCard({ task }: { task: Task }) {
             </span>
           )}
           {task.due && <span className="pdt-badge pdt-badge--due">📅 {task.due}</span>}
-          {task.assignee && (
-            <span className="pdt-badge pdt-badge--who">@{task.assignee}</span>
-          )}
+          {task.assignee && <span className="pdt-badge pdt-badge--who">@{task.assignee}</span>}
           {task.labels.map((label) => (
             <span key={label} className="pdt-badge pdt-badge--label">
               #{label}

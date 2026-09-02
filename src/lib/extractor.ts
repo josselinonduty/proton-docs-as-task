@@ -19,9 +19,9 @@ const EDITOR_SELECTORS = [
 /** Locate the editable document root, if present in this frame. */
 export function findEditorRoot(doc: Document = document): HTMLElement | null {
   for (const selector of EDITOR_SELECTORS) {
-    const candidates = Array.from(
-      doc.querySelectorAll<HTMLElement>(selector),
-    ).filter((el) => el.isContentEditable || el.getAttribute('contenteditable') === 'true');
+    const candidates = Array.from(doc.querySelectorAll<HTMLElement>(selector)).filter(
+      (el) => el.isContentEditable || el.getAttribute('contenteditable') === 'true',
+    );
     if (candidates.length === 0) continue;
     // Prefer the largest visible editable region.
     candidates.sort((a, b) => area(b) - area(a));

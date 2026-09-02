@@ -3,6 +3,20 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+Tooling, CI, and documentation hardening (no user-facing behavior changes):
+
+- Added ESLint + Prettier with `lint` / `format` / `format:check` scripts, and
+  an `.editorconfig`; CI now lints and checks formatting.
+- Added unit tests for the editor DOM serializer (`extractor.ts`).
+- CI/release moved to Node 24 (dropping end-of-life Node 20); `package.json`
+  now declares `engines.node >= 22`.
+- Hardened GitHub Actions: pinned to commit SHAs, added least-privilege
+  `permissions: contents: read` and concurrency cancellation to CI.
+- Added `.github/dependabot.yml` (npm + GitHub Actions), `SECURITY.md`, and
+  `CONTRIBUTING.md`.
+
 ## 0.1.0
 
 Initial release.
