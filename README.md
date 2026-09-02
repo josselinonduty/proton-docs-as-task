@@ -1,16 +1,17 @@
 # Proton Docs as Task
 
 Turn a [Proton Docs](https://proton.me/drive/docs) document into an interactive
-**task board**. When a document begins with an activation marker, this browser
-extension parses the checklist below it and renders a live Kanban / list view on
-top of the editor — without changing the underlying document.
+**task board**. Open an empty document and one Proton-styled button converts it
+into a board; open a document that already begins with an activation marker and
+its checklist is parsed straight into a live Kanban view on top of the editor.
 
 <p align="center">
   <img src="public/icon/128.png" width="96" height="96" alt="Proton Docs as Task icon" />
 </p>
 
-> Your document stays the single source of truth. The board is a **view** over
-> its content: edit the doc, and the board updates as you type.
+> The document is still the single source of truth — the board reads from it and
+> writes back to it. You manage columns, tasks, priorities, due dates and rich
+> descriptions from the board UI, and never have to touch the text behind them.
 
 ---
 
@@ -27,10 +28,16 @@ extension:
    `aria-checked`, `<h1..6>`) rather than Proton's CSS class names, so it keeps
    working across styling changes.
 3. **Detects the activation marker** on the first non-empty line. If none is
-   present, the extension stays completely dormant on that document.
+   present but the document is empty, it offers a **Convert to task board**
+   button; otherwise it stays completely dormant on that document.
 4. **Parses** the rest into a task model ([`src/lib/parser.ts`](src/lib/parser.ts)).
 5. **Renders** a React board inside a Shadow DOM overlay, so the extension's
    styles never leak into (or inherit from) Proton's UI.
+6. **Writes edits back** to the document. While the board is open it is
+   authoritative: each change is serialized to plain text
+   ([`src/lib/model.ts`](src/lib/model.ts)) and pushed into the Lexical editor
+   ([`src/lib/docwriter.ts`](src/lib/docwriter.ts)). The board rebuilds from the
+   freshly parsed document each time you reopen it.
 
 ```
 docs.proton.me  (outer shell frame)
@@ -70,6 +77,7 @@ board title after the marker.
 | `@priority:high`       | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`)                        |
 | `@due:2026-09-10`      | A due date (`@due(next friday)` also works)                                        |
 | `@who:alex` / `@@alex` | An assignee                                                                        |
+| `@desc(free text)`     | A hidden single-line description (managed from the board, escaped to round-trip)   |
 | `#label`               | One or more labels                                                                 |
 
 An explicit `@status` always wins; otherwise a ticked checkbox resolves to
