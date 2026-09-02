@@ -1,0 +1,260 @@
+/**
+ * Shared component classes. Depends on tokens.css being loaded first —
+ * every surface (popup, options, board overlay) imports both and composes
+ * these classes instead of hand-rolling one-off buttons, inputs, etc.
+ * See STYLEGUIDE.md for naming and usage guidance.
+ */
+
+/* ---------- Buttons ---------- */
+.pdt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pdt-space-2);
+  padding: 8px 14px;
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-background-norm);
+  color: var(--pdt-text-norm);
+  font-family: inherit;
+  font-size: var(--pdt-text-sm);
+  font-weight: var(--pdt-font-weight-medium);
+  cursor: pointer;
+  transition:
+    background var(--pdt-transition-fast),
+    border-color var(--pdt-transition-fast),
+    color var(--pdt-transition-fast),
+    transform var(--pdt-transition-fast);
+}
+.pdt-btn:hover {
+  border-color: var(--pdt-primary);
+  color: var(--pdt-primary);
+}
+.pdt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pdt-btn-primary {
+  border-color: var(--pdt-primary);
+  background: var(--pdt-primary);
+  color: var(--pdt-primary-contrast);
+}
+.pdt-btn-primary:hover {
+  border-color: var(--pdt-primary-hover);
+  background: var(--pdt-primary-hover);
+  color: var(--pdt-primary-contrast);
+}
+.pdt-btn-primary:active {
+  background: var(--pdt-primary-active);
+  border-color: var(--pdt-primary-active);
+}
+
+.pdt-btn-pill {
+  border-radius: var(--pdt-radius-pill);
+  padding: 10px 18px;
+  box-shadow: var(--pdt-shadow-md);
+}
+.pdt-btn-pill:hover {
+  transform: translateY(-1px);
+}
+
+.pdt-btn-danger {
+  color: var(--pdt-signal-danger);
+}
+.pdt-btn-danger:hover {
+  border-color: var(--pdt-signal-danger);
+  background: var(--pdt-signal-danger-weak);
+  color: var(--pdt-signal-danger);
+}
+
+.pdt-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+.pdt-btn-ghost:hover {
+  border-color: transparent;
+  background: var(--pdt-background-weak);
+  color: var(--pdt-text-norm);
+}
+
+.pdt-btn-icon {
+  padding: 4px 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-md);
+  line-height: 1;
+}
+.pdt-btn-icon:hover {
+  border-color: transparent;
+  background: var(--pdt-background-weak);
+  color: var(--pdt-text-norm);
+}
+
+.pdt-btn-sm {
+  padding: 5px 10px;
+  font-size: var(--pdt-text-xs);
+}
+
+/* ---------- Link (quiet, text-only action) ---------- */
+.pdt-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--pdt-primary);
+  font-family: inherit;
+  font-size: var(--pdt-text-sm);
+  font-weight: var(--pdt-font-weight-medium);
+  cursor: pointer;
+  text-decoration: none;
+}
+.pdt-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Inputs ---------- */
+.pdt-input,
+.pdt-select,
+.pdt-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-background-weak);
+  color: var(--pdt-text-norm);
+  font-family: inherit;
+  font-size: var(--pdt-text-sm);
+  transition: outline-color var(--pdt-transition-fast);
+}
+.pdt-textarea {
+  resize: vertical;
+  font-family: var(--pdt-font-mono);
+  font-size: var(--pdt-text-xs);
+}
+.pdt-input:focus,
+.pdt-select:focus,
+.pdt-textarea:focus {
+  outline: 2px solid var(--pdt-primary);
+  outline-offset: -1px;
+}
+.pdt-select {
+  cursor: pointer;
+}
+
+/* Checkbox / radio accent, left as native controls with a matching hue. */
+.pdt-native-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--pdt-primary);
+}
+
+/* ---------- Switch (toggle) ---------- */
+.pdt-switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-2);
+  cursor: pointer;
+  user-select: none;
+}
+.pdt-switch-row input {
+  display: none;
+}
+.pdt-switch-row > span:first-child {
+  flex: 1;
+  font-weight: var(--pdt-font-weight-medium);
+}
+.pdt-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-border-norm);
+  transition: background var(--pdt-transition-base);
+}
+.pdt-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pdt-background-norm);
+  box-shadow: var(--pdt-shadow-sm);
+  transition: transform var(--pdt-transition-base);
+}
+.pdt-switch-row input:checked + .pdt-switch {
+  background: var(--pdt-primary);
+}
+.pdt-switch-row input:checked + .pdt-switch::after {
+  transform: translateX(16px);
+}
+
+/* ---------- Card / panel ---------- */
+.pdt-card {
+  background: var(--pdt-background-norm);
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-lg);
+  padding: var(--pdt-space-5);
+}
+
+/* ---------- Badge / chip ---------- */
+.pdt-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-background-strong);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-2xs);
+  font-weight: var(--pdt-font-weight-medium);
+  line-height: 1.6;
+}
+.pdt-badge-primary {
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary);
+}
+.pdt-badge-danger {
+  background: var(--pdt-signal-danger-weak);
+  color: var(--pdt-signal-danger);
+}
+.pdt-badge-warning {
+  background: var(--pdt-signal-warning-weak);
+  color: var(--pdt-signal-warning);
+}
+.pdt-badge-success {
+  background: var(--pdt-signal-success-weak);
+  color: var(--pdt-signal-success);
+}
+
+/* ---------- Inline code ---------- */
+.pdt-host code,
+.pdt-code {
+  padding: 1px 5px;
+  border-radius: var(--pdt-radius-sm);
+  background: var(--pdt-background-strong);
+  color: var(--pdt-text-norm);
+  font-family: var(--pdt-font-mono);
+  font-size: var(--pdt-text-xs);
+}
+
+/* ---------- Form field wrapper ---------- */
+.pdt-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-1);
+}
+.pdt-field-label {
+  font-size: var(--pdt-text-2xs);
+  font-weight: var(--pdt-font-weight-bold);
+  color: var(--pdt-text-weak);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Muted text helper ---------- */
+.pdt-text-weak {
+  color: var(--pdt-text-weak);
+}

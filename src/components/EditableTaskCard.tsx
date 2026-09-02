@@ -38,7 +38,7 @@ export function EditableTaskCard({
   const toggleDone = () => onChange({ status: done ? 'todo' : 'done' });
 
   return (
-    <article className={`pdt-card pdt-card--${task.status}`}>
+    <article className={`pdt-taskcard pdt-taskcard--${task.status}`}>
       <div className="pdt-card__top">
         <button
           type="button"
@@ -57,7 +57,7 @@ export function EditableTaskCard({
         />
         <button
           type="button"
-          className="pdt-icon-btn"
+          className="pdt-btn pdt-btn-icon"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           title="Task details"
@@ -106,7 +106,7 @@ export function EditableTaskCard({
       {open && (
         <div className="pdt-card__details">
           <label className="pdt-field">
-            <span className="pdt-field__label">Description</span>
+            <span className="pdt-field-label">Description</span>
             <textarea
               className="pdt-textarea"
               rows={3}
@@ -117,7 +117,7 @@ export function EditableTaskCard({
           </label>
 
           <label className="pdt-field">
-            <span className="pdt-field__label">Assignee</span>
+            <span className="pdt-field-label">Assignee</span>
             <input
               className="pdt-input"
               value={task.assignee ?? ''}
@@ -127,7 +127,7 @@ export function EditableTaskCard({
           </label>
 
           <label className="pdt-field">
-            <span className="pdt-field__label">Labels</span>
+            <span className="pdt-field-label">Labels</span>
             <input
               className="pdt-input"
               value={task.labels.join(', ')}
@@ -138,7 +138,7 @@ export function EditableTaskCard({
 
           <div className="pdt-field pdt-field--row">
             <label className="pdt-field pdt-field--grow">
-              <span className="pdt-field__label">Column</span>
+              <span className="pdt-field-label">Column</span>
               <select
                 className="pdt-input"
                 value={columnId}
@@ -151,7 +151,7 @@ export function EditableTaskCard({
                 ))}
               </select>
             </label>
-            <button type="button" className="pdt-danger-btn" onClick={onDelete}>
+            <button type="button" className="pdt-btn pdt-btn-sm pdt-btn-danger" onClick={onDelete}>
               Delete
             </button>
           </div>
