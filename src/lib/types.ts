@@ -22,6 +22,8 @@ export interface Task {
   due?: string;
   /** Assignee / owner name. */
   assignee?: string;
+  /** Free-form single-line description, stored inline as `@desc(...)`. */
+  description?: string;
   /** Free-form `#labels`. */
   labels: string[];
   /** Section heading this task lives under (default "Tasks"). */
