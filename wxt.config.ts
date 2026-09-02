@@ -11,10 +11,7 @@ export default defineConfig({
     permissions: ['storage'],
     // The document content lives inside the sandboxed Lexical editor iframe
     // (docs-editor.proton.me) embedded in the Docs shell (docs.proton.me).
-    host_permissions: [
-      'https://docs.proton.me/*',
-      'https://docs-editor.proton.me/*',
-    ],
+    host_permissions: ['https://docs.proton.me/*', 'https://docs-editor.proton.me/*'],
     action: {
       default_title: 'Proton Docs as Task',
     },

@@ -12,8 +12,7 @@
   --pdt-shadow: 0 10px 30px rgba(20, 18, 40, 0.18);
   --pdt-radius: 12px;
 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--pdt-text);
   line-height: 1.4;
 }
@@ -58,7 +57,9 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--pdt-shadow);
-  transition: transform 0.12s ease, background 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease;
 }
 .pdt-fab:hover {
   background: var(--pdt-accent-strong);

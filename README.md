@@ -50,7 +50,7 @@ A document activates when its **first non-empty line** starts with one of the
 activation markers (default `#!tasks`, `#!task`, or `:::tasks`). You can add a
 board title after the marker.
 
-````text
+```text
 #!tasks Sprint 42
 
 ## Backend
@@ -60,17 +60,17 @@ board title after the marker.
 ## Frontend
 - [ ] Wire up the board @@jo !!
 - [ ] Polish styles #ui
-````
+```
 
-| Token | Meaning |
-| --- | --- |
-| `- [ ]` / `- [x]` | An open / done task (plain `- bullets` work too) |
-| `## Heading` | A section — used by the "group by section" view |
-| `@status:doing` | Status: `todo` · `doing` · `done` (aliases: `@s:wip`, `backlog`, `in-progress`, …) |
-| `@priority:high` | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`) |
-| `@due:2026-09-10` | A due date (`@due(next friday)` also works) |
-| `@who:alex` / `@@alex` | An assignee |
-| `#label` | One or more labels |
+| Token                  | Meaning                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| `- [ ]` / `- [x]`      | An open / done task (plain `- bullets` work too)                                   |
+| `## Heading`           | A section — used by the "group by section" view                                    |
+| `@status:doing`        | Status: `todo` · `doing` · `done` (aliases: `@s:wip`, `backlog`, `in-progress`, …) |
+| `@priority:high`       | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`)                        |
+| `@due:2026-09-10`      | A due date (`@due(next friday)` also works)                                        |
+| `@who:alex` / `@@alex` | An assignee                                                                        |
+| `#label`               | One or more labels                                                                 |
 
 An explicit `@status` always wins; otherwise a ticked checkbox resolves to
 **done** and everything else to **todo**. See
@@ -105,7 +105,8 @@ and add a few `- [ ]` items.
 
 ## Install & develop
 
-Requires Node 20+.
+Requires Node 22+ (Node 24 is used in CI). See [CONTRIBUTING.md](CONTRIBUTING.md)
+for the full contributor workflow.
 
 ```bash
 npm install          # install deps (runs `wxt prepare`)
@@ -130,13 +131,15 @@ Open a document on `docs.proton.me`, make its first line `#!tasks`, and add a fe
 
 ### Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` / `dev:firefox` | Dev server with hot reload |
-| `npm run build` / `build:firefox` | Production build |
-| `npm run zip` / `zip:firefox` | Zip a build for release / distribution |
-| `npm run compile` | Type-check with `tsc --noEmit` |
-| `npm test` | Run the unit tests (Vitest) |
+| Command                           | Description                            |
+| --------------------------------- | -------------------------------------- |
+| `npm run dev` / `dev:firefox`     | Dev server with hot reload             |
+| `npm run build` / `build:firefox` | Production build                       |
+| `npm run zip` / `zip:firefox`     | Zip a build for release / distribution |
+| `npm run compile`                 | Type-check with `tsc --noEmit`         |
+| `npm run lint`                    | Lint with ESLint                       |
+| `npm run format` / `format:check` | Format (or check) with Prettier        |
+| `npm test`                        | Run the unit tests (Vitest)            |
 
 ### Releasing
 
@@ -159,7 +162,7 @@ match the `package.json` version (e.g. `v0.1.0` ↔ `0.1.0`) or the run fails.
 
 ## Configuration
 
-Open the extension's **options page** (right-click the toolbar icon → *Options*,
+Open the extension's **options page** (right-click the toolbar icon → _Options_,
 or the "Settings & syntax guide" link in the popup) to:
 
 - enable / disable the extension,

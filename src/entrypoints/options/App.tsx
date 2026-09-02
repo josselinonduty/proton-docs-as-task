@@ -54,9 +54,7 @@ export function App() {
         </span>
         <div>
           <h1>Proton Docs as Task</h1>
-          <p className="op-sub">
-            Turn a Proton Docs document into an interactive task board.
-          </p>
+          <p className="op-sub">Turn a Proton Docs document into an interactive task board.</p>
         </div>
         {saved && <span className="op-saved">Saved ✓</span>}
       </header>
@@ -78,9 +76,7 @@ export function App() {
         <label className="op-row">
           <div>
             <div className="op-row__label">Show board automatically</div>
-            <div className="op-row__hint">
-              Open the board as soon as a document activates.
-            </div>
+            <div className="op-row__hint">Open the board as soon as a document activates.</div>
           </div>
           <input
             type="checkbox"
@@ -96,9 +92,7 @@ export function App() {
           </div>
           <select
             value={settings.grouping}
-            onChange={(e) =>
-              persist({ grouping: e.target.value as Settings['grouping'] })
-            }
+            onChange={(e) => persist({ grouping: e.target.value as Settings['grouping'] })}
           >
             <option value="status">By status</option>
             <option value="section">By section</option>
@@ -109,9 +103,9 @@ export function App() {
       <section className="op-card">
         <h2>Activation markers</h2>
         <p className="op-hint">
-          A document becomes a task board when its <strong>first non-empty line</strong>{' '}
-          starts with one of these (one per line, case-insensitive). You can add a title
-          after the marker, e.g. <code>#!tasks Sprint 42</code>.
+          A document becomes a task board when its <strong>first non-empty line</strong> starts with
+          one of these (one per line, case-insensitive). You can add a title after the marker, e.g.{' '}
+          <code>#!tasks Sprint 42</code>.
         </p>
         <textarea
           className="op-textarea"
@@ -124,10 +118,7 @@ export function App() {
           <button className="op-btn op-btn--primary" onClick={saveMarkers}>
             Save markers
           </button>
-          <button
-            className="op-btn"
-            onClick={() => persist({ markers: DEFAULT_SETTINGS.markers })}
-          >
+          <button className="op-btn" onClick={() => persist({ markers: DEFAULT_SETTINGS.markers })}>
             Reset to defaults
           </button>
         </div>
@@ -155,10 +146,7 @@ export function App() {
           <button className="op-btn op-btn--primary" onClick={saveColumns}>
             Save labels
           </button>
-          <button
-            className="op-btn"
-            onClick={() => persist({ columns: DEFAULT_SETTINGS.columns })}
-          >
+          <button className="op-btn" onClick={() => persist({ columns: DEFAULT_SETTINGS.columns })}>
             Reset to defaults
           </button>
         </div>
@@ -167,8 +155,8 @@ export function App() {
       <section className="op-card">
         <h2>Task syntax</h2>
         <p className="op-hint">
-          Below the marker line, write your tasks as a checklist. The board updates live
-          as you type.
+          Below the marker line, write your tasks as a checklist. The board updates live as you
+          type.
         </p>
         <pre className="op-syntax">{SYNTAX_EXAMPLE}</pre>
         <ul className="op-legend">
@@ -182,8 +170,8 @@ export function App() {
             <code>@status:doing</code> — todo · doing · done (also <code>@s:wip</code>)
           </li>
           <li>
-            <code>@priority:high</code> — high · medium · low (also{' '}
-            <code>!</code>/<code>!!</code>/<code>!!!</code>)
+            <code>@priority:high</code> — high · medium · low (also <code>!</code>/<code>!!</code>/
+            <code>!!!</code>)
           </li>
           <li>
             <code>@due:2026-09-10</code> — a due date
@@ -198,7 +186,11 @@ export function App() {
       </section>
 
       <footer className="op-foot">
-        <a href="https://github.com/josselinonduty/proton-docs-as-task" target="_blank" rel="noreferrer">
+        <a
+          href="https://github.com/josselinonduty/proton-docs-as-task"
+          target="_blank"
+          rel="noreferrer"
+        >
           github.com/josselinonduty/proton-docs-as-task
         </a>
       </footer>

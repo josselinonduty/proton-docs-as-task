@@ -14,8 +14,7 @@ export function groupByStatus(tasks: Task[], columns: ColumnDef[]): BoardGroup[]
   for (const task of tasks) {
     // Fall back to the first column if a status has no matching column.
     const bucket =
-      byStatus.get(task.status) ??
-      (fallbackKey ? byStatus.get(fallbackKey) : undefined);
+      byStatus.get(task.status) ?? (fallbackKey ? byStatus.get(fallbackKey) : undefined);
     bucket?.push(task);
   }
   return columns.map((col) => ({
