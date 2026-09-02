@@ -56,7 +56,11 @@ export function App() {
           <h1>Proton Docs as Task</h1>
           <p className="op-sub">Turn a Proton Docs document into an interactive task board.</p>
         </div>
-        {saved && <span className="op-saved">Saved ✓</span>}
+        {saved && (
+          <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success op-saved">
+            Saved ✓
+          </span>
+        )}
       </header>
 
       <section className="op-card pdt-card">
