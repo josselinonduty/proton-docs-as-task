@@ -27,8 +27,7 @@
     transform var(--pdt-transition-fast);
 }
 .pdt-btn:hover {
-  border-color: var(--pdt-primary);
-  color: var(--pdt-primary);
+  background: var(--pdt-background-weak);
 }
 .pdt-btn:disabled {
   opacity: 0.5;
@@ -121,14 +120,21 @@
   padding: 8px 10px;
   border: 1px solid var(--pdt-border-norm);
   border-radius: var(--pdt-radius-md);
-  background: var(--pdt-background-weak);
+  background: var(--pdt-background-norm);
   color: var(--pdt-text-norm);
   font-family: inherit;
   font-size: var(--pdt-text-sm);
-  transition: outline-color var(--pdt-transition-fast);
+  transition:
+    outline-color var(--pdt-transition-fast),
+    background var(--pdt-transition-fast);
+}
+.pdt-select:hover,
+.pdt-input:hover {
+  background: var(--pdt-background-weak);
 }
 .pdt-textarea {
   resize: vertical;
+  background: var(--pdt-background-weak);
   font-family: var(--pdt-font-mono);
   font-size: var(--pdt-text-xs);
 }
@@ -227,6 +233,26 @@
 .pdt-badge-success {
   background: var(--pdt-signal-success-weak);
   color: var(--pdt-signal-success);
+}
+
+/* Solid pill chip, for a status readout (e.g. "Active") rather than a
+ * lightweight tag — Proton uses filled chips like this for account/plan
+ * status ("ACTIF") and defaults ("DÉFAUT"). */
+.pdt-badge-solid {
+  font-weight: var(--pdt-font-weight-bold);
+  color: var(--pdt-text-invert);
+}
+.pdt-badge-solid-primary {
+  background: var(--pdt-primary);
+}
+.pdt-badge-solid-danger {
+  background: var(--pdt-signal-danger);
+}
+.pdt-badge-solid-warning {
+  background: var(--pdt-signal-warning);
+}
+.pdt-badge-solid-success {
+  background: var(--pdt-signal-success);
 }
 
 /* ---------- Inline code ---------- */
