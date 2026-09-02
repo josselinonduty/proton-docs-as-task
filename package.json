@@ -1,0 +1,37 @@
+{
+  "name": "proton-docs-as-task",
+  "description": "A browser extension that turns Proton Docs into a lightweight task board. When a document begins with an activation marker, the extension parses its checklist content and renders it as an interactive Kanban / list view on top of the editor.",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "josselinonduty",
+  "homepage": "https://github.com/josselinonduty/proton-docs-as-task",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josselinonduty/proton-docs-as-task.git"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@wxt-dev/module-react": "^1.2.2",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0",
+    "wxt": "^0.21.4"
+  }
+}
