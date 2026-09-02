@@ -10,13 +10,40 @@
  * handles the paste.
  */
 
+/**
+ * Simulate the platform "select all" keyboard shortcut on `root`.
+ *
+ * Rich-text editors like Lexical keep their own internal selection model —
+ * they don't read the native DOM `Selection` synchronously. They resync it
+ * from the browser's `selectionchange` event, which fires asynchronously, so
+ * a `Range`/`Selection` set immediately before a synthetic `paste` is still
+ * stale from the editor's point of view: the paste lands at whatever the
+ * editor's internal cursor last was (often the end of the document) instead
+ * of replacing the selection, which is what turns every write into an append
+ * rather than a replace. Dispatching a real Ctrl/Cmd+A keydown instead runs
+ * the editor's own select-all handler synchronously against its internal
+ * model, so the selection is actually current by the time paste fires.
+ */
+function dispatchSelectAllShortcut(root: HTMLElement, win: Window & typeof globalThis): void {
+  const event = new win.KeyboardEvent('keydown', {
+    key: 'a',
+    code: 'KeyA',
+    ctrlKey: true,
+    metaKey: true,
+    bubbles: true,
+    cancelable: true,
+  });
+  root.dispatchEvent(event);
+}
+
 /** Select the entire editor content so the next insertion replaces it. */
 function selectAll(root: HTMLElement): Selection | null {
   const doc = root.ownerDocument;
   const win = doc.defaultView;
   const selection = win?.getSelection() ?? null;
-  if (!selection) return null;
   root.focus();
+  if (win) dispatchSelectAllShortcut(root, win);
+  if (!selection) return null;
   const range = doc.createRange();
   range.selectNodeContents(root);
   selection.removeAllRanges();
