@@ -1,0 +1,162 @@
+:root {
+  --accent: #6d4aff;
+  --accent-strong: #573ae0;
+  --bg: #ffffff;
+  --surface: #f5f5f7;
+  --border: #e2e2ea;
+  --text: #1c1b22;
+  --muted: #6b6b78;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1a22;
+    --surface: #26252f;
+    --border: #34333f;
+    --text: #edecf2;
+    --muted: #a0a0ad;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+}
+.pp {
+  padding: 16px;
+}
+.pp-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+.pp-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.pp-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+}
+.pp-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.pp-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.pp-muted {
+  color: var(--muted);
+}
+code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.pp-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.pp-toggle span:first-child {
+  flex: 1;
+  font-weight: 600;
+}
+.pp-toggle input {
+  display: none;
+}
+.pp-switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 0.15s ease;
+}
+.pp-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+.pp-toggle input:checked + .pp-switch {
+  background: var(--accent);
+}
+.pp-toggle input:checked + .pp-switch::after {
+  transform: translateX(16px);
+}
+
+.pp-status {
+  margin: 14px 0;
+  font-size: 13px;
+}
+.pp-active {
+  margin: 0 0 10px;
+}
+.pp-btn {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pp-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.pp-btn--primary:hover {
+  background: var(--accent-strong);
+}
+
+.pp-foot {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.pp-link {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.pp-link:hover {
+  text-decoration: underline;
+}
