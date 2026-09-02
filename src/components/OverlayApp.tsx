@@ -31,10 +31,7 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
     return () => unwatch();
   }, []);
 
-  const result = useMemo(
-    () => parseDocument(text, settings.markers),
-    [text, settings.markers],
-  );
+  const result = useMemo(() => parseDocument(text, settings.markers), [text, settings.markers]);
 
   // Auto-show the board the first time a document becomes a task board.
   useEffect(() => {
@@ -80,11 +77,7 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
   if (!visible) {
     const pending = result.tasks.filter((t) => t.status !== 'done').length;
     return (
-      <button
-        className="pdt-fab"
-        onClick={() => setVisible(true)}
-        title="Open task board"
-      >
+      <button className="pdt-fab" onClick={() => setVisible(true)} title="Open task board">
         <span className="pdt-fab__icon" aria-hidden="true">
           ✓
         </span>

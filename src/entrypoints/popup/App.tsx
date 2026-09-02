@@ -15,10 +15,7 @@ async function queryActiveTab(): Promise<{ id?: number; url?: string }> {
   return { id: tab?.id, url: tab?.url };
 }
 
-async function sendToTab(
-  tabId: number,
-  message: ContentMessage,
-): Promise<StatusResponse | null> {
+async function sendToTab(tabId: number, message: ContentMessage): Promise<StatusResponse | null> {
   try {
     const res = (await browser.tabs.sendMessage(tabId, message)) as StatusResponse;
     return res?.ok ? res : null;
@@ -46,11 +43,7 @@ export function App() {
         return;
       }
       const status = await sendToTab(active.id, { type: 'get-status' });
-      setTab(
-        status && status.activated
-          ? { state: 'active', status }
-          : { state: 'inactive' },
-      );
+      setTab(status && status.activated ? { state: 'active', status } : { state: 'inactive' });
     })();
   }, []);
 
@@ -115,10 +108,7 @@ export function App() {
       </div>
 
       <footer className="pp-foot">
-        <button
-          className="pp-link"
-          onClick={() => browser.runtime.openOptionsPage()}
-        >
+        <button className="pp-link" onClick={() => browser.runtime.openOptionsPage()}>
           Settings &amp; syntax guide
         </button>
       </footer>

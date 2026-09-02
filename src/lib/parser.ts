@@ -48,10 +48,7 @@ const PRIORITY_SYNONYMS: Record<string, Priority> = {
 };
 
 /** Removes the first regex match from `text` and returns its capture + remainder. */
-function extractFirst(
-  text: string,
-  patterns: RegExp[],
-): { value?: string; text: string } {
+function extractFirst(text: string, patterns: RegExp[]): { value?: string; text: string } {
   for (const re of patterns) {
     const m = re.exec(text);
     if (m) {
@@ -83,10 +80,7 @@ export function extractMeta(input: string): Meta {
   });
 
   // Status: @status(...) / @status:... / @s:...
-  const status = extractFirst(text, [
-    /@(?:status|s)\(([^)]*)\)/i,
-    /@(?:status|s):(\S+)/i,
-  ]);
+  const status = extractFirst(text, [/@(?:status|s)\(([^)]*)\)/i, /@(?:status|s):(\S+)/i]);
   text = status.text;
 
   // Priority: @priority(...) / @p:... plus bang shorthands (!, !!, !!!).
@@ -113,9 +107,7 @@ export function extractMeta(input: string): Meta {
   ]);
   text = assignee.text;
 
-  const priorityValue = prio.value
-    ? PRIORITY_SYNONYMS[prio.value.toLowerCase()]
-    : bangPriority;
+  const priorityValue = prio.value ? PRIORITY_SYNONYMS[prio.value.toLowerCase()] : bangPriority;
 
   return {
     status: status.value
