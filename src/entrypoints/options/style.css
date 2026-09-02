@@ -29,11 +29,17 @@ code {
   margin: 0 auto;
   padding: var(--pdt-space-8) var(--pdt-space-5) 48px;
 }
+/* A dark "chrome" band, echoing the persistent dark navigation Proton's own
+ * settings pages use behind their white content cards (see STYLEGUIDE.md). */
 .op-head {
   display: flex;
   align-items: center;
   gap: var(--pdt-space-3);
   margin-bottom: var(--pdt-space-6);
+  padding: var(--pdt-space-4) var(--pdt-space-5);
+  border-radius: var(--pdt-radius-lg);
+  background: var(--pdt-nav-bg);
+  color: var(--pdt-nav-text);
 }
 .op-logo {
   display: inline-flex;
@@ -49,15 +55,14 @@ code {
 .op-head h1 {
   margin: 0;
   font-size: var(--pdt-text-xl);
+  color: var(--pdt-nav-text);
 }
 .op-sub {
   margin: 2px 0 0;
-  color: var(--pdt-text-weak);
+  color: var(--pdt-nav-text-weak);
 }
 .op-saved {
   margin-left: auto;
-  color: var(--pdt-signal-success);
-  font-weight: var(--pdt-font-weight-medium);
 }
 
 .op-card {
