@@ -77,6 +77,32 @@ An explicit `@status` always wins; otherwise a ticked checkbox resolves to
 [`examples/sample-board.md`](examples/sample-board.md) for a fuller example, and
 the extension's **options page** for an in-app syntax guide.
 
+## Install from a release
+
+Prebuilt packages are attached to every
+[GitHub Release](https://github.com/josselinonduty/proton-docs-as-task/releases).
+Grab the latest one — no build tools required.
+
+**Chrome / Chromium / Edge**
+
+1. Download `proton-docs-as-task-<version>-chrome.zip` and **unzip it** (Chrome
+   can't load a zip directly).
+2. Open `chrome://extensions` and enable **Developer mode** (top right).
+3. Click **Load unpacked** and select the unzipped folder.
+
+**Firefox**
+
+1. Download `proton-docs-as-task-<version>-firefox.zip`.
+2. Open `about:debugging` → **This Firefox** → **Load Temporary Add-on** and
+   pick the downloaded zip.
+
+> On Firefox, an unsigned add-on loaded this way is **temporary** — it's removed
+> when you restart the browser. A permanent install requires signing through
+> addons.mozilla.org, which isn't set up for this project yet.
+
+Once loaded, open a document on `docs.proton.me`, make its first line `#!tasks`,
+and add a few `- [ ]` items.
+
 ## Install & develop
 
 Requires Node 20+.
@@ -108,9 +134,28 @@ Open a document on `docs.proton.me`, make its first line `#!tasks`, and add a fe
 | --- | --- |
 | `npm run dev` / `dev:firefox` | Dev server with hot reload |
 | `npm run build` / `build:firefox` | Production build |
-| `npm run zip` / `zip:firefox` | Zip a build for store submission |
+| `npm run zip` / `zip:firefox` | Zip a build for release / distribution |
 | `npm run compile` | Type-check with `tsc --noEmit` |
 | `npm test` | Run the unit tests (Vitest) |
+
+### Releasing
+
+Releases are built and published by the
+[`release` workflow](.github/workflows/release.yml) when a version tag is
+pushed:
+
+1. Bump `version` in `package.json` (WXT uses it for the manifest version).
+2. Commit the bump.
+3. Tag and push:
+
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+The workflow type-checks, tests, builds the Chrome and Firefox packages, and
+attaches them to a new GitHub Release with auto-generated notes. The tag must
+match the `package.json` version (e.g. `v0.1.0` ↔ `0.1.0`) or the run fails.
 
 ## Configuration
 
