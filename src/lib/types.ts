@@ -26,7 +26,7 @@ export interface Task {
   labels: string[];
   /** Section heading this task lives under (default "Tasks"). */
   section: string;
-  /** Zero-based index of the source line in the document body. */
+  /** Zero-based index of the source line within the whole document (marker line included). */
   sourceLine: number;
   /** Raw source line, useful for debugging / round-tripping. */
   raw: string;

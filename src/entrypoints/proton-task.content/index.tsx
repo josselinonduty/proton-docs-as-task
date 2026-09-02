@@ -9,10 +9,7 @@ import './style.css';
  * Wait for the Lexical editor root to appear in this frame. Returns null in
  * frames that never host an editor (e.g. the outer Docs shell frame).
  */
-function waitForEditor(
-  ctx: { isValid: boolean },
-  timeoutMs = 30_000,
-): Promise<HTMLElement | null> {
+function waitForEditor(ctx: { isValid: boolean }, timeoutMs = 30_000): Promise<HTMLElement | null> {
   return new Promise((resolve) => {
     const existing = findEditorRoot();
     if (existing) return resolve(existing);

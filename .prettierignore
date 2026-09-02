@@ -1,0 +1,7 @@
+.wxt
+.output
+node_modules
+package-lock.json
+CHANGELOG.md
+stats.html
+stats-*.json

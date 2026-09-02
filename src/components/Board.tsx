@@ -11,13 +11,7 @@ interface BoardProps {
   onClose: () => void;
 }
 
-export function Board({
-  result,
-  settings,
-  grouping,
-  onGroupingChange,
-  onClose,
-}: BoardProps) {
+export function Board({ result, settings, grouping, onGroupingChange, onClose }: BoardProps) {
   const groups = useMemo(
     () =>
       grouping === 'status'
@@ -36,9 +30,7 @@ export function Board({
           <span className="pdt-logo" aria-hidden="true">
             ✓
           </span>
-          <h1 className="pdt-board__title">
-            {result.boardTitle || 'Tasks'}
-          </h1>
+          <h1 className="pdt-board__title">{result.boardTitle || 'Tasks'}</h1>
           <span className="pdt-board__count">
             {summary.done}/{summary.total} done
           </span>
@@ -77,8 +69,8 @@ export function Board({
         <div className="pdt-empty">
           <p>No tasks yet.</p>
           <p className="pdt-muted">
-            Add lines like <code>- [ ] Write the report @due:2026-09-10 @priority:high</code>{' '}
-            below the marker.
+            Add lines like <code>- [ ] Write the report @due:2026-09-10 @priority:high</code> below
+            the marker.
           </p>
         </div>
       ) : (
