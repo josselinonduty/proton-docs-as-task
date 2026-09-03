@@ -4,7 +4,6 @@ import {
   addTask,
   applyBulkAction,
   columnsForView,
-  countTasks,
   duplicateTask,
   moveSection,
   removeSection,
@@ -16,7 +15,6 @@ import {
   serializeTaskLine,
   setTaskSection,
   setTaskStatus,
-  setTitle,
   updateTask,
   type BulkAction,
   type BoardColumn,
@@ -51,6 +49,7 @@ import { BulkBar } from './BulkBar';
 import { CommandPalette, type Command } from './CommandPalette';
 import { ShortcutHelp } from './ShortcutHelp';
 import { Dialog } from './Dialog';
+import { Icon } from './Icon';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -127,8 +126,6 @@ export function EditableBoard(props: EditableBoardProps) {
   const statusColumns = settings.columns;
   const now = new Date();
   const facets = collectFacets(model);
-  const { total, done } = countTasks(model);
-  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   const filtersActive = hasActiveFilters(filters);
   const sortActive = isActiveSort(sort);
   const hideCompleted = settings.completedDisplay === 'hide';
@@ -161,9 +158,37 @@ export function EditableBoard(props: EditableBoardProps) {
   const [cardSignal, setCardSignal] = useState({ id: '', open: 0, edit: 0, move: 0 });
 
   const draggedId = useRef<string | null>(null);
+  const boardRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const lastSelect = useRef<{ id: string; colKey: string } | null>(null);
+
+  // Focus the board once it opens so keyboard shortcuts fire immediately.
+  // Without this, focus stays outside the shadow root (on the page body) and
+  // key events never reach the board's onKeyDown handler.
+  useEffect(() => {
+    boardRef.current?.focus();
+  }, []);
+
+  // Close the overflow menu on outside click / Escape. `composedPath` is used
+  // because the click's target is retargeted to the shadow host at the
+  // document level, which would otherwise always read as an outside click.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (menuRef.current && !e.composedPath().includes(menuRef.current)) setMenuOpen(false);
+    };
+    const onDocKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onDocKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onDocKey);
+    };
+  }, [menuOpen]);
 
   // Clear the new-task highlight after a moment.
   useEffect(() => {
@@ -612,30 +637,56 @@ export function EditableBoard(props: EditableBoardProps) {
   const mod = modLabel();
 
   return (
-    <section className="pdt-board" role="region" aria-label="Task board" onKeyDown={handleKeyDown}>
+    <section
+      className="pdt-board"
+      role="region"
+      aria-label="Task board"
+      tabIndex={-1}
+      ref={boardRef}
+      onKeyDown={handleKeyDown}
+    >
       <header className="pdt-board__header">
         <div className="pdt-board__row pdt-board__row--primary">
-          <span className="pdt-logo" aria-hidden="true">
-            ✓
-          </span>
+          <div className="pdt-segment" role="tablist" aria-label="Board view">
+            {VIEW_LABELS.map((v) => (
+              <button
+                key={v.key}
+                role="tab"
+                aria-selected={view === v.key}
+                className={`pdt-segment__btn ${view === v.key ? 'is-active' : ''}`}
+                onClick={() => onViewChange(v.key)}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+
           <input
-            className="pdt-board__title-input"
-            value={model.title ?? ''}
-            placeholder="Untitled board"
-            aria-label="Board title"
-            onChange={(e) => onChange(setTitle(model, e.target.value))}
+            ref={searchRef}
+            type="search"
+            className="pdt-input pdt-search"
+            value={filters.search}
+            placeholder="Search tasks… ( / )"
+            aria-label="Search tasks"
+            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
           />
 
-          <div className="pdt-progress-summary" title={`${done} of ${total} tasks completed`}>
-            <span className="pdt-progress-summary__text">
-              {done}/{total} done · {pct}%
-            </span>
-            {settings.showProgressBar && (
-              <span className="pdt-progress" aria-hidden="true">
-                <span className="pdt-progress__bar" style={{ width: `${pct}%` }} />
-              </span>
-            )}
-          </div>
+          <FilterPanel
+            filters={filters}
+            facets={facets}
+            statusColumns={statusColumns}
+            triggerRef={filterBtnRef}
+            onChange={onFiltersChange}
+            onClear={() => onFiltersChange({ ...EMPTY_FILTERS })}
+          />
+
+          <SortMenu
+            sort={sort}
+            open={sortOpen}
+            onOpenChange={setSortOpen}
+            onChange={onSortChange}
+            onApplyToDocument={applySortToDocument}
+          />
 
           <div className="pdt-board__spacer" />
 
@@ -645,7 +696,8 @@ export function EditableBoard(props: EditableBoardProps) {
             aria-expanded={quickAddOpen}
             title="Add task (N)"
           >
-            + Add task
+            <Icon name="plus" size={14} />
+            Add task
           </button>
 
           <SaveIndicator state={saveState} onRetry={onRetry} />
@@ -654,7 +706,7 @@ export function EditableBoard(props: EditableBoardProps) {
             Back to document
           </button>
 
-          <div className="pdt-menu">
+          <div className="pdt-menu" ref={menuRef}>
             <button
               type="button"
               className="pdt-btn pdt-btn-icon"
@@ -663,7 +715,7 @@ export function EditableBoard(props: EditableBoardProps) {
               aria-label="More actions"
               onClick={() => setMenuOpen((v) => !v)}
             >
-              ⋮
+              <Icon name="dots-vertical" />
             </button>
             {menuOpen && (
               <div className="pdt-menu__panel" role="menu">
@@ -719,52 +771,21 @@ export function EditableBoard(props: EditableBoardProps) {
                 >
                   Reload from document
                 </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="pdt-menu__item"
+                  onClick={() => {
+                    onOpenSettings();
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Icon name="cog" size={14} />
+                  Extension settings
+                </button>
               </div>
             )}
           </div>
-        </div>
-
-        <div className="pdt-board__row pdt-board__row--tools">
-          <div className="pdt-segment" role="tablist" aria-label="Board view">
-            {VIEW_LABELS.map((v) => (
-              <button
-                key={v.key}
-                role="tab"
-                aria-selected={view === v.key}
-                className={`pdt-segment__btn ${view === v.key ? 'is-active' : ''}`}
-                onClick={() => onViewChange(v.key)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-
-          <input
-            ref={searchRef}
-            type="search"
-            className="pdt-input pdt-search"
-            value={filters.search}
-            placeholder="Search tasks… ( / )"
-            aria-label="Search tasks"
-            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-          />
-
-          <FilterPanel
-            filters={filters}
-            facets={facets}
-            statusColumns={statusColumns}
-            triggerRef={filterBtnRef}
-            onChange={onFiltersChange}
-            onClear={() => onFiltersChange({ ...EMPTY_FILTERS })}
-          />
-
-          <SortMenu
-            sort={sort}
-            open={sortOpen}
-            onOpenChange={setSortOpen}
-            onChange={onSortChange}
-            onApplyToDocument={applySortToDocument}
-          />
         </div>
 
         <FilterBar
@@ -834,13 +855,6 @@ export function EditableBoard(props: EditableBoardProps) {
             </button>
           </div>
         </div>
-      )}
-
-      {sortActive && (
-        <p className="pdt-sortnote" role="note">
-          Sorted by {sort.key} — drag-and-drop is off. Switch to Manual order or “Apply this order
-          to document” to rearrange.
-        </p>
       )}
 
       {view === 'swimlane' && model.sections.length > 6 && (
@@ -1067,7 +1081,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   aria-label={collapsed ? `Expand ${col.label}` : `Collapse ${col.label}`}
                   onClick={() => onToggleColumnCollapse(col.key)}
                 >
-                  {collapsed ? '▸' : '▾'}
+                  <Icon name={collapsed ? 'chevron-right' : 'chevron-down'} />
                 </button>
 
                 {view === 'sections' && (
@@ -1079,7 +1093,7 @@ export function EditableBoard(props: EditableBoardProps) {
                       disabled={model.sections.indexOf(col.key) === 0}
                       onClick={() => onChange(moveSection(model, col.key, -1))}
                     >
-                      ‹
+                      <Icon name="chevron-left" />
                     </button>
                     <button
                       type="button"
@@ -1088,7 +1102,7 @@ export function EditableBoard(props: EditableBoardProps) {
                       disabled={model.sections.indexOf(col.key) === model.sections.length - 1}
                       onClick={() => onChange(moveSection(model, col.key, 1))}
                     >
-                      ›
+                      <Icon name="chevron-right" />
                     </button>
                     <button
                       type="button"
@@ -1096,7 +1110,7 @@ export function EditableBoard(props: EditableBoardProps) {
                       aria-label={`Delete section ${col.label}`}
                       onClick={() => requestSectionDelete(col.key)}
                     >
-                      ✕
+                      <Icon name="cross" />
                     </button>
                   </div>
                 )}
@@ -1150,7 +1164,8 @@ export function EditableBoard(props: EditableBoardProps) {
                 announce('Section added');
               }}
             >
-              + Add section
+              <Icon name="plus" size={14} />
+              Add section
             </button>
           </div>
         )}
@@ -1185,7 +1200,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   aria-label={rowCollapsed ? `Expand ${section}` : `Collapse ${section}`}
                   onClick={() => onToggleRowCollapse(section)}
                 >
-                  {rowCollapsed ? '▸' : '▾'}
+                  <Icon name={rowCollapsed ? 'chevron-right' : 'chevron-down'} />
                 </button>
                 <span className="pdt-swimlane__rowname">{section}</span>
                 <span className="pdt-column__count">{rowCount}</span>
@@ -1329,11 +1344,17 @@ function buildCommands(a: BuildCommandsArgs): Command[] {
   ];
 }
 
+/**
+ * Save state indicator. Proton Docs shows its own "Saved / Saving" status, so
+ * the board only surfaces the states Proton can't: a failed write (with a
+ * retry action) and an external-change conflict. The normal saved/saving
+ * states render nothing.
+ */
 function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
   if (state === 'error') {
     return (
       <span className="pdt-save pdt-save--error" role="status">
-        <span aria-hidden="true">⚠</span> Save failed
+        <Icon name="exclamation-circle" size={14} /> Save failed
         <button type="button" className="pdt-link" onClick={onRetry}>
           Retry
         </button>
@@ -1343,22 +1364,11 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
   if (state === 'conflict') {
     return (
       <span className="pdt-save pdt-save--warning" role="status">
-        <span aria-hidden="true">↯</span> Document changed
+        <Icon name="exclamation-circle" size={14} /> Document changed
       </span>
     );
   }
-  if (state === 'saving') {
-    return (
-      <span className="pdt-save pdt-save--saving" role="status">
-        Saving…
-      </span>
-    );
-  }
-  return (
-    <span className="pdt-save pdt-save--saved" role="status">
-      <span aria-hidden="true">✓</span> Saved
-    </span>
-  );
+  return null;
 }
 
 interface QuickAddProps {
@@ -1381,7 +1391,8 @@ function QuickAdd({ open, label, onOpen, onCancel, onSubmit }: QuickAddProps) {
   if (!open) {
     return (
       <button type="button" className="pdt-add-task" onClick={onOpen}>
-        + Add task
+        <Icon name="plus" size={14} />
+        Add task
       </button>
     );
   }

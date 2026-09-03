@@ -170,12 +170,6 @@ export function App() {
           checked={settings.confirmDelete}
           onChange={(v) => persist({ confirmDelete: v })}
         />
-        <Toggle
-          label="Show progress bar"
-          hint="Show the completion progress bar in the board header."
-          checked={settings.showProgressBar}
-          onChange={(v) => persist({ showProgressBar: v })}
-        />
       </section>
 
       <section className="op-card pdt-card">

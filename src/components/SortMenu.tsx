@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { SORT_OPTIONS, describeSort, isActiveSort, type SortState } from '../lib/sorting';
+import { Icon } from './Icon';
 
 interface SortMenuProps {
   sort: SortState;
@@ -21,7 +22,9 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
       if (e.key === 'Escape') onOpenChange(false);
     };
     const onDocClick = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) onOpenChange(false);
+      // composedPath crosses the shadow boundary; `e.target` at the document
+      // level is retargeted to the shadow host and would misread as outside.
+      if (wrapRef.current && !e.composedPath().includes(wrapRef.current)) onOpenChange(false);
     };
     document.addEventListener('keydown', onDocKey);
     document.addEventListener('mousedown', onDocClick);
@@ -60,7 +63,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
                 onClick={() => onChange({ key: o.key, dir: selected ? sort.dir : o.defaultDir })}
               >
                 <span>{o.label}</span>
-                {selected && o.directional && <span aria-hidden="true">✓</span>}
+                {selected && o.directional && <Icon name="checkmark" size={14} />}
               </button>
             );
           })}

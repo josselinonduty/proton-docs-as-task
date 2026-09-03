@@ -120,8 +120,6 @@ export interface Settings {
   collapseDoneByDefault: boolean;
   /** Ask for confirmation before deleting a card. */
   confirmDelete: boolean;
-  /** Show the completion progress bar in the header. */
-  showProgressBar: boolean;
   /** Which optional fields cards display. */
   cardFields: CardFieldVisibility;
   /** How completed tasks are presented. */
