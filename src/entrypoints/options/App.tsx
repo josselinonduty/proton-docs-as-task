@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_SETTINGS, getSettings, setSettings } from '../../lib/settings';
+import { DEFAULT_SETTINGS, getSettings, markersAreValid, setSettings } from '../../lib/settings';
 import type { Settings, StatusKey } from '../../lib/types';
 
 const STATUS_ORDER: StatusKey[] = ['todo', 'doing', 'done'];
@@ -7,6 +7,7 @@ const STATUS_ORDER: StatusKey[] = ['todo', 'doing', 'done'];
 export function App() {
   const [settings, setLocal] = useState<Settings | null>(null);
   const [markersText, setMarkersText] = useState('');
+  const [markerError, setMarkerError] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -30,6 +31,11 @@ export function App() {
       .split('\n')
       .map((m) => m.trim())
       .filter(Boolean);
+    if (!markersAreValid(markers)) {
+      setMarkerError('Add at least one activation marker — an empty list is not allowed.');
+      return;
+    }
+    setMarkerError('');
     void persist({ markers });
   }
 
@@ -65,46 +71,90 @@ export function App() {
 
       <section className="op-card pdt-card">
         <h2>General</h2>
-        <label className="op-row">
-          <div>
-            <div className="op-row__label">Enable the extension</div>
-            <div className="op-row__hint">Turn the whole board on or off.</div>
-          </div>
-          <input
-            type="checkbox"
-            className="pdt-native-check"
-            checked={settings.enabled}
-            onChange={(e) => persist({ enabled: e.target.checked })}
-          />
-        </label>
+        <Toggle
+          label="Enable the extension"
+          hint="Turn the whole board on or off."
+          checked={settings.enabled}
+          onChange={(v) => persist({ enabled: v })}
+        />
+        <Toggle
+          label="Open activated boards automatically"
+          hint="Open the board as soon as a document activates."
+          checked={settings.autoShow}
+          onChange={(v) => persist({ autoShow: v })}
+        />
 
-        <label className="op-row">
-          <div>
-            <div className="op-row__label">Show board automatically</div>
-            <div className="op-row__hint">Open the board as soon as a document activates.</div>
-          </div>
-          <input
-            type="checkbox"
-            className="pdt-native-check"
-            checked={settings.autoShow}
-            onChange={(e) => persist({ autoShow: e.target.checked })}
-          />
-        </label>
-
-        <label className="op-row">
-          <div>
-            <div className="op-row__label">Default grouping</div>
-            <div className="op-row__hint">How cards are laid out into columns.</div>
-          </div>
+        <Row label="Default view" hint="Which layout the board opens in.">
           <select
             className="pdt-select"
-            value={settings.grouping}
-            onChange={(e) => persist({ grouping: e.target.value as Settings['grouping'] })}
+            value={settings.defaultView}
+            onChange={(e) => persist({ defaultView: e.target.value as Settings['defaultView'] })}
           >
-            <option value="status">By status</option>
-            <option value="section">By section</option>
+            <option value="workflow">Workflow (by status)</option>
+            <option value="sections">Sections (by heading)</option>
           </select>
-        </label>
+        </Row>
+
+        <Row label="Theme" hint="Match the system, or force light / dark.">
+          <select
+            className="pdt-select"
+            value={settings.theme}
+            onChange={(e) => persist({ theme: e.target.value as Settings['theme'] })}
+          >
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </Row>
+
+        <Row label="Card density" hint="How tightly cards are packed.">
+          <select
+            className="pdt-select"
+            value={settings.density}
+            onChange={(e) => persist({ density: e.target.value as Settings['density'] })}
+          >
+            <option value="comfortable">Comfortable</option>
+            <option value="compact">Compact</option>
+          </select>
+        </Row>
+      </section>
+
+      <section className="op-card pdt-card">
+        <h2>Board behavior</h2>
+        <Row label="New cards" hint="Where a quick-added card lands in its column.">
+          <select
+            className="pdt-select"
+            value={settings.newCardsAtTop ? 'top' : 'bottom'}
+            onChange={(e) => persist({ newCardsAtTop: e.target.value === 'top' })}
+          >
+            <option value="bottom">At the bottom</option>
+            <option value="top">At the top</option>
+          </select>
+        </Row>
+        <Toggle
+          label="Show description preview"
+          hint="Show a short snippet of the description on collapsed cards."
+          checked={settings.showDescriptionPreview}
+          onChange={(v) => persist({ showDescriptionPreview: v })}
+        />
+        <Toggle
+          label="Collapse Done by default"
+          hint="Start the Done column collapsed in Workflow view."
+          checked={settings.collapseDoneByDefault}
+          onChange={(v) => persist({ collapseDoneByDefault: v })}
+        />
+        <Toggle
+          label="Confirm card deletion"
+          hint="Ask before deleting a card (you can always undo)."
+          checked={settings.confirmDelete}
+          onChange={(v) => persist({ confirmDelete: v })}
+        />
+        <Toggle
+          label="Show progress bar"
+          hint="Show the completion progress bar in the board header."
+          checked={settings.showProgressBar}
+          onChange={(v) => persist({ showProgressBar: v })}
+        />
       </section>
 
       <section className="op-card pdt-card">
@@ -121,13 +171,21 @@ export function App() {
           onChange={(e) => setMarkersText(e.target.value)}
           spellCheck={false}
         />
+        {markerError && (
+          <p className="op-error" role="alert">
+            {markerError}
+          </p>
+        )}
         <div className="op-actions">
           <button className="pdt-btn pdt-btn-primary" onClick={saveMarkers}>
             Save markers
           </button>
           <button
             className="pdt-btn"
-            onClick={() => persist({ markers: DEFAULT_SETTINGS.markers })}
+            onClick={() => {
+              setMarkerError('');
+              void persist({ markers: DEFAULT_SETTINGS.markers });
+            }}
           >
             Reset to defaults
           </button>
@@ -135,8 +193,12 @@ export function App() {
       </section>
 
       <section className="op-card pdt-card">
-        <h2>Column labels</h2>
-        <p className="op-hint">Rename the status columns shown on the board.</p>
+        <h2>Workflow labels</h2>
+        <p className="op-hint">
+          Rename the status columns shown on the board. The internal keys stay <code>todo</code>,{' '}
+          <code>doing</code> and <code>done</code>, so renaming a label never changes any task's
+          status or metadata.
+        </p>
         <div className="op-cols">
           {STATUS_ORDER.map((key) => {
             const col = settings.columns.find((c) => c.key === key);
@@ -170,7 +232,8 @@ export function App() {
         <h2>Task syntax</h2>
         <p className="op-hint">
           Below the marker line, write your tasks as a checklist. The board updates live as you
-          type.
+          type. Status and section are independent: a task's <code>@status</code> is its workflow
+          stage, while its <code>## Heading</code> is the section it lives under.
         </p>
         <pre className="op-syntax">{SYNTAX_EXAMPLE}</pre>
         <ul className="op-legend">
@@ -178,7 +241,7 @@ export function App() {
             <code>- [ ]</code> / <code>- [x]</code> — an open or done task
           </li>
           <li>
-            <code>## Heading</code> — a section (used for “group by section”)
+            <code>## Heading</code> — a section (the Sections view groups by these)
           </li>
           <li>
             <code>@status:doing</code> — todo · doing · done (also <code>@s:wip</code>)
@@ -209,6 +272,49 @@ export function App() {
         </a>
       </footer>
     </div>
+  );
+}
+
+function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="op-row">
+      <div>
+        <div className="op-row__label">{label}</div>
+        <div className="op-row__hint">{hint}</div>
+      </div>
+      {children}
+    </label>
+  );
+}
+
+function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <Row label={label} hint={hint}>
+      <input
+        type="checkbox"
+        className="pdt-native-check"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+    </Row>
   );
 }
 

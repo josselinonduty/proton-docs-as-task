@@ -94,9 +94,10 @@
   --pdt-nav-active-bg: rgba(130, 102, 255, 0.22);
 }
 
+/* Dark palette, shared by the OS preference and an explicit dark override. */
 @media (prefers-color-scheme: dark) {
-  :root,
-  .pdt-host {
+  :root:not([data-theme='light']),
+  .pdt-host:not([data-theme='light']) {
     --pdt-primary: #8266ff;
     --pdt-primary-hover: #9784ff;
     --pdt-primary-active: #6d4aff;
@@ -116,3 +117,29 @@
     --pdt-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
   }
 }
+
+/* Explicit "Dark" theme choice — wins regardless of the OS preference. */
+:root[data-theme='dark'],
+.pdt-host[data-theme='dark'] {
+  --pdt-primary: #8266ff;
+  --pdt-primary-hover: #9784ff;
+  --pdt-primary-active: #6d4aff;
+
+  --pdt-background-norm: #1c1b24;
+  --pdt-background-weak: #131218;
+  --pdt-background-strong: #292833;
+  --pdt-border-norm: #322f3d;
+  --pdt-border-weak: #26242f;
+  --pdt-text-norm: #edecf2;
+  --pdt-text-weak: #a0a0ad;
+  --pdt-text-hint: #726f82;
+  --pdt-text-invert: #16151c;
+
+  --pdt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --pdt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --pdt-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Explicit "Light" theme choice keeps the light palette defined on :root above,
+ * so it only needs to opt out of the dark media block (handled by the
+ * :not([data-theme='light']) guard). No further declarations required. */

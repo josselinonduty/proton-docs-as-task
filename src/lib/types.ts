@@ -28,6 +28,11 @@ export interface Task {
   labels: string[];
   /** Section heading this task lives under (default "Tasks"). */
   section: string;
+  /**
+   * Global ordering rank (0-based, in document line order). Used to keep a
+   * stable order within each section when serializing back to the document.
+   */
+  order: number;
   /** Zero-based index of the source line within the whole document (marker line included). */
   sourceLine: number;
   /** Raw source line, useful for debugging / round-tripping. */
@@ -53,6 +58,15 @@ export interface ColumnDef {
   label: string;
 }
 
+/** The two board layouts. Workflow groups by status, Sections by heading. */
+export type BoardView = 'workflow' | 'sections';
+
+export type Theme = 'system' | 'light' | 'dark';
+export type CardDensity = 'comfortable' | 'compact';
+
+/** Document synchronization state shown in the board header. */
+export type SaveState = 'saved' | 'saving' | 'error' | 'conflict';
+
 /** Persisted user settings. */
 export interface Settings {
   /** Whether the extension is globally enabled. */
@@ -62,10 +76,24 @@ export interface Settings {
    * trimmed, starts with any of these (case-insensitive).
    */
   markers: string[];
-  /** Column definitions, in display order. */
+  /** Status column definitions (renameable labels), in display order. */
   columns: ColumnDef[];
-  /** Default grouping mode for the board. */
-  grouping: 'status' | 'section';
-  /** Whether the board should be shown automatically on activation. */
+  /** Default board view. */
+  defaultView: BoardView;
+  /** Whether the board should be opened automatically on activation. */
   autoShow: boolean;
+  /** Color theme for the board and extension surfaces. */
+  theme: Theme;
+  /** Card layout density. */
+  density: CardDensity;
+  /** Where a quick-added card lands in its column. */
+  newCardsAtTop: boolean;
+  /** Show a short description preview on collapsed cards. */
+  showDescriptionPreview: boolean;
+  /** Start the Done column collapsed in Workflow view. */
+  collapseDoneByDefault: boolean;
+  /** Ask for confirmation before deleting a card. */
+  confirmDelete: boolean;
+  /** Show the completion progress bar in the header. */
+  showProgressBar: boolean;
 }

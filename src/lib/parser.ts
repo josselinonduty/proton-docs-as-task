@@ -252,6 +252,7 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
       description: meta.description,
       labels: meta.labels,
       section: currentSection,
+      order: tasks.length,
       sourceLine: i,
       raw: rawLine,
     });
