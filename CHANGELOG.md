@@ -3,6 +3,44 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0
+
+A coherent, dependable daily-use task board. **Status and section are now
+independent** properties of a task, and the same task collection is shown in two
+interchangeable layouts without ever losing data.
+
+- **Two views.** _Workflow_ groups cards into the To Do / In Progress / Done
+  status columns; _Sections_ groups them by `## Heading`. Moving a card in
+  Workflow changes only its status (and ticks/unticks the checkbox); moving it in
+  Sections changes only its section. The chosen view persists as your default and
+  switching never mutates task data.
+- **Move by pointer or keyboard.** Drag-and-drop plus fully keyboard-accessible
+  equivalents (`Alt`+`↑`/`↓` and explicit Move / Move to… controls); moves are
+  announced to screen readers and focus follows the moved card.
+- **Search & filters.** Case-insensitive search across title, description,
+  assignee, labels and section, combinable filters (status, section, priority,
+  assignee, label, due date, completion), a one-click clear, and empty states for
+  columns with no matches. Filtering only changes visibility.
+- **Save state & conflict handling.** The header shows _Saved_ / _Saving…_ /
+  _Save failed_ (with **Retry**) / _Document changed_. External document changes
+  offer Reload, Keep board version, or Cancel instead of a silent overwrite.
+- **Undo** for moving a card, deleting a card, and deleting a section (including
+  the bulk move/delete of its tasks), via a single-level toast.
+- **Safe section deletion.** Deleting a non-empty section asks whether to move
+  its tasks elsewhere (the default) or delete them too; deleting tasks is
+  confirmed and undoable. Workflow status columns can't be deleted.
+- **Progress** summary (completed / total / percentage + bar) that ignores
+  filters, plus a collapsible Done column.
+- **More settings.** Default view, theme (System / Light / Dark), card density,
+  new-cards-at-top/bottom, description previews, collapse-Done-by-default,
+  confirm-delete, progress-bar toggle, and validation preventing an empty
+  activation-marker configuration.
+- **Accessibility.** Visible focus, focus-trapping dialogs that close on Escape,
+  labelled inputs, non-color state indicators, and reduced-motion support.
+- Existing v0.4 task documents open with no manual migration. New pure modules
+  (`model`, `filters`, `sync`) carry automated tests for the model, serialization,
+  movement, filtering and conflict behavior.
+
 ## 0.2.0
 
 Editable task boards (the board can now write back to the document):

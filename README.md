@@ -3,15 +3,31 @@
 Turn a [Proton Docs](https://proton.me/drive/docs) document into an interactive
 **task board**. Open an empty document and one Proton-styled button converts it
 into a board; open a document that already begins with an activation marker and
-its checklist is parsed straight into a live Kanban view on top of the editor.
+its checklist is parsed straight into a live board on top of the editor.
 
 <p align="center">
   <img src="public/icon/128.png" width="96" height="96" alt="Proton Docs as Task icon" />
 </p>
 
 > The document is still the single source of truth — the board reads from it and
-> writes back to it. You manage columns, tasks, priorities, due dates and rich
+> writes back to it. You manage tasks, priorities, due dates and rich
 > descriptions from the board UI, and never have to touch the text behind them.
+
+A task's **status** (its workflow stage) and its **section** (the `## Heading`
+it lives under) are independent. The board shows the same tasks in two layouts:
+
+- **Workflow** — Kanban columns for _To Do_, _In Progress_ and _Done_. Moving a
+  card changes its status (and ticks/unticks its Markdown checkbox); its section
+  is untouched.
+- **Sections** — columns for the document's `## Headings`. Moving a card changes
+  its section; its status is untouched. You can add, rename, reorder and delete
+  sections here.
+
+Switch views from the board header without ever changing your task data. Search
+and filters (status, section, priority, assignee, label, due date, completion)
+stay active across the switch, card and section moves can be **undone**, and
+every move is announced for screen readers and reachable without a mouse
+(`Alt`+`↑`/`↓` to reorder, or the explicit **Move** / **Move to…** controls).
 
 ---
 
@@ -72,7 +88,7 @@ board title after the marker.
 | Token                  | Meaning                                                                            |
 | ---------------------- | ---------------------------------------------------------------------------------- |
 | `- [ ]` / `- [x]`      | An open / done task (plain `- bullets` work too)                                   |
-| `## Heading`           | A section — used by the "group by section" view                                    |
+| `## Heading`           | A section — the Sections view groups by these                                      |
 | `@status:doing`        | Status: `todo` · `doing` · `done` (aliases: `@s:wip`, `backlog`, `in-progress`, …) |
 | `@priority:high`       | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`)                        |
 | `@due:2026-09-10`      | A due date (`@due(next friday)` also works)                                        |
@@ -173,12 +189,18 @@ match the `package.json` version (e.g. `v0.1.0` ↔ `0.1.0`) or the run fails.
 Open the extension's **options page** (right-click the toolbar icon → _Options_,
 or the "Settings & syntax guide" link in the popup) to:
 
-- enable / disable the extension,
-- customize the activation markers,
-- rename the status columns,
-- choose the default grouping (status vs. section) and auto-show behavior.
+- enable / disable the extension and choose whether activated boards open
+  automatically,
+- pick the default view (Workflow or Sections), theme (System / Light / Dark)
+  and card density (Comfortable / Compact),
+- tune board behavior — new cards at top or bottom, description previews,
+  collapse Done by default, confirm-before-delete, and the progress bar,
+- rename the workflow labels (the internal keys stay `todo` / `doing` / `done`,
+  so renaming never changes a task's status),
+- customize the activation markers (an empty marker list is rejected).
 
-Settings are stored in `browser.storage.sync`.
+Settings are stored in `browser.storage.sync`, and a v0.4 board opens with no
+manual migration.
 
 ## Project layout
 
@@ -189,11 +211,16 @@ src/
 │  ├─ proton-task.content/       # content script + board overlay + styles
 │  ├─ popup/                      # toolbar popup (status + quick toggles)
 │  └─ options/                    # settings & syntax guide
-├─ components/                    # React board UI (Board, TaskCard, OverlayApp)
+├─ components/                    # React board UI (OverlayApp, EditableBoard,
+│                                 #   EditableTaskCard, FilterPanel, Dialog)
 └─ lib/
-   ├─ parser.ts                   # marker detection + task DSL parser  (tested)
-   ├─ board.ts                    # grouping + summary helpers           (tested)
+   ├─ parser.ts                   # marker detection + task DSL parser   (tested)
+   ├─ model.ts                    # flat task model, views, serialization (tested)
+   ├─ filters.ts                  # search + filters + due-date buckets   (tested)
+   ├─ sync.ts                     # external-change / conflict detection  (tested)
+   ├─ board.ts                    # grouping + summary helpers            (tested)
    ├─ extractor.ts                # Lexical DOM → text serialization
+   ├─ docwriter.ts                # text → Lexical editor (debounced write)
    ├─ settings.ts / defaults.ts   # persisted settings
    ├─ messaging.ts                # popup ↔ content-script contract
    └─ types.ts
@@ -201,12 +228,18 @@ src/
 
 ## Scope & limitations
 
-- **v1 is a read / visualize layer.** Proton Docs is end-to-end encrypted and
-  edited through a collaborative (Yjs) model, so this extension deliberately does
-  **not** write back into the document — it never risks corrupting your data.
-  You edit tasks by editing the doc; the board reflects it live.
+- **The board reads from and writes back to the document.** While it is open the
+  board is authoritative: edits update the UI immediately and are serialized back
+  into the editor on a short debounce. The header shows a live save state
+  (_Saving…_ / _Saved_ / _Save failed_ with **Retry**), and if the document
+  changes underneath an open board you're offered **Reload**, **Keep board
+  version** or **Cancel** rather than a silent overwrite.
 - Because it depends on the editor's DOM structure, a major redesign of the
   Proton Docs editor could require updating the selectors in `extractor.ts`.
+- **Out of scope for v0.5:** custom workflow statuses, comments, attachments,
+  subtasks, recurring tasks, reminders, dependencies, multiple boards per
+  document, saved filters, real-time multi-user merge, and any cloud/back-end
+  service. Everything runs locally.
 - Built with [WXT](https://wxt.dev), React and TypeScript.
 
 ## License

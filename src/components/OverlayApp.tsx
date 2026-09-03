@@ -10,25 +10,51 @@ import {
   countTasks,
   type BoardModel,
 } from '../lib/model';
-import { settingsItem, withDefaults } from '../lib/settings';
-import type { Settings } from '../lib/types';
+import { canonicalDoc, canonicalModel } from '../lib/sync';
+import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
+import { settingsItem, setSettings as persistSettings, withDefaults } from '../lib/settings';
+import type { BoardView, SaveState, Settings } from '../lib/types';
 import type { ContentMessage, StatusResponse } from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
 
 interface OverlayAppProps {
   root: HTMLElement;
+  host: HTMLElement;
   initialSettings: Settings;
 }
 
 const WRITE_DEBOUNCE_MS = 400;
+const UNDO_TIMEOUT_MS = 9000;
 
-export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
+interface UndoEntry {
+  model: BoardModel;
+  label: string;
+}
+
+export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
   const [settings, setSettings] = useState(initialSettings);
   const [text, setText] = useState('');
   const [visible, setVisible] = useState(false);
   const [model, setModel] = useState<BoardModel | null>(null);
+  const [view, setView] = useState<BoardView>(initialSettings.defaultView);
+  const [filters, setFilters] = useState<FilterState>({ ...EMPTY_FILTERS });
+  const [saveState, setSaveState] = useState<SaveState>('saved');
+  const [undo, setUndo] = useState<UndoEntry | null>(null);
+  const undoRef = useRef<UndoEntry | null>(null);
+  const [announcement, setAnnouncement] = useState('');
+
   const wasActivated = useRef(false);
   const writeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const modelRef = useRef<BoardModel | null>(null);
+  const expectedCanonical = useRef<string | null>(null);
+  // The canonical the editor held just before the latest write. Its (delayed)
+  // MutationObserver echo would otherwise briefly look like an external change.
+  const prevExpected = useRef<string | null>(null);
+  const suppressConflict = useRef<string | null>(null);
+  const pendingWrite = useRef<BoardModel | null>(null);
+
+  modelRef.current = model;
+  undoRef.current = undo;
 
   // Track document text via the editor observer.
   useEffect(() => {
@@ -42,69 +68,176 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
     return () => unwatch();
   }, []);
 
+  // Apply the chosen theme to the shadow host.
+  useEffect(() => {
+    if (settings.theme === 'system') host.removeAttribute('data-theme');
+    else host.setAttribute('data-theme', settings.theme);
+  }, [host, settings.theme]);
+
   const result = useMemo(() => parseDocument(text, settings.markers), [text, settings.markers]);
 
-  // Marker to lead the document with when serializing the board back out.
   const marker = result.matchedMarker ?? settings.markers[0] ?? '#!tasks';
   const markerRef = useRef(marker);
   markerRef.current = marker;
 
-  // The board is authoritative while open: push the (debounced) serialized
-  // model into the editor. External doc edits are ignored until the board is
-  // reopened, at which point it rebuilds from the freshly parsed document.
-  const writeDoc = useCallback(
+  const announce = useCallback((message: string) => setAnnouncement(message), []);
+
+  // Perform an actual write, honoring the "don't rewrite if unchanged" rule.
+  const doWrite = useCallback(
     (next: BoardModel) => {
-      if (writeTimer.current) clearTimeout(writeTimer.current);
-      writeTimer.current = setTimeout(() => {
-        writePreservingFocus(root, serializeModel(next, markerRef.current));
-      }, WRITE_DEBOUNCE_MS);
+      const m = markerRef.current;
+      const canonical = canonicalModel(next, m);
+      if (canonical === expectedCanonical.current) {
+        pendingWrite.current = null;
+        setSaveState('saved');
+        return;
+      }
+      const ok = writePreservingFocus(root, serializeModel(next, m));
+      if (ok) {
+        prevExpected.current = expectedCanonical.current;
+        expectedCanonical.current = canonical;
+        suppressConflict.current = null;
+        pendingWrite.current = null;
+        setSaveState('saved');
+      } else {
+        pendingWrite.current = next;
+        setSaveState('error');
+      }
     },
     [root],
+  );
+
+  const scheduleWrite = useCallback(
+    (next: BoardModel) => {
+      if (writeTimer.current) clearTimeout(writeTimer.current);
+      setSaveState('saving');
+      writeTimer.current = setTimeout(() => doWrite(next), WRITE_DEBOUNCE_MS);
+    },
+    [doWrite],
   );
 
   const flushWrite = useCallback(
     (next: BoardModel) => {
       if (writeTimer.current) clearTimeout(writeTimer.current);
-      writePreservingFocus(root, serializeModel(next, markerRef.current));
+      doWrite(next);
     },
-    [root],
+    [doWrite],
   );
 
   const handleModelChange = useCallback(
-    (next: BoardModel) => {
+    (next: BoardModel, undoLabel?: string) => {
+      if (undoLabel && modelRef.current) setUndo({ model: modelRef.current, label: undoLabel });
       setModel(next);
-      writeDoc(next);
+      modelRef.current = next;
+      scheduleWrite(next);
     },
-    [writeDoc],
+    [scheduleWrite],
   );
 
+  const handleUndo = useCallback(() => {
+    const entry = undoRef.current;
+    if (!entry) return;
+    setModel(entry.model);
+    modelRef.current = entry.model;
+    scheduleWrite(entry.model);
+    setUndo(null);
+    announce('Change undone');
+  }, [scheduleWrite, announce]);
+
+  // Auto-dismiss the undo toast.
+  useEffect(() => {
+    if (!undo) return;
+    const timer = setTimeout(() => setUndo(null), UNDO_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [undo]);
+
+  const handleViewChange = useCallback((next: BoardView) => {
+    setView(next);
+    void persistSettings({ defaultView: next });
+  }, []);
+
   const openBoard = useCallback(() => {
-    setModel((current) => current ?? fromParseResult(parseDocument(text, settings.markers)));
+    const next = fromParseResult(parseDocument(text, settings.markers));
+    setModel((current) => current ?? next);
+    modelRef.current = modelRef.current ?? next;
+    expectedCanonical.current = canonicalDoc(text, settings.markers);
+    suppressConflict.current = null;
+    setSaveState('saved');
     setVisible(true);
   }, [text, settings.markers]);
 
   const closeBoard = useCallback(() => {
+    if (modelRef.current) flushWrite(modelRef.current);
     setVisible(false);
-    setModel((current) => {
-      if (current) flushWrite(current);
-      return null; // rebuild from the doc on next open
-    });
+    setModel(null);
+    modelRef.current = null;
+    setUndo(null);
   }, [flushWrite]);
 
   const convertToTaskDoc = useCallback(() => {
     const starter = createStarterModel();
     setModel(starter);
+    modelRef.current = starter;
+    expectedCanonical.current = null; // force the first write
     setVisible(true);
     flushWrite(starter);
   }, [flushWrite]);
 
+  // --- Conflict handling ---------------------------------------------------
+  const reloadFromDoc = useCallback(() => {
+    const next = fromParseResult(parseDocument(text, settings.markers));
+    setModel(next);
+    modelRef.current = next;
+    expectedCanonical.current = canonicalDoc(text, settings.markers);
+    suppressConflict.current = null;
+    setSaveState('saved');
+    announce('Board reloaded from the document');
+  }, [text, settings.markers, announce]);
+
+  const overwriteDoc = useCallback(() => {
+    if (modelRef.current) {
+      expectedCanonical.current = null; // force overwrite
+      flushWrite(modelRef.current);
+    }
+    announce('Document overwritten with the board version');
+  }, [flushWrite, announce]);
+
+  const dismissConflict = useCallback(() => {
+    suppressConflict.current = canonicalDoc(text, settings.markers);
+    setSaveState('saved');
+  }, [text, settings.markers]);
+
+  const retryWrite = useCallback(() => {
+    const next = pendingWrite.current ?? modelRef.current;
+    if (next) {
+      setSaveState('saving');
+      doWrite(next);
+    }
+  }, [doWrite]);
+
+  // Detect external document changes while the board is open.
+  useEffect(() => {
+    if (!visible || !model) return;
+    if (saveState === 'saving' || saveState === 'error') return;
+    if (expectedCanonical.current == null) return;
+    const canonical = canonicalDoc(text, settings.markers);
+    if (canonical === expectedCanonical.current) {
+      if (saveState === 'conflict') setSaveState('saved');
+      return;
+    }
+    // The editor's MutationObserver echo lags our write by a beat; while it
+    // still reports the pre-write content, that is not an external change.
+    if (canonical === prevExpected.current) return;
+    if (canonical === suppressConflict.current) return;
+    setSaveState('conflict');
+  }, [text, visible, model, saveState, settings.markers]);
+
   // Auto-show the board the first time a document becomes a task board.
   useEffect(() => {
     if (result.activated && !wasActivated.current && settings.autoShow) {
-      setModel((current) => current ?? fromParseResult(result));
-      setVisible(true);
+      openBoard();
     }
-    if (!result.activated && !model) setVisible(false);
+    if (!result.activated && !modelRef.current) setVisible(false);
     wasActivated.current = result.activated;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.activated, settings.autoShow]);
@@ -154,7 +287,30 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
 
   // Editable board takes over the screen while open.
   if (visible && model) {
-    return <EditableBoard model={model} onChange={handleModelChange} onClose={closeBoard} />;
+    return (
+      <>
+        <LiveRegion message={announcement} />
+        <EditableBoard
+          model={model}
+          view={view}
+          filters={filters}
+          settings={settings}
+          marker={marker}
+          saveState={saveState}
+          undoLabel={undo?.label ?? null}
+          announce={announce}
+          onChange={handleModelChange}
+          onViewChange={handleViewChange}
+          onFiltersChange={setFilters}
+          onUndo={handleUndo}
+          onRetry={retryWrite}
+          onReloadFromDoc={reloadFromDoc}
+          onOverwriteDoc={overwriteDoc}
+          onDismissConflict={dismissConflict}
+          onClose={closeBoard}
+        />
+      </>
+    );
   }
 
   // Activated document, board closed → floating button to reopen it.
@@ -195,4 +351,13 @@ export function OverlayApp({ root, initialSettings }: OverlayAppProps) {
   }
 
   return null;
+}
+
+/** Off-screen polite live region for screen-reader announcements. */
+function LiveRegion({ message }: { message: string }) {
+  return (
+    <div className="pdt-sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {message}
+    </div>
+  );
 }

@@ -114,6 +114,13 @@ code {
   margin-top: var(--pdt-space-2);
 }
 
+.op-error {
+  margin: var(--pdt-space-2) 0 0;
+  color: var(--pdt-signal-danger);
+  font-size: var(--pdt-text-sm);
+  font-weight: var(--pdt-font-weight-medium);
+}
+
 .op-syntax {
   margin: 0 0 var(--pdt-space-3);
   padding: var(--pdt-space-4);
