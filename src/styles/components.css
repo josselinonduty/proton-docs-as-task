@@ -67,6 +67,22 @@
   color: var(--pdt-signal-danger);
 }
 
+/* Solid destructive button (red fill, white text) for the confirmed
+ * destructive action in a dialog. */
+.pdt-btn-danger-solid {
+  border-color: var(--pdt-signal-danger);
+  background: var(--pdt-signal-danger);
+  color: #fff;
+}
+.pdt-btn-danger-solid:hover {
+  border-color: var(--pdt-signal-danger);
+  background: #c32944;
+  color: #fff;
+}
+.pdt-btn-danger-solid:active {
+  background: #a82239;
+}
+
 .pdt-btn-ghost {
   border-color: transparent;
   background: transparent;

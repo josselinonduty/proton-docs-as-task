@@ -11,4 +11,16 @@ export default defineBackground(() => {
       });
     }
   });
+
+  // `browser.runtime.openOptionsPage` is not available in content scripts, so
+  // the in-page board asks the background to open the options page for it.
+  browser.runtime.onMessage.addListener((message: unknown) => {
+    if ((message as { type?: string })?.type === 'open-options') {
+      return browser.runtime
+        .openOptionsPage()
+        .then(() => ({ ok: true }))
+        .catch(() => ({ ok: false }));
+    }
+    return undefined;
+  });
 });

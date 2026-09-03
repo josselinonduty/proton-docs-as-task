@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   dueBadgeText,
   dueState,
@@ -10,6 +10,7 @@ import {
   type DueState,
   type QuickDateOption,
 } from '../lib/dates';
+import { Icon } from './Icon';
 
 interface DueDateControlProps {
   value: string | undefined;
@@ -28,9 +29,14 @@ const QUICK: { option: QuickDateOption; label: string }[] = [
   { option: 'next-week', label: 'Next week' },
 ];
 
+/** Width of the popover, kept in sync with `.pdt-duedate__panel` in CSS. */
+const PANEL_WIDTH = 240;
+
 /**
- * A lightweight due-date control: a trigger showing the current relative state,
+ * A lightweight due-date control: a trigger styled like the other form inputs,
  * and a popover with deterministic quick options plus an exact date picker.
+ * The popover is positioned with `position: fixed` against the trigger so it
+ * floats above the scrolling card body instead of being clipped inside it.
  * Dates are stored as `YYYY-MM-DD`; relative labels use the local timezone.
  */
 export function DueDateControl({
@@ -42,8 +48,30 @@ export function DueDateControl({
   ariaLabel,
 }: DueDateControlProps) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const wrapRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const state: DueState = dueState(value, now, completed);
+
+  // Position the fixed popover just under the trigger, clamped to the viewport.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - PANEL_WIDTH - 8));
+      setPos({ top: rect.bottom + 4, left });
+    };
+    place();
+    // Track scrolling of any ancestor (capture) and viewport resizes.
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -54,7 +82,16 @@ export function DueDateControl({
       }
     };
     const onDocClick = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      // composedPath crosses the shadow-root boundary (the document-level
+      // target is retargeted to the shadow host otherwise).
+      const path = e.composedPath();
+      if (
+        (wrapRef.current && path.includes(wrapRef.current)) ||
+        (panelRef.current && path.includes(panelRef.current))
+      ) {
+        return;
+      }
+      setOpen(false);
     };
     document.addEventListener('keydown', onDocKey, true);
     document.addEventListener('mousedown', onDocClick);
@@ -75,8 +112,9 @@ export function DueDateControl({
   return (
     <div className="pdt-duedate" ref={wrapRef}>
       <button
+        ref={triggerRef}
         type="button"
-        className={`pdt-btn pdt-btn-sm pdt-duedate__trigger pdt-due--${state}`}
+        className={`pdt-input pdt-duedate__trigger ${value ? `pdt-duedate__trigger--${state}` : ''}`}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={
@@ -87,11 +125,18 @@ export function DueDateControl({
         title={value ? `${dueStateLabel(state)} · ${fullDate}` : 'Set a due date'}
         onClick={() => setOpen((v) => !v)}
       >
-        <span aria-hidden="true">◇</span> {triggerText}
+        <span className="pdt-duedate__value">{triggerText}</span>
+        <Icon name="chevron-down" size={14} />
       </button>
 
       {open && (
-        <div className="pdt-duedate__panel" role="dialog" aria-label="Choose a due date">
+        <div
+          ref={panelRef}
+          className="pdt-duedate__panel"
+          role="dialog"
+          aria-label="Choose a due date"
+          style={{ position: 'fixed', top: pos.top, left: pos.left }}
+        >
           <div className="pdt-duedate__quick">
             {QUICK.map((q) => (
               <button
