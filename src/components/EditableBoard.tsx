@@ -633,7 +633,6 @@ export function EditableBoard(props: EditableBoardProps) {
     retry: onRetry,
   });
 
-  const emptyBoard = model.tasks.length === 0;
   const mod = modLabel();
 
   return (
@@ -870,15 +869,6 @@ export function EditableBoard(props: EditableBoardProps) {
         </div>
       )}
 
-      {emptyBoard && (
-        <div className="pdt-empty pdt-empty--board" role="note">
-          <p className="pdt-empty__title">No tasks yet</p>
-          <p className="pdt-empty__hint">
-            Add your first task with “+ Add task” above, or the button in any column below.
-          </p>
-        </div>
-      )}
-
       {view === 'swimlane' ? renderSwimlane() : renderColumns(baseColumns)}
 
       {selectionMode && (
@@ -916,7 +906,7 @@ export function EditableBoard(props: EditableBoardProps) {
               Cancel
             </button>
             <button
-              className="pdt-btn pdt-btn-primary pdt-btn-danger"
+              className="pdt-btn pdt-btn-danger-solid"
               onClick={() => confirmDeleteCard(pendingCardDelete)}
             >
               Delete
@@ -936,7 +926,7 @@ export function EditableBoard(props: EditableBoardProps) {
               Cancel
             </button>
             <button
-              className="pdt-btn pdt-btn-primary pdt-btn-danger"
+              className="pdt-btn pdt-btn-danger-solid"
               onClick={() => {
                 runBulk({ kind: 'delete' });
                 setPendingBulkDelete(false);
