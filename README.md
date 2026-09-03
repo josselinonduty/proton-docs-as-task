@@ -385,6 +385,11 @@ src/
   parsing is not attempted — date shortcuts resolve to exact calendar dates.
 - Built with [WXT](https://wxt.dev), React and TypeScript.
 
+## Privacy & security
+
+[PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md) — the extension makes
+no network requests and collects no data; everything runs locally.
+
 ## License
 
 [MIT](LICENSE) © josselinonduty
