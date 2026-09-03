@@ -57,4 +57,6 @@ npm run build:firefox # Firefox production build
 
 Releasing is documented in the [README](README.md#releasing): bump the version
 in `package.json`, tag `vX.Y.Z`, and push the tag — the release workflow builds
-and publishes the Chrome and Firefox packages.
+the Chrome and Firefox packages, attaches them to a GitHub Release, and (once
+the [store credentials](README.md#store-credentials) are configured as repo
+secrets) submits them to the Chrome Web Store and Firefox Add-ons for review.

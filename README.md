@@ -244,15 +244,17 @@ Open a document on `docs.proton.me`, make its first line `#!tasks`, and add a fe
 
 ### Scripts
 
-| Command                           | Description                            |
-| --------------------------------- | -------------------------------------- |
-| `npm run dev` / `dev:firefox`     | Dev server with hot reload             |
-| `npm run build` / `build:firefox` | Production build                       |
-| `npm run zip` / `zip:firefox`     | Zip a build for release / distribution |
-| `npm run compile`                 | Type-check with `tsc --noEmit`         |
-| `npm run lint`                    | Lint with ESLint                       |
-| `npm run format` / `format:check` | Format (or check) with Prettier        |
-| `npm test`                        | Run the unit tests (Vitest)            |
+| Command                           | Description                                                   |
+| --------------------------------- | ------------------------------------------------------------- |
+| `npm run dev` / `dev:firefox`     | Dev server with hot reload                                    |
+| `npm run build` / `build:firefox` | Production build                                              |
+| `npm run zip` / `zip:firefox`     | Zip a build for release / distribution                        |
+| `npm run submit`                  | Submit built zips to the extension stores (needs credentials) |
+| `npm run submit:init`             | Interactively generate store credentials into `.env.submit`   |
+| `npm run compile`                 | Type-check with `tsc --noEmit`                                |
+| `npm run lint`                    | Lint with ESLint                                              |
+| `npm run format` / `format:check` | Format (or check) with Prettier                               |
+| `npm test`                        | Run the unit tests (Vitest)                                   |
 
 ### Releasing
 
@@ -270,8 +272,41 @@ pushed:
    ```
 
 The workflow type-checks, tests, builds the Chrome and Firefox packages, and
-attaches them to a new GitHub Release with auto-generated notes. The tag must
-match the `package.json` version (e.g. `v0.1.0` ↔ `0.1.0`) or the run fails.
+attaches them (plus a Firefox sources archive) to a new GitHub Release with
+auto-generated notes. The tag must match the `package.json` version (e.g.
+`v0.1.0` ↔ `0.1.0`) or the run fails.
+
+If the store credentials below are configured as repository secrets, the
+workflow also submits the packages to the Chrome Web Store and Firefox
+Add-ons (AMO) for review, using [`wxt submit`][wxt-submit] (backed by
+[`publish-browser-extension`][pbe]). Submission is skipped — without failing
+the release — for whichever store's secrets aren't set, so the GitHub
+Release always publishes even before the stores are wired up.
+
+#### Store credentials
+
+| Secret                 | Store   | Where to get it                                                                                                              |
+| ---------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `CHROME_EXTENSION_ID`  | Chrome  | The extension's ID on the [Chrome Web Store Developer Dashboard][chrome-dashboard] (create the listing once, by hand, first) |
+| `CHROME_CLIENT_ID`     | Chrome  | OAuth client ID from a [Google Cloud project][gcp-console] with the Chrome Web Store API enabled                             |
+| `CHROME_CLIENT_SECRET` | Chrome  | OAuth client secret for the same client                                                                                      |
+| `CHROME_REFRESH_TOKEN` | Chrome  | A refresh token generated for that client (see `npm run submit:init` below)                                                  |
+| `FIREFOX_EXTENSION_ID` | Firefox | The add-on's ID/slug on [addons.mozilla.org][amo-devhub] (create the listing once, by hand, first)                           |
+| `FIREFOX_JWT_ISSUER`   | Firefox | `JWT issuer` from your [AMO API keys][amo-api-keys]                                                                          |
+| `FIREFOX_JWT_SECRET`   | Firefox | `JWT secret` from the same page                                                                                              |
+
+Run `npm run submit:init` locally to walk through generating these values
+interactively (it writes them to a git-ignored `.env.submit` file); copy the
+results into the repository's **Settings → Secrets and variables → Actions**.
+Only create the store listings themselves once, by hand — `wxt submit`
+uploads new versions to an existing listing, it doesn't create one.
+
+[wxt-submit]: https://wxt.dev/guide/essentials/publishing.html
+[pbe]: https://github.com/aklinker1/publish-browser-extension
+[chrome-dashboard]: https://chrome.google.com/webstore/devconsole
+[gcp-console]: https://console.cloud.google.com/
+[amo-devhub]: https://addons.mozilla.org/developers/
+[amo-api-keys]: https://addons.mozilla.org/developers/addon/api/key/
 
 ## Configuration
 
