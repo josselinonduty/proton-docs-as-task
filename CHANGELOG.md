@@ -3,6 +3,31 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.1
+
+Board chrome polish and interaction fixes.
+
+- **Filter/sort/menu clicks fixed.** Clicking a checkbox, label or option inside
+  the Filters, Sort or overflow menus no longer closes the whole menu. Outside-click
+  detection now uses the event's composed path so it works across the extension's
+  shadow-root boundary.
+- **Keyboard shortcuts work on open.** The board takes focus when it opens, so
+  shortcuts (`N`, `/`, `F`, `V`, `S`, `J`/`K`, `?`, …) fire immediately without a
+  first click into the board.
+- **Single toolbar row.** The board header is now one line of controls (view,
+  search, filters, sort, Add task, Back, overflow) instead of two. The extension's
+  own board icon, board-title input and progress bar were removed — Proton Docs
+  already shows the document title, and its own save status replaces the board's
+  "Saved" indicator (a failed save or external-change conflict is still surfaced,
+  since Proton can't report those).
+- **Extension settings in the overflow menu.** The `⋮` menu now has an
+  **Extension settings** item.
+- **Proton-style icons.** Chevrons, arrows, the overflow/details dots, the close,
+  plus, and check glyphs are now consistent inline SVG icons drawn on Proton's
+  16px grid, replacing the previous mix of Unicode characters.
+- Removed the "Sorted by … — drag-and-drop is off" note and the now-unused
+  **Show progress bar** setting.
+
 ## 0.6.0
 
 A faster, more comfortable board for daily use. Everything new here builds on the

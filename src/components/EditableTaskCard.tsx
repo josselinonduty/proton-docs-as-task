@@ -12,6 +12,7 @@ import type {
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
+import { Icon } from './Icon';
 
 const STATUS_OPTIONS: { value: StatusKey; label: string }[] = [
   { value: 'todo', label: 'To Do' },
@@ -207,7 +208,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
           aria-pressed={done}
           aria-label={done ? 'Mark as not done' : 'Mark as done'}
         >
-          {done ? '✓' : ''}
+          {done && <Icon name="checkmark" size={12} />}
         </button>
         <input
           ref={titleRef}
@@ -225,7 +226,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
           aria-label={open ? 'Hide task details' : 'Show task details'}
           title="Task details"
         >
-          {open ? '▾' : '⋯'}
+          <Icon name={open ? 'chevron-down' : 'dots'} />
         </button>
       </div>
 
@@ -387,7 +388,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
                 onClick={() => onMoveWithin(-1)}
                 aria-label="Move up"
               >
-                ↑ Up
+                <Icon name="arrow-up" size={14} /> Up
               </button>
               <button
                 type="button"
@@ -396,7 +397,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
                 onClick={() => onMoveWithin(1)}
                 aria-label="Move down"
               >
-                ↓ Down
+                <Icon name="arrow-down" size={14} /> Down
               </button>
             </div>
           </div>
