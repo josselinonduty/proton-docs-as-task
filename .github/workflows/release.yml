@@ -66,6 +66,25 @@ jobs:
         id: firefox-creds
         run: echo "present=${{ secrets.FIREFOX_EXTENSION_ID != '' && secrets.FIREFOX_JWT_ISSUER != '' && secrets.FIREFOX_JWT_SECRET != '' }}" >> "$GITHUB_OUTPUT"
 
+      # GitHub secrets are single-line, so the service account's PEM private
+      # key is typically pasted with literal `\n` escape sequences instead
+      # of real line breaks (as it appears inside the JSON key file). Node's
+      # PEM parser needs actual newlines, or JWT signing fails with
+      # "DECODER routines::unsupported" — turn the escapes into real
+      # newlines here (a no-op if the secret already has real ones), the
+      # same normalization `wxt submit init` does interactively.
+      - name: Normalize Chrome service account private key
+        if: steps.chrome-creds.outputs.present == 'true'
+        run: |
+          {
+            echo "CHROME_SERVICE_ACCOUNT_PRIVATE_KEY<<PDT_CHROME_KEY_EOF"
+            node -e "process.stdout.write(process.env.RAW_KEY.replace(/\\\\n/g, String.fromCharCode(10)).trim())"
+            echo
+            echo "PDT_CHROME_KEY_EOF"
+          } >> "$GITHUB_ENV"
+        env:
+          RAW_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+
       # Uses the Chrome Web Store API v2 (service account auth). The v1.1
       # OAuth flow (client id/secret/refresh token) is deprecated and stops
       # working October 15th, 2026.
@@ -77,7 +96,9 @@ jobs:
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
           CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
-          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          # CHROME_SERVICE_ACCOUNT_PRIVATE_KEY comes from $GITHUB_ENV, set by
+          # the normalization step above — do not re-set it from the raw
+          # secret here, that would undo the newline fix.
 
       - name: Submit to Firefox Add-ons
         if: steps.firefox-creds.outputs.present == 'true'
