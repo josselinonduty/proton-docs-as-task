@@ -2,7 +2,13 @@ import { storage } from '#imports';
 import type { Settings } from './types';
 import { DEFAULT_SETTINGS, withDefaults } from './defaults';
 
-export { DEFAULT_COLUMNS, DEFAULT_MARKERS, DEFAULT_SETTINGS, withDefaults } from './defaults';
+export {
+  DEFAULT_COLUMNS,
+  DEFAULT_MARKERS,
+  DEFAULT_SETTINGS,
+  markersAreValid,
+  withDefaults,
+} from './defaults';
 
 /**
  * Single source of truth for persisted settings. Uses WXT's typed storage
