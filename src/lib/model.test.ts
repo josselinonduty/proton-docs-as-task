@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from './parser';
-import { DEFAULT_MARKERS } from './defaults';
+import { DEFAULT_COLUMNS, DEFAULT_MARKERS } from './defaults';
 import {
-  addColumn,
+  addSection,
   addTask,
+  columnsForView,
   countTasks,
   createStarterModel,
+  duplicateTask,
   fromParseResult,
-  moveTask,
-  removeColumn,
-  removeTask,
-  renameColumn,
+  moveSection,
+  removeSection,
+  removeSectionMovingTasks,
+  renameSection,
+  reorderColumn,
   serializeModel,
+  setTaskSection,
+  setTaskStatus,
   setTitle,
   updateTask,
   type BoardModel,
@@ -19,11 +24,23 @@ import {
 
 const MARKER = '#!tasks';
 
-/** Round-trip a model through serialization + parsing back into a model. */
-function roundTrip(model: BoardModel): BoardModel {
-  const text = serializeModel(model, MARKER);
-  return fromParseResult(parseDocument(text, DEFAULT_MARKERS));
+function build(doc: string): BoardModel {
+  return fromParseResult(parseDocument(doc, DEFAULT_MARKERS));
 }
+
+function roundTrip(model: BoardModel): BoardModel {
+  return build(serializeModel(model, MARKER));
+}
+
+const SAMPLE = [
+  '#!tasks Product launch',
+  '',
+  '## Build',
+  '- [ ] Implement API @status:doing @priority:high #backend',
+  '',
+  '## Launch',
+  '- [x] Publish announcement #marketing',
+].join('\n');
 
 describe('serializeModel', () => {
   it('leads with the marker and board title', () => {
@@ -31,49 +48,185 @@ describe('serializeModel', () => {
     expect(serializeModel(model, MARKER).split('\n')[0]).toBe('#!tasks Sprint 42');
   });
 
-  it('emits a heading per column and a checkbox line per task', () => {
-    let model: BoardModel = { title: undefined, columns: [] };
-    model = addColumn(model, 'Backend');
-    const colId = model.columns[0]!.id;
-    model = addTask(model, colId, 'Build the API');
-    const taskId = model.columns[0]!.tasks[0]!.id;
-    model = updateTask(model, taskId, {
-      status: 'doing',
-      priority: 'high',
-      due: '2026-09-10',
-      assignee: 'sam',
-      description: 'Wire up the endpoints',
-      labels: ['api'],
-    });
-
+  it('emits a heading per section and a checkbox line per task with metadata', () => {
+    const model = build(SAMPLE);
     const text = serializeModel(model, MARKER);
-    expect(text).toContain('## Backend');
-    expect(text).toContain(
-      '- [ ] Build the API @status:doing @priority:high @due:2026-09-10 @who:sam #api @desc(Wire up the endpoints)',
-    );
+    expect(text).toContain('## Build');
+    expect(text).toContain('- [ ] Implement API @status:doing @priority:high #backend');
+    expect(text).toContain('## Launch');
+    expect(text).toContain('- [x] Publish announcement #marketing');
   });
 
   it('marks done tasks with [x] and omits a status token', () => {
-    let model: BoardModel = { title: undefined, columns: [] };
-    model = addColumn(model, 'Done');
-    const colId = model.columns[0]!.id;
-    model = addTask(model, colId, 'Shipped');
-    model = updateTask(model, model.columns[0]!.tasks[0]!.id, { status: 'done' });
-
+    let model = build('#!tasks\n## Work\n- [ ] Shipped @status:doing');
+    const id = model.tasks[0]!.id;
+    model = setTaskStatus(model, id, 'done');
     const text = serializeModel(model, MARKER);
     expect(text).toContain('- [x] Shipped');
     expect(text).not.toContain('@status:done');
+    expect(text).not.toContain('@status:doing');
+  });
+
+  it('writes @status:doing only for the doing status', () => {
+    const model = build('#!tasks\n## Work\n- [ ] a\n- [ ] b @status:doing\n- [x] c');
+    const text = serializeModel(model, MARKER);
+    const doing = text.split('\n').filter((l) => l.includes('@status:doing'));
+    expect(doing).toHaveLength(1);
   });
 });
 
-describe('round-trip through the document', () => {
-  it('preserves columns, tasks and all metadata', () => {
-    let model: BoardModel = setTitle({ title: undefined, columns: [] }, 'My board');
-    model = addColumn(model, 'To Do');
-    const colId = model.columns[0]!.id;
-    model = addTask(model, colId, 'Write report');
-    const taskId = model.columns[0]!.tasks[0]!.id;
-    model = updateTask(model, taskId, {
+describe('independent status and section', () => {
+  it('separates the two dimensions', () => {
+    const model = build(SAMPLE);
+    const api = model.tasks.find((t) => t.title === 'Implement API')!;
+    expect(api.status).toBe('doing');
+    expect(api.section).toBe('Build');
+  });
+
+  it('projects the same tasks into workflow and section columns', () => {
+    const model = build(SAMPLE);
+    const workflow = columnsForView(model, 'workflow', DEFAULT_COLUMNS);
+    expect(workflow.map((c) => c.key)).toEqual(['todo', 'doing', 'done']);
+    expect(workflow.find((c) => c.key === 'doing')!.tasks.map((t) => t.title)).toEqual([
+      'Implement API',
+    ]);
+    expect(workflow.find((c) => c.key === 'done')!.tasks.map((t) => t.title)).toEqual([
+      'Publish announcement',
+    ]);
+
+    const sections = columnsForView(model, 'sections', DEFAULT_COLUMNS);
+    expect(sections.map((c) => c.key)).toEqual(['Build', 'Launch']);
+  });
+});
+
+describe('workflow moves (status)', () => {
+  it('changing status keeps the section', () => {
+    let model = build(SAMPLE);
+    const api = model.tasks.find((t) => t.title === 'Implement API')!;
+    model = setTaskStatus(model, api.id, 'done');
+    const moved = model.tasks.find((t) => t.id === api.id)!;
+    expect(moved.status).toBe('done');
+    expect(moved.section).toBe('Build');
+  });
+
+  it('moving to Done ticks the checkbox and drops @status:doing', () => {
+    let model = build(SAMPLE);
+    const api = model.tasks.find((t) => t.title === 'Implement API')!;
+    model = setTaskStatus(model, api.id, 'done');
+    const line = serializeModel(model, MARKER)
+      .split('\n')
+      .find((l) => l.includes('Implement API'))!;
+    expect(line.startsWith('- [x]')).toBe(true);
+    expect(line).not.toContain('@status');
+  });
+});
+
+describe('section moves', () => {
+  it('changing section keeps status and metadata, and relocates the line', () => {
+    let model = build(SAMPLE);
+    const api = model.tasks.find((t) => t.title === 'Implement API')!;
+    model = setTaskSection(model, api.id, 'Launch');
+    const moved = model.tasks.find((t) => t.id === api.id)!;
+    expect(moved.section).toBe('Launch');
+    expect(moved.status).toBe('doing');
+    expect(moved.priority).toBe('high');
+
+    const lines = serializeModel(model, MARKER).split('\n');
+    const launchIdx = lines.indexOf('## Launch');
+    const apiIdx = lines.findIndex((l) => l.includes('Implement API'));
+    const buildIdx = lines.indexOf('## Build');
+    expect(apiIdx).toBeGreaterThan(launchIdx);
+    expect(apiIdx).toBeGreaterThan(buildIdx);
+  });
+
+  it('renaming a section renames its heading and updates its tasks', () => {
+    let model = build(SAMPLE);
+    model = renameSection(model, 'Launch', 'Release');
+    expect(model.sections).toContain('Release');
+    expect(model.sections).not.toContain('Launch');
+    expect(model.tasks.find((t) => t.title === 'Publish announcement')!.section).toBe('Release');
+    expect(serializeModel(model, MARKER)).toContain('## Release');
+  });
+
+  it('adding a section creates a new heading', () => {
+    let model = build('#!tasks\n## A\n- [ ] x');
+    model = addSection(model, 'B');
+    expect(serializeModel(model, MARKER)).toContain('## B');
+  });
+
+  it('moves a section earlier / later', () => {
+    let model = build('#!tasks\n## A\n- [ ] x\n## B\n- [ ] y');
+    model = moveSection(model, 'B', -1);
+    expect(model.sections).toEqual(['B', 'A']);
+  });
+});
+
+describe('section deletion', () => {
+  it('deletes a section and its tasks', () => {
+    const model = removeSection(build(SAMPLE), 'Build');
+    expect(model.sections).not.toContain('Build');
+    expect(model.tasks.find((t) => t.title === 'Implement API')).toBeUndefined();
+  });
+
+  it('deletes a section but relocates its tasks to another section', () => {
+    const model = removeSectionMovingTasks(build(SAMPLE), 'Build', 'Launch');
+    expect(model.sections).not.toContain('Build');
+    const api = model.tasks.find((t) => t.title === 'Implement API');
+    expect(api).toBeDefined();
+    expect(api!.section).toBe('Launch');
+  });
+});
+
+describe('ordering', () => {
+  it('reorders cards within a column and persists within a section', () => {
+    let model = build('#!tasks\n## Work\n- [ ] a\n- [ ] b\n- [ ] c');
+    const [a, b, c] = model.tasks;
+    model = reorderColumn(model, [c!.id, a!.id, b!.id]);
+    const titles = roundTrip(model).tasks.map((t) => t.title);
+    expect(titles).toEqual(['c', 'a', 'b']);
+  });
+
+  it('card ordering survives a round-trip through the document', () => {
+    const model = build('#!tasks\n## S\n- [ ] one\n- [ ] two\n- [ ] three');
+    const titles = roundTrip(model).tasks.map((t) => t.title);
+    expect(titles).toEqual(['one', 'two', 'three']);
+  });
+});
+
+describe('task mutations', () => {
+  it('adds a task inheriting section and defaulting to todo', () => {
+    let model = build('#!tasks\n## S\n- [ ] existing');
+    const { model: next, taskId } = addTask(model, 'S');
+    model = next;
+    const task = model.tasks.find((t) => t.id === taskId)!;
+    expect(task.section).toBe('S');
+    expect(task.status).toBe('todo');
+  });
+
+  it('duplicates a task right after the original', () => {
+    let model = build('#!tasks\n## S\n- [ ] orig @priority:high');
+    const orig = model.tasks[0]!;
+    const { model: next, taskId } = duplicateTask(model, orig.id);
+    model = next;
+    expect(model.tasks).toHaveLength(2);
+    const copy = model.tasks.find((t) => t.id === taskId)!;
+    expect(copy.priority).toBe('high');
+    expect(model.tasks[1]!.id).toBe(taskId);
+  });
+
+  it('counts totals and completed with status === done only', () => {
+    let model = build('#!tasks\n## S\n- [ ] a\n- [ ] b @status:doing\n- [x] c');
+    expect(countTasks(model)).toEqual({ total: 3, done: 1 });
+    model = updateTask(model, model.tasks[0]!.id, { status: 'done' });
+    expect(countTasks(model)).toEqual({ total: 3, done: 2 });
+  });
+});
+
+describe('round-trip fidelity', () => {
+  it('preserves title, sections, statuses and all metadata', () => {
+    let model: BoardModel = build('#!tasks My board\n## To Do\n- [ ] Write report');
+    const id = model.tasks[0]!.id;
+    model = updateTask(model, id, {
       priority: 'medium',
       due: '2026-10-01',
       assignee: 'Sam Rivera',
@@ -83,9 +236,8 @@ describe('round-trip through the document', () => {
 
     const back = roundTrip(model);
     expect(back.title).toBe('My board');
-    expect(back.columns).toHaveLength(1);
-    expect(back.columns[0]!.name).toBe('To Do');
-    const t = back.columns[0]!.tasks[0]!;
+    expect(back.sections).toEqual(['To Do']);
+    const t = back.tasks[0]!;
     expect(t.title).toBe('Write report');
     expect(t.priority).toBe('medium');
     expect(t.due).toBe('2026-10-01');
@@ -94,54 +246,13 @@ describe('round-trip through the document', () => {
     expect(t.labels).toEqual(['docs']);
   });
 
-  it('round-trips the doing status', () => {
-    let model: BoardModel = { title: undefined, columns: [] };
-    model = addColumn(model, 'Work');
-    const colId = model.columns[0]!.id;
-    model = addTask(model, colId, 'In flight');
-    model = updateTask(model, model.columns[0]!.tasks[0]!.id, { status: 'doing' });
-    const back = roundTrip(model);
-    expect(back.columns[0]!.tasks[0]!.status).toBe('doing');
-  });
-});
-
-describe('model mutations', () => {
-  it('adds, renames and removes columns immutably', () => {
-    const base: BoardModel = { title: undefined, columns: [] };
-    const withCol = addColumn(base, 'A');
-    expect(base.columns).toHaveLength(0); // unchanged
-    expect(withCol.columns).toHaveLength(1);
-
-    const renamed = renameColumn(withCol, withCol.columns[0]!.id, 'B');
-    expect(renamed.columns[0]!.name).toBe('B');
-
-    const removed = removeColumn(renamed, renamed.columns[0]!.id);
-    expect(removed.columns).toHaveLength(0);
-  });
-
-  it('moves a task between columns', () => {
-    let model: BoardModel = { title: undefined, columns: [] };
-    model = addColumn(model, 'One');
-    model = addColumn(model, 'Two');
-    const [c1, c2] = model.columns;
-    model = addTask(model, c1!.id, 'roamer');
-    const taskId = model.columns[0]!.tasks[0]!.id;
-
-    model = moveTask(model, taskId, c2!.id);
-    expect(model.columns[0]!.tasks).toHaveLength(0);
-    expect(model.columns[1]!.tasks[0]!.title).toBe('roamer');
-  });
-
-  it('removes a task and counts totals', () => {
-    let model: BoardModel = { title: undefined, columns: [] };
-    model = addColumn(model, 'C');
-    const colId = model.columns[0]!.id;
-    model = addTask(model, colId, 'a');
-    model = addTask(model, colId, 'b');
-    model = updateTask(model, model.columns[0]!.tasks[0]!.id, { status: 'done' });
-    expect(countTasks(model)).toEqual({ total: 2, done: 1 });
-
-    model = removeTask(model, model.columns[0]!.tasks[1]!.id);
-    expect(countTasks(model)).toEqual({ total: 1, done: 1 });
+  it('does not activate-change v0.4 documents on open (no manual migration)', () => {
+    const v04 = ['#!tasks Legacy', '## Backend', '- [x] done thing', '- [ ] open @@jo !!'].join(
+      '\n',
+    );
+    const model = build(v04);
+    expect(model.tasks).toHaveLength(2);
+    expect(model.tasks[1]!.assignee).toBe('jo');
+    expect(model.tasks[1]!.priority).toBe('medium');
   });
 });

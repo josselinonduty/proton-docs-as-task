@@ -50,7 +50,7 @@ export default defineContentScript({
         host.className = 'pdt-host';
         container.append(host);
         const reactRoot = ReactDOM.createRoot(host);
-        reactRoot.render(<OverlayApp root={root} initialSettings={settings} />);
+        reactRoot.render(<OverlayApp root={root} host={host} initialSettings={settings} />);
         return reactRoot;
       },
       onRemove(reactRoot) {
