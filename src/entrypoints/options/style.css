@@ -154,3 +154,25 @@ code {
 .op-foot a:hover {
   text-decoration: underline;
 }
+
+.op-fieldset {
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-md);
+  padding: var(--pdt-space-2);
+  margin: var(--pdt-space-2) 0 0;
+}
+.op-fieldset legend {
+  padding: 0 6px;
+}
+.op-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 16px;
+  margin-top: var(--pdt-space-1);
+}
+.op-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--pdt-text-sm);
+}

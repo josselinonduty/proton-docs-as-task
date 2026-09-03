@@ -12,6 +12,9 @@ import {
 } from '../lib/model';
 import { canonicalDoc, canonicalModel } from '../lib/sync';
 import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
+import { MANUAL_SORT, type SortState } from '../lib/sorting';
+import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '../lib/session';
+import { readDocPrefs, writeDocPrefs } from '../lib/sessionStore';
 import { settingsItem, setSettings as persistSettings, withDefaults } from '../lib/settings';
 import type { BoardView, SaveState, Settings } from '../lib/types';
 import type { ContentMessage, StatusResponse } from '../lib/messaging';
@@ -38,6 +41,10 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
   const [model, setModel] = useState<BoardModel | null>(null);
   const [view, setView] = useState<BoardView>(initialSettings.defaultView);
   const [filters, setFilters] = useState<FilterState>({ ...EMPTY_FILTERS });
+  const [sort, setSort] = useState<SortState>(MANUAL_SORT);
+  const [collapsedColumns, setCollapsedColumns] = useState<string[]>([]);
+  const [collapsedRows, setCollapsedRows] = useState<string[]>([]);
+  const [lastQuickAddSection, setLastQuickAddSection] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [undo, setUndo] = useState<UndoEntry | null>(null);
   const undoRef = useRef<UndoEntry | null>(null);
@@ -73,6 +80,53 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     if (settings.theme === 'system') host.removeAttribute('data-theme');
     else host.setAttribute('data-theme', settings.theme);
   }, [host, settings.theme]);
+
+  // Per-document session preferences (view, sort, filters, collapsed sets).
+  const docKey = useMemo(
+    () => (typeof window !== 'undefined' ? documentKey(window.location.href) : null),
+    [],
+  );
+  const sessionReady = useRef(false);
+
+  const seedCollapsed = useCallback(
+    () =>
+      settings.completedDisplay === 'collapse' || settings.collapseDoneByDefault ? ['done'] : [],
+    [settings.completedDisplay, settings.collapseDoneByDefault],
+  );
+
+  // Load stored preferences once (per document key, else start from defaults).
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const prefs = docKey ? await readDocPrefs(docKey) : DEFAULT_SESSION;
+      if (cancelled) return;
+      if (prefs.view) setView(prefs.view);
+      setSort(prefs.sort);
+      setFilters(prefs.filters);
+      setCollapsedColumns(prefs.collapsedColumns.length ? prefs.collapsedColumns : seedCollapsed());
+      setCollapsedRows(prefs.collapsedRows);
+      setLastQuickAddSection(prefs.lastQuickAddSection);
+      sessionReady.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docKey]);
+
+  // Persist preferences whenever they change (session storage only).
+  useEffect(() => {
+    if (!sessionReady.current || !docKey) return;
+    const prefs: SessionPrefs = {
+      view,
+      sort,
+      filters,
+      collapsedColumns,
+      collapsedRows,
+      lastQuickAddSection,
+    };
+    void writeDocPrefs(docKey, prefs);
+  }, [docKey, view, sort, filters, collapsedColumns, collapsedRows, lastQuickAddSection]);
 
   const result = useMemo(() => parseDocument(text, settings.markers), [text, settings.markers]);
 
@@ -155,6 +209,20 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     setView(next);
     void persistSettings({ defaultView: next });
   }, []);
+
+  const handleSettingsChange = useCallback((patch: Partial<Settings>) => {
+    void persistSettings(patch);
+  }, []);
+
+  const toggleColumnCollapse = useCallback(
+    (key: string) => setCollapsedColumns((l) => toggleInList(l, key)),
+    [],
+  );
+  const toggleRowCollapse = useCallback(
+    (key: string) => setCollapsedRows((l) => toggleInList(l, key)),
+    [],
+  );
+  const openSettingsPage = useCallback(() => void browser.runtime.openOptionsPage(), []);
 
   const openBoard = useCallback(() => {
     const next = fromParseResult(parseDocument(text, settings.markers));
@@ -294,19 +362,29 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
           model={model}
           view={view}
           filters={filters}
+          sort={sort}
           settings={settings}
           marker={marker}
           saveState={saveState}
           undoLabel={undo?.label ?? null}
+          collapsedColumns={collapsedColumns}
+          collapsedRows={collapsedRows}
+          lastQuickAddSection={lastQuickAddSection}
           announce={announce}
           onChange={handleModelChange}
           onViewChange={handleViewChange}
           onFiltersChange={setFilters}
+          onSortChange={setSort}
+          onSettingsChange={handleSettingsChange}
+          onToggleColumnCollapse={toggleColumnCollapse}
+          onToggleRowCollapse={toggleRowCollapse}
+          onQuickAddSectionChange={setLastQuickAddSection}
           onUndo={handleUndo}
           onRetry={retryWrite}
           onReloadFromDoc={reloadFromDoc}
           onOverwriteDoc={overwriteDoc}
           onDismissConflict={dismissConflict}
+          onOpenSettings={openSettingsPage}
           onClose={closeBoard}
         />
       </>
