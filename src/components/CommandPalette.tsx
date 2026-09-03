@@ -76,7 +76,7 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
 
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`);
-    el?.scrollIntoView({ block: 'nearest' });
+    el?.scrollIntoView?.({ block: 'nearest' });
   }, [active]);
 
   const runAt = (index: number) => {
