@@ -284,3 +284,11 @@
 .pdt-text-weak {
   color: var(--pdt-text-weak);
 }
+
+/* ---------- Icons ---------- */
+/* Proton-style inline SVG icons. They inherit color via `currentColor` and sit
+ * on the text baseline; buttons that use flex layout align them automatically. */
+.pdt-icon {
+  flex: 0 0 auto;
+  vertical-align: -0.125em;
+}

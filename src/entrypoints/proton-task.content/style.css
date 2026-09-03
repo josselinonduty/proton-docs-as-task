@@ -54,26 +54,16 @@
   background: var(--pdt-background-norm);
   border-bottom: 1px solid var(--pdt-border-norm);
 }
+/* The board container receives programmatic focus on open (so keyboard
+ * shortcuts work immediately); it is not an interactive control itself, so it
+ * shows no focus ring. */
+.pdt-board:focus {
+  outline: none;
+}
 .pdt-board__titlewrap {
   display: flex;
   align-items: center;
   gap: var(--pdt-space-2);
-}
-.pdt-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--pdt-radius-md);
-  background: var(--pdt-primary);
-  color: var(--pdt-primary-contrast);
-  font-size: var(--pdt-text-sm);
-}
-.pdt-board__title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: var(--pdt-font-weight-bold);
 }
 .pdt-board__count {
   padding: 3px 8px;
@@ -109,16 +99,6 @@
   background: var(--pdt-background-norm);
   color: var(--pdt-text-norm);
   box-shadow: var(--pdt-shadow-sm);
-}
-
-.pdt-progress {
-  height: 4px;
-  background: var(--pdt-background-strong);
-}
-.pdt-progress__bar {
-  height: 100%;
-  background: var(--pdt-primary);
-  transition: width 0.3s ease;
 }
 
 /* ---------- Columns ---------- */
@@ -254,21 +234,6 @@
 }
 
 /* ---------- Editable board pieces ---------- */
-.pdt-board__title-input {
-  border: none;
-  background: transparent;
-  color: var(--pdt-text-norm);
-  font-size: 18px;
-  font-weight: var(--pdt-font-weight-bold);
-  padding: 2px 4px;
-  border-radius: var(--pdt-radius-sm);
-  min-width: 120px;
-}
-.pdt-board__title-input:focus {
-  outline: 2px solid var(--pdt-primary);
-  background: var(--pdt-background-weak);
-}
-
 .pdt-column--add {
   flex: 0 0 220px;
   background: transparent;
@@ -420,7 +385,7 @@
 .pdt-board__spacer {
   flex: 1;
 }
-.pdt-board__row--tools {
+.pdt-board__row--primary {
   gap: var(--pdt-space-3);
 }
 .pdt-column__name {
@@ -428,23 +393,6 @@
   font-weight: var(--pdt-font-weight-bold);
   font-size: var(--pdt-text-md);
   min-width: 0;
-}
-
-.pdt-progress-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 150px;
-}
-.pdt-progress-summary__text {
-  font-size: var(--pdt-text-xs);
-  color: var(--pdt-text-weak);
-  font-weight: var(--pdt-font-weight-medium);
-}
-.pdt-progress-summary .pdt-progress {
-  height: 6px;
-  border-radius: var(--pdt-radius-pill);
-  overflow: hidden;
 }
 
 .pdt-search {
@@ -502,6 +450,9 @@
   box-shadow: var(--pdt-shadow-lg);
 }
 .pdt-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-2);
   text-align: left;
   border: none;
   background: transparent;
@@ -1043,15 +994,6 @@
   margin-left: 4px;
 }
 
-/* ---------- Sort note ---------- */
-.pdt-sortnote {
-  margin: 0 var(--pdt-space-5) var(--pdt-space-2);
-  padding: 6px var(--pdt-space-3);
-  background: var(--pdt-signal-info-weak);
-  color: var(--pdt-text-norm);
-  border-radius: var(--pdt-radius-md);
-  font-size: var(--pdt-text-xs);
-}
 .pdt-banner--info {
   background: var(--pdt-signal-info-weak);
   border-bottom-color: var(--pdt-signal-info);

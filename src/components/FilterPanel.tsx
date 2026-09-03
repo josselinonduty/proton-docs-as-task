@@ -55,7 +55,10 @@ export function FilterPanel({
       if (e.key === 'Escape') setOpen(false);
     };
     const onDocClick = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      // Use the composed path so clicks inside the shadow-root panel are
+      // recognised — `e.target` is retargeted to the shadow host at the
+      // document level, which would otherwise read as an outside click.
+      if (wrapRef.current && !e.composedPath().includes(wrapRef.current)) setOpen(false);
     };
     document.addEventListener('keydown', onDocKey);
     document.addEventListener('mousedown', onDocClick);
