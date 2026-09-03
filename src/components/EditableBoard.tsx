@@ -368,15 +368,16 @@ export function EditableBoard(props: EditableBoardProps) {
         </div>
       )}
 
-      {emptyBoard ? (
+      {emptyBoard && (
         <div className="pdt-empty pdt-empty--board" role="note">
           <p className="pdt-empty__title">No tasks yet</p>
           <p className="pdt-empty__hint">
             Add your first task with the “Add task” button in any column below.
           </p>
         </div>
-      ) : (
-        <div className="pdt-columns">
+      )}
+
+      <div className="pdt-columns">
           {columns.map((col) => {
             const isDoneCol = view === 'workflow' && col.status === 'done';
             const collapsed = isDoneCol && doneCollapsed;
@@ -517,8 +518,7 @@ export function EditableBoard(props: EditableBoardProps) {
               </button>
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {undoLabel && (
         <div className="pdt-toast" role="status">
