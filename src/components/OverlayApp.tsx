@@ -4,17 +4,22 @@ import { parseDocument } from '../lib/parser';
 import { watchEditor } from '../lib/extractor';
 import { writePreservingFocus } from '../lib/docwriter';
 import {
+  addTask as addTaskToModel,
   createStarterModel,
   fromParseResult,
   serializeModel,
   countTasks,
+  updateTask as updateTaskInModel,
   type BoardModel,
 } from '../lib/model';
 import { canonicalDoc, canonicalModel } from '../lib/sync';
 import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
+import { MANUAL_SORT, type SortState } from '../lib/sorting';
+import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '../lib/session';
+import { readDocPrefs, writeDocPrefs } from '../lib/sessionStore';
 import { settingsItem, setSettings as persistSettings, withDefaults } from '../lib/settings';
 import type { BoardView, SaveState, Settings } from '../lib/types';
-import type { ContentMessage, StatusResponse } from '../lib/messaging';
+import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
 
 interface OverlayAppProps {
@@ -38,6 +43,10 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
   const [model, setModel] = useState<BoardModel | null>(null);
   const [view, setView] = useState<BoardView>(initialSettings.defaultView);
   const [filters, setFilters] = useState<FilterState>({ ...EMPTY_FILTERS });
+  const [sort, setSort] = useState<SortState>(MANUAL_SORT);
+  const [collapsedColumns, setCollapsedColumns] = useState<string[]>([]);
+  const [collapsedRows, setCollapsedRows] = useState<string[]>([]);
+  const [lastQuickAddSection, setLastQuickAddSection] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [undo, setUndo] = useState<UndoEntry | null>(null);
   const undoRef = useRef<UndoEntry | null>(null);
@@ -73,6 +82,53 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     if (settings.theme === 'system') host.removeAttribute('data-theme');
     else host.setAttribute('data-theme', settings.theme);
   }, [host, settings.theme]);
+
+  // Per-document session preferences (view, sort, filters, collapsed sets).
+  const docKey = useMemo(
+    () => (typeof window !== 'undefined' ? documentKey(window.location.href) : null),
+    [],
+  );
+  const sessionReady = useRef(false);
+
+  const seedCollapsed = useCallback(
+    () =>
+      settings.completedDisplay === 'collapse' || settings.collapseDoneByDefault ? ['done'] : [],
+    [settings.completedDisplay, settings.collapseDoneByDefault],
+  );
+
+  // Load stored preferences once (per document key, else start from defaults).
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const prefs = docKey ? await readDocPrefs(docKey) : DEFAULT_SESSION;
+      if (cancelled) return;
+      if (prefs.view) setView(prefs.view);
+      setSort(prefs.sort);
+      setFilters(prefs.filters);
+      setCollapsedColumns(prefs.collapsedColumns.length ? prefs.collapsedColumns : seedCollapsed());
+      setCollapsedRows(prefs.collapsedRows);
+      setLastQuickAddSection(prefs.lastQuickAddSection);
+      sessionReady.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docKey]);
+
+  // Persist preferences whenever they change (session storage only).
+  useEffect(() => {
+    if (!sessionReady.current || !docKey) return;
+    const prefs: SessionPrefs = {
+      view,
+      sort,
+      filters,
+      collapsedColumns,
+      collapsedRows,
+      lastQuickAddSection,
+    };
+    void writeDocPrefs(docKey, prefs);
+  }, [docKey, view, sort, filters, collapsedColumns, collapsedRows, lastQuickAddSection]);
 
   const result = useMemo(() => parseDocument(text, settings.markers), [text, settings.markers]);
 
@@ -155,6 +211,20 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     setView(next);
     void persistSettings({ defaultView: next });
   }, []);
+
+  const handleSettingsChange = useCallback((patch: Partial<Settings>) => {
+    void persistSettings(patch);
+  }, []);
+
+  const toggleColumnCollapse = useCallback(
+    (key: string) => setCollapsedColumns((l) => toggleInList(l, key)),
+    [],
+  );
+  const toggleRowCollapse = useCallback(
+    (key: string) => setCollapsedRows((l) => toggleInList(l, key)),
+    [],
+  );
+  const openSettingsPage = useCallback(() => void browser.runtime.openOptionsPage(), []);
 
   const openBoard = useCallback(() => {
     const next = fromParseResult(parseDocument(text, settings.markers));
@@ -249,6 +319,52 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     };
   }, []);
 
+  // Popup quick-add: write a task into the active document, whether or not the
+  // board is open. Returns success only once the write is actually dispatched.
+  const addTaskFromPopup = useCallback(
+    (title: string, section?: string, due?: string): AddTaskResponse => {
+      const clean = title.trim();
+      if (!clean) return { ok: true, added: false, error: 'empty' };
+
+      const parsed = parseDocument(text, settings.markers);
+      const boardOpen = visible && modelRef.current != null;
+      if (!parsed.activated && !boardOpen) {
+        return { ok: true, added: false, error: 'not-a-board' };
+      }
+      // A conflict on the open board must be resolved on the board itself.
+      if (boardOpen && saveState === 'conflict') {
+        return { ok: true, added: false, blocked: 'conflict' };
+      }
+
+      const base = boardOpen ? modelRef.current! : fromParseResult(parsed);
+      const targetSection =
+        section && base.sections.includes(section) ? section : (base.sections[0] ?? 'Tasks');
+      const { model: withTask, taskId } = addTaskToModel(base, targetSection, {
+        status: 'todo',
+        title: clean,
+        atTop: settings.newCardsAtTop,
+      });
+      const next = due?.trim()
+        ? updateTaskInModel(withTask, taskId, { due: due.trim() })
+        : withTask;
+
+      const m = markerRef.current;
+      const ok = writePreservingFocus(root, serializeModel(next, m));
+      if (!ok) return { ok: true, added: false, error: 'write-failed' };
+
+      prevExpected.current = expectedCanonical.current;
+      expectedCanonical.current = canonicalModel(next, m);
+      suppressConflict.current = null;
+      setSaveState('saved');
+      if (boardOpen) {
+        setModel(next);
+        modelRef.current = next;
+      }
+      return { ok: true, added: true, section: targetSection };
+    },
+    [text, settings.markers, settings.newCardsAtTop, visible, saveState, root],
+  );
+
   // Respond to popup commands. Only this (editor) frame registers a listener.
   useEffect(() => {
     const counts = model ? countTasks(model) : { total: result.tasks.length, done: 0 };
@@ -260,9 +376,13 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
       taskCount: counts.total,
       doneCount,
       boardTitle: model?.title ?? result.boardTitle,
+      sections: model ? model.sections : result.sections,
+      conflict: visible && saveState === 'conflict',
     });
 
-    const handler = (message: ContentMessage): Promise<StatusResponse> | undefined => {
+    const handler = (
+      message: ContentMessage,
+    ): Promise<StatusResponse | AddTaskResponse> | undefined => {
       switch (message?.type) {
         case 'get-status':
           return Promise.resolve(status());
@@ -274,6 +394,8 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
           if (message.visible) openBoard();
           else closeBoard();
           return Promise.resolve({ ...status(), visible: message.visible });
+        case 'add-task':
+          return Promise.resolve(addTaskFromPopup(message.title, message.section, message.due));
         default:
           return undefined;
       }
@@ -281,7 +403,7 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
 
     browser.runtime.onMessage.addListener(handler);
     return () => browser.runtime.onMessage.removeListener(handler);
-  }, [result, visible, model, openBoard, closeBoard]);
+  }, [result, visible, model, saveState, openBoard, closeBoard, addTaskFromPopup]);
 
   if (!settings.enabled) return null;
 
@@ -294,19 +416,29 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
           model={model}
           view={view}
           filters={filters}
+          sort={sort}
           settings={settings}
           marker={marker}
           saveState={saveState}
           undoLabel={undo?.label ?? null}
+          collapsedColumns={collapsedColumns}
+          collapsedRows={collapsedRows}
+          lastQuickAddSection={lastQuickAddSection}
           announce={announce}
           onChange={handleModelChange}
           onViewChange={handleViewChange}
           onFiltersChange={setFilters}
+          onSortChange={setSort}
+          onSettingsChange={handleSettingsChange}
+          onToggleColumnCollapse={toggleColumnCollapse}
+          onToggleRowCollapse={toggleRowCollapse}
+          onQuickAddSectionChange={setLastQuickAddSection}
           onUndo={handleUndo}
           onRetry={retryWrite}
           onReloadFromDoc={reloadFromDoc}
           onOverwriteDoc={overwriteDoc}
           onDismissConflict={dismissConflict}
+          onOpenSettings={openSettingsPage}
           onClose={closeBoard}
         />
       </>

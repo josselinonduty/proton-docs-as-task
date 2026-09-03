@@ -4,6 +4,7 @@ import { DEFAULT_COLUMNS, DEFAULT_MARKERS } from './defaults';
 import {
   addSection,
   addTask,
+  applyBulkAction,
   columnsForView,
   countTasks,
   createStarterModel,
@@ -254,5 +255,69 @@ describe('round-trip fidelity', () => {
     expect(model.tasks).toHaveLength(2);
     expect(model.tasks[1]!.assignee).toBe('jo');
     expect(model.tasks[1]!.priority).toBe('medium');
+  });
+});
+
+describe('bulk actions', () => {
+  const doc = [
+    '#!tasks',
+    '## A',
+    '- [ ] one @priority:low #x',
+    '- [ ] two @who:Sam',
+    '## B',
+    '- [x] three',
+  ].join('\n');
+
+  function ids(model: BoardModel, ...titles: string[]): string[] {
+    return titles.map((t) => model.tasks.find((x) => x.title === t)!.id);
+  }
+
+  it('sets status/complete across a selection in one new model', () => {
+    const m = build(doc);
+    const next = applyBulkAction(m, ids(m, 'one', 'two'), { kind: 'complete' });
+    expect(next).not.toBe(m);
+    expect(
+      next.tasks
+        .filter((t) => t.status === 'done')
+        .map((t) => t.title)
+        .sort(),
+    ).toEqual(['one', 'three', 'two']);
+  });
+
+  it('moves a selection to a section, registering the section', () => {
+    const m = build(doc);
+    const next = applyBulkAction(m, ids(m, 'one'), { kind: 'section', section: 'C' });
+    expect(next.sections).toContain('C');
+    expect(next.tasks.find((t) => t.title === 'one')!.section).toBe('C');
+  });
+
+  it('sets priority, assignee and due, clearing with undefined', () => {
+    const m = build(doc);
+    const withPrio = applyBulkAction(m, ids(m, 'two'), { kind: 'priority', priority: 'high' });
+    expect(withPrio.tasks.find((t) => t.title === 'two')!.priority).toBe('high');
+    const cleared = applyBulkAction(withPrio, ids(m, 'one'), { kind: 'priority' });
+    expect(cleared.tasks.find((t) => t.title === 'one')!.priority).toBeUndefined();
+    const due = applyBulkAction(m, ids(m, 'one', 'two'), { kind: 'due', due: '2026-09-09' });
+    expect(due.tasks.filter((t) => t.due === '2026-09-09')).toHaveLength(2);
+  });
+
+  it('adds and removes labels without duplicates', () => {
+    const m = build(doc);
+    const added = applyBulkAction(m, ids(m, 'one', 'two'), { kind: 'addLabel', label: '#x' });
+    // 'one' already has x (case-insensitive) → still one copy; 'two' gains it.
+    expect(added.tasks.find((t) => t.title === 'one')!.labels).toEqual(['x']);
+    expect(added.tasks.find((t) => t.title === 'two')!.labels).toEqual(['x']);
+    const removed = applyBulkAction(added, ids(m, 'one', 'two'), {
+      kind: 'removeLabel',
+      label: 'X',
+    });
+    expect(removed.tasks.every((t) => t.labels.length === 0)).toBe(true);
+  });
+
+  it('deletes a selection and reindexes', () => {
+    const m = build(doc);
+    const next = applyBulkAction(m, ids(m, 'one', 'three'), { kind: 'delete' });
+    expect(next.tasks.map((t) => t.title)).toEqual(['two']);
+    expect(next.tasks[0]!.order).toBe(0);
   });
 });

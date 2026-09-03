@@ -5,11 +5,16 @@ import { fromParseResult } from './model';
 import {
   activeFilterCount,
   applyFilters,
+  buildPresets,
   collectFacets,
   dueBucket,
   EMPTY_FILTERS,
+  facetCounts,
+  getPreset,
   hasActiveFilters,
   matchesFilters,
+  matchesPreset,
+  normalizeFilters,
   type FilterState,
 } from './filters';
 
@@ -121,5 +126,101 @@ describe('collectFacets', () => {
     expect(facets.priorities).toEqual(['high', 'low']);
     expect(facets.assignees).toEqual(['alex', 'sam']);
     expect(facets.labels).toEqual(['api', 'db', 'ui']);
+  });
+});
+
+describe('exclude & assignment filters', () => {
+  it('excludes tasks by status ("not Done")', () => {
+    expect(
+      applyFilters(model.tasks, filters({ excludeStatuses: ['done'] }), NOW).map((t) => t.title),
+    ).toEqual(['Build the API', 'Polish styles', 'Ship it']);
+  });
+
+  it('keeps only unassigned tasks', () => {
+    expect(
+      applyFilters(model.tasks, filters({ assignment: 'unassigned' }), NOW).map((t) => t.title),
+    ).toEqual(['Polish styles', 'Ship it']);
+  });
+
+  it('filters by dueWithinDays (this week)', () => {
+    // NOW is 2026-09-03; within 7 days catches 2026-09-03 (today). 09-02 is overdue (excluded),
+    // 12-01 is far off.
+    expect(
+      applyFilters(model.tasks, filters({ dueWithinDays: 7 }), NOW).map((t) => t.title),
+    ).toEqual(['Polish styles']);
+  });
+
+  it('counts the new dimensions as active', () => {
+    expect(hasActiveFilters(filters({ assignment: 'unassigned' }))).toBe(true);
+    expect(activeFilterCount(filters({ excludeStatuses: ['done'], dueWithinDays: 7 }))).toBe(2);
+  });
+});
+
+describe('normalizeFilters', () => {
+  it('fills missing new fields from a legacy stored object', () => {
+    const legacy = { search: 'x', statuses: ['todo'] } as Partial<FilterState>;
+    const f = normalizeFilters(legacy);
+    expect(f.excludeStatuses).toEqual([]);
+    expect(f.assignment).toBe('any');
+    expect(f.dueWithinDays).toBeNull();
+    expect(f.search).toBe('x');
+  });
+});
+
+describe('facetCounts', () => {
+  it('counts usage per value including unassigned', () => {
+    const c = facetCounts(model);
+    expect(c.assignees).toEqual({ alex: 1, sam: 1 });
+    expect(c.labels).toEqual({ api: 1, db: 1, ui: 1 });
+    expect(c.unassigned).toBe(2);
+    expect(c.statuses.done).toBe(1);
+  });
+});
+
+describe('presets', () => {
+  it('marks "My open tasks" unavailable without a configured name', () => {
+    const none = getPreset('my-open', {})!;
+    expect(none.available).toBe(false);
+    const mine = getPreset('my-open', { userAssignee: 'alex' })!;
+    expect(mine.available).toBe(true);
+    expect(applyFilters(model.tasks, mine.filters, NOW).map((t) => t.title)).toEqual([
+      'Build the API',
+    ]);
+  });
+
+  it('overdue preset finds only incomplete overdue tasks', () => {
+    const p = getPreset('overdue', {})!;
+    expect(applyFilters(model.tasks, p.filters, NOW).map((t) => t.title)).toEqual([
+      'Build the API',
+    ]);
+  });
+
+  it('unassigned and high-priority presets work', () => {
+    const unassigned = getPreset('unassigned', {})!;
+    expect(applyFilters(model.tasks, unassigned.filters, NOW).map((t) => t.title)).toEqual([
+      'Polish styles',
+      'Ship it',
+    ]);
+    const high = getPreset('high-priority', {})!;
+    expect(applyFilters(model.tasks, high.filters, NOW).map((t) => t.title)).toEqual([
+      'Build the API',
+    ]);
+  });
+
+  it('matchesPreset detects an active preset', () => {
+    const p = getPreset('unassigned', {})!;
+    expect(matchesPreset(p.filters, p)).toBe(true);
+    expect(matchesPreset(EMPTY_FILTERS, p)).toBe(false);
+  });
+
+  it('builds the full preset list', () => {
+    expect(buildPresets({ userAssignee: 'x' }).map((p) => p.id)).toEqual([
+      'my-open',
+      'overdue',
+      'due-this-week',
+      'high-priority',
+      'unassigned',
+      'recently-completed',
+    ]);
   });
 });

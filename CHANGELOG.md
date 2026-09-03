@@ -3,6 +3,47 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0
+
+A faster, more comfortable board for daily use. Everything new here builds on the
+v0.5 task model without introducing any required Markdown — sorting, filters,
+density, view selection and collapsed states are UI preferences only.
+
+- **Quick capture.** An **Add task** form in the board header (title required;
+  status, section, due date, priority, assignee and labels optional) that
+  remembers the last section, submits with `Cmd`/`Ctrl`+`Enter`, highlights the
+  new card, and warns when active filters would hide it. The **extension popup**
+  can add a task straight into the active document and only reports success once
+  the write is confirmed (and defers to the board when a conflict exists).
+- **Sorting.** A per-view sort menu — due date, priority, title, assignee,
+  recently created — that is non-destructive by default (Manual restores the saved
+  order), disables drag while active, and offers an undoable **Apply this order to
+  document**.
+- **Suggestions.** Assignee and label inputs are now accessible comboboxes whose
+  suggestions come from values already in the document (case-insensitive, existing
+  capitalization preserved, with usage counts); labels are a token input with
+  duplicate prevention.
+- **Improved due dates.** A lightweight date control with deterministic quick
+  options (Today, Tomorrow, This weekend, Next week, Clear) and readable states
+  (Overdue, Due today/tomorrow/this week, Future, Completed) in the local timezone.
+- **Swimlane view.** Status columns × section rows, with drag that changes status,
+  section or both, collapsible rows, and a wide-board warning.
+- **Bulk selection & actions.** Selection mode with `Shift`-range and select-all,
+  and atomic, undoable bulk status / section / priority / assignee / due / label /
+  complete / delete across the selection.
+- **Keyboard & command palette.** A full set of board shortcuts, a searchable
+  command palette (`Cmd`/`Ctrl`+`K`), and a shortcut reference (`?`).
+- **Filters.** Filter chips in the header, exclude filters, and one-click presets
+  (My open tasks, Overdue, Due this week, High priority, Unassigned, Recently
+  completed).
+- **Display preferences.** Card-field visibility, completed-tasks presentation
+  (show / collapse Done / hide), a configurable date format, and your own name for
+  the _My open tasks_ preset — plus per-document session memory of view, sort,
+  filters and collapsed columns/rows.
+- New tested modules (`dates`, `sorting`, `suggestions`, `session`, filter presets
+  and bulk model actions) plus React interaction tests for the new components.
+  Chrome and Firefox builds pass all checks; v0.4/v0.5 documents open unchanged.
+
 ## 0.5.0
 
 A coherent, dependable daily-use task board. **Status and section are now
