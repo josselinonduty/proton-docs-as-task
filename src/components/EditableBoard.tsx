@@ -378,146 +378,144 @@ export function EditableBoard(props: EditableBoardProps) {
       )}
 
       <div className="pdt-columns">
-          {columns.map((col) => {
-            const isDoneCol = view === 'workflow' && col.status === 'done';
-            const collapsed = isDoneCol && doneCollapsed;
-            const visibleTasks = filtersActive
-              ? col.tasks.filter((t) => matchesFilters(t, filters, now))
-              : col.tasks;
-            return (
-              <div
-                className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''}`}
-                key={col.key}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleDrop(col);
-                }}
-              >
-                <div className="pdt-column__head">
-                  {view === 'sections' ? (
-                    <input
-                      className="pdt-column__name-input"
-                      value={col.label}
-                      aria-label={`Section name: ${col.label}`}
-                      onChange={(e) => onChange(renameSection(model, col.key, e.target.value))}
-                    />
-                  ) : (
-                    <span className="pdt-column__name">{col.label}</span>
-                  )}
-                  <span className="pdt-column__count" aria-label={`${col.tasks.length} tasks`}>
-                    {filtersActive
-                      ? `${visibleTasks.length}/${col.tasks.length}`
-                      : col.tasks.length}
-                  </span>
+        {columns.map((col) => {
+          const isDoneCol = view === 'workflow' && col.status === 'done';
+          const collapsed = isDoneCol && doneCollapsed;
+          const visibleTasks = filtersActive
+            ? col.tasks.filter((t) => matchesFilters(t, filters, now))
+            : col.tasks;
+          return (
+            <div
+              className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''}`}
+              key={col.key}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDrop(col);
+              }}
+            >
+              <div className="pdt-column__head">
+                {view === 'sections' ? (
+                  <input
+                    className="pdt-column__name-input"
+                    value={col.label}
+                    aria-label={`Section name: ${col.label}`}
+                    onChange={(e) => onChange(renameSection(model, col.key, e.target.value))}
+                  />
+                ) : (
+                  <span className="pdt-column__name">{col.label}</span>
+                )}
+                <span className="pdt-column__count" aria-label={`${col.tasks.length} tasks`}>
+                  {filtersActive ? `${visibleTasks.length}/${col.tasks.length}` : col.tasks.length}
+                </span>
 
-                  {isDoneCol && (
+                {isDoneCol && (
+                  <button
+                    type="button"
+                    className="pdt-btn pdt-btn-icon"
+                    aria-expanded={!collapsed}
+                    aria-label={collapsed ? 'Expand Done column' : 'Collapse Done column'}
+                    onClick={() => setDoneCollapsed((v) => !v)}
+                  >
+                    {collapsed ? '▸' : '▾'}
+                  </button>
+                )}
+
+                {view === 'sections' && (
+                  <div className="pdt-column__ops">
                     <button
                       type="button"
                       className="pdt-btn pdt-btn-icon"
-                      aria-expanded={!collapsed}
-                      aria-label={collapsed ? 'Expand Done column' : 'Collapse Done column'}
-                      onClick={() => setDoneCollapsed((v) => !v)}
+                      aria-label="Move section left"
+                      disabled={model.sections.indexOf(col.key) === 0}
+                      onClick={() => onChange(moveSection(model, col.key, -1))}
                     >
-                      {collapsed ? '▸' : '▾'}
+                      ‹
                     </button>
-                  )}
-
-                  {view === 'sections' && (
-                    <div className="pdt-column__ops">
-                      <button
-                        type="button"
-                        className="pdt-btn pdt-btn-icon"
-                        aria-label="Move section left"
-                        disabled={model.sections.indexOf(col.key) === 0}
-                        onClick={() => onChange(moveSection(model, col.key, -1))}
-                      >
-                        ‹
-                      </button>
-                      <button
-                        type="button"
-                        className="pdt-btn pdt-btn-icon"
-                        aria-label="Move section right"
-                        disabled={model.sections.indexOf(col.key) === model.sections.length - 1}
-                        onClick={() => onChange(moveSection(model, col.key, 1))}
-                      >
-                        ›
-                      </button>
-                      <button
-                        type="button"
-                        className="pdt-btn pdt-btn-icon"
-                        aria-label={`Delete section ${col.label}`}
-                        onClick={() => requestSectionDelete(col.key)}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {!collapsed && (
-                  <div className="pdt-column__body">
-                    {visibleTasks.map((task, i) => (
-                      <EditableTaskCard
-                        key={task.id}
-                        task={task}
-                        statusColumns={statusColumns}
-                        sections={model.sections}
-                        density={settings.density}
-                        showDescriptionPreview={settings.showDescriptionPreview}
-                        now={now}
-                        position={{ index: i, count: visibleTasks.length }}
-                        focus={focusTaskId === task.id}
-                        onFocusHandled={() => setFocusTaskId(null)}
-                        onToggleDone={() => toggleDone(task)}
-                        onPatch={(patch) => patchTask(task.id, patch)}
-                        onSetStatus={(s) => setStatus(task, s)}
-                        onSetSection={(s) => setSection(task, s)}
-                        onMoveWithin={(delta) => moveWithin(col, task, delta)}
-                        onDuplicate={() => duplicate(task)}
-                        onDelete={() => requestDelete(task)}
-                        onCopyMarkdown={() => void copyMarkdown(task)}
-                        onDragStartCard={() => (draggedId.current = task.id)}
-                        onDropOnCard={() => handleDrop(col, task.id)}
-                      />
-                    ))}
-
-                    {visibleTasks.length === 0 && (
-                      <p className="pdt-column__empty">
-                        {filtersActive && col.tasks.length > 0
-                          ? 'No tasks match the filters.'
-                          : 'No tasks yet.'}
-                      </p>
-                    )}
-
-                    <QuickAdd
-                      open={adding === col.key}
-                      label={col.label}
-                      onOpen={() => setAdding(col.key)}
-                      onCancel={() => setAdding(null)}
-                      onSubmit={(title) => submitQuickAdd(col, title)}
-                    />
+                    <button
+                      type="button"
+                      className="pdt-btn pdt-btn-icon"
+                      aria-label="Move section right"
+                      disabled={model.sections.indexOf(col.key) === model.sections.length - 1}
+                      onClick={() => onChange(moveSection(model, col.key, 1))}
+                    >
+                      ›
+                    </button>
+                    <button
+                      type="button"
+                      className="pdt-btn pdt-btn-icon"
+                      aria-label={`Delete section ${col.label}`}
+                      onClick={() => requestSectionDelete(col.key)}
+                    >
+                      ✕
+                    </button>
                   </div>
                 )}
               </div>
-            );
-          })}
 
-          {view === 'sections' && (
-            <div className="pdt-column pdt-column--add">
-              <button
-                type="button"
-                className="pdt-add-column"
-                onClick={() => {
-                  const next = addSection(model);
-                  onChange(next);
-                  announce('Section added');
-                }}
-              >
-                + Add section
-              </button>
+              {!collapsed && (
+                <div className="pdt-column__body">
+                  {visibleTasks.map((task, i) => (
+                    <EditableTaskCard
+                      key={task.id}
+                      task={task}
+                      statusColumns={statusColumns}
+                      sections={model.sections}
+                      density={settings.density}
+                      showDescriptionPreview={settings.showDescriptionPreview}
+                      now={now}
+                      position={{ index: i, count: visibleTasks.length }}
+                      focus={focusTaskId === task.id}
+                      onFocusHandled={() => setFocusTaskId(null)}
+                      onToggleDone={() => toggleDone(task)}
+                      onPatch={(patch) => patchTask(task.id, patch)}
+                      onSetStatus={(s) => setStatus(task, s)}
+                      onSetSection={(s) => setSection(task, s)}
+                      onMoveWithin={(delta) => moveWithin(col, task, delta)}
+                      onDuplicate={() => duplicate(task)}
+                      onDelete={() => requestDelete(task)}
+                      onCopyMarkdown={() => void copyMarkdown(task)}
+                      onDragStartCard={() => (draggedId.current = task.id)}
+                      onDropOnCard={() => handleDrop(col, task.id)}
+                    />
+                  ))}
+
+                  {visibleTasks.length === 0 && (
+                    <p className="pdt-column__empty">
+                      {filtersActive && col.tasks.length > 0
+                        ? 'No tasks match the filters.'
+                        : 'No tasks yet.'}
+                    </p>
+                  )}
+
+                  <QuickAdd
+                    open={adding === col.key}
+                    label={col.label}
+                    onOpen={() => setAdding(col.key)}
+                    onCancel={() => setAdding(null)}
+                    onSubmit={(title) => submitQuickAdd(col, title)}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          );
+        })}
+
+        {view === 'sections' && (
+          <div className="pdt-column pdt-column--add">
+            <button
+              type="button"
+              className="pdt-add-column"
+              onClick={() => {
+                const next = addSection(model);
+                onChange(next);
+                announce('Section added');
+              }}
+            >
+              + Add section
+            </button>
+          </div>
+        )}
       </div>
 
       {undoLabel && (
