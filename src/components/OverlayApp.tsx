@@ -4,10 +4,12 @@ import { parseDocument } from '../lib/parser';
 import { watchEditor } from '../lib/extractor';
 import { writePreservingFocus } from '../lib/docwriter';
 import {
+  addTask as addTaskToModel,
   createStarterModel,
   fromParseResult,
   serializeModel,
   countTasks,
+  updateTask as updateTaskInModel,
   type BoardModel,
 } from '../lib/model';
 import { canonicalDoc, canonicalModel } from '../lib/sync';
@@ -17,7 +19,7 @@ import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '.
 import { readDocPrefs, writeDocPrefs } from '../lib/sessionStore';
 import { settingsItem, setSettings as persistSettings, withDefaults } from '../lib/settings';
 import type { BoardView, SaveState, Settings } from '../lib/types';
-import type { ContentMessage, StatusResponse } from '../lib/messaging';
+import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
 
 interface OverlayAppProps {
@@ -317,6 +319,50 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     };
   }, []);
 
+  // Popup quick-add: write a task into the active document, whether or not the
+  // board is open. Returns success only once the write is actually dispatched.
+  const addTaskFromPopup = useCallback(
+    (title: string, section?: string, due?: string): AddTaskResponse => {
+      const clean = title.trim();
+      if (!clean) return { ok: true, added: false, error: 'empty' };
+
+      const parsed = parseDocument(text, settings.markers);
+      const boardOpen = visible && modelRef.current != null;
+      if (!parsed.activated && !boardOpen) {
+        return { ok: true, added: false, error: 'not-a-board' };
+      }
+      // A conflict on the open board must be resolved on the board itself.
+      if (boardOpen && saveState === 'conflict') {
+        return { ok: true, added: false, blocked: 'conflict' };
+      }
+
+      const base = boardOpen ? modelRef.current! : fromParseResult(parsed);
+      const targetSection =
+        section && base.sections.includes(section) ? section : (base.sections[0] ?? 'Tasks');
+      const { model: withTask, taskId } = addTaskToModel(base, targetSection, {
+        status: 'todo',
+        title: clean,
+        atTop: settings.newCardsAtTop,
+      });
+      const next = due?.trim() ? updateTaskInModel(withTask, taskId, { due: due.trim() }) : withTask;
+
+      const m = markerRef.current;
+      const ok = writePreservingFocus(root, serializeModel(next, m));
+      if (!ok) return { ok: true, added: false, error: 'write-failed' };
+
+      prevExpected.current = expectedCanonical.current;
+      expectedCanonical.current = canonicalModel(next, m);
+      suppressConflict.current = null;
+      setSaveState('saved');
+      if (boardOpen) {
+        setModel(next);
+        modelRef.current = next;
+      }
+      return { ok: true, added: true, section: targetSection };
+    },
+    [text, settings.markers, settings.newCardsAtTop, visible, saveState, root],
+  );
+
   // Respond to popup commands. Only this (editor) frame registers a listener.
   useEffect(() => {
     const counts = model ? countTasks(model) : { total: result.tasks.length, done: 0 };
@@ -328,9 +374,13 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
       taskCount: counts.total,
       doneCount,
       boardTitle: model?.title ?? result.boardTitle,
+      sections: model ? model.sections : result.sections,
+      conflict: visible && saveState === 'conflict',
     });
 
-    const handler = (message: ContentMessage): Promise<StatusResponse> | undefined => {
+    const handler = (
+      message: ContentMessage,
+    ): Promise<StatusResponse | AddTaskResponse> | undefined => {
       switch (message?.type) {
         case 'get-status':
           return Promise.resolve(status());
@@ -342,6 +392,8 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
           if (message.visible) openBoard();
           else closeBoard();
           return Promise.resolve({ ...status(), visible: message.visible });
+        case 'add-task':
+          return Promise.resolve(addTaskFromPopup(message.title, message.section, message.due));
         default:
           return undefined;
       }
@@ -349,7 +401,7 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
 
     browser.runtime.onMessage.addListener(handler);
     return () => browser.runtime.onMessage.removeListener(handler);
-  }, [result, visible, model, openBoard, closeBoard]);
+  }, [result, visible, model, saveState, openBoard, closeBoard, addTaskFromPopup]);
 
   if (!settings.enabled) return null;
 
