@@ -3,6 +3,21 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.2
+
+Follow-up board fixes.
+
+- **Due-date field matches the other controls.** The "Set due date" trigger now
+  uses the same input styling and size as the Status/Section/Priority selects,
+  the leftover Unicode glyph is gone, and its popover floats above the card
+  (fixed positioning) instead of being clipped inside the scrolling body.
+- **Extension settings opens.** The overflow-menu settings item now works from the
+  in-page board — content scripts can't call `openOptionsPage` directly, so it is
+  routed through the background script.
+- **Delete dialog button color fixed.** The confirm-delete button is now a solid
+  red button instead of a purple fill with red text.
+- Removed the "No tasks yet" board placeholder.
+
 ## 0.6.1
 
 Board chrome polish and interaction fixes.
