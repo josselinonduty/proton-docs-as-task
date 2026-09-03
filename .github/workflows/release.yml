@@ -40,8 +40,10 @@ jobs:
       - name: Package (Chrome)
         run: npm run zip
 
+      # --sources bundles the source tree alongside the Firefox package,
+      # which AMO review requires for extensions built with a bundler.
       - name: Package (Firefox)
-        run: npm run zip:firefox
+        run: npm run zip:firefox -- --sources
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
@@ -51,3 +53,36 @@ jobs:
           files: |
             .output/*-chrome.zip
             .output/*-firefox.zip
+            .output/*-sources.zip
+
+      # Store credentials are optional: until they're configured as repo
+      # secrets, the release still builds and publishes to GitHub, it just
+      # skips the store submissions instead of failing the whole run.
+      - name: Check for Chrome Web Store credentials
+        id: chrome-creds
+        run: echo "present=${{ secrets.CHROME_EXTENSION_ID != '' && secrets.CHROME_PUBLISHER_ID != '' && secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL != '' && secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check for Firefox Add-ons credentials
+        id: firefox-creds
+        run: echo "present=${{ secrets.FIREFOX_EXTENSION_ID != '' && secrets.FIREFOX_JWT_ISSUER != '' && secrets.FIREFOX_JWT_SECRET != '' }}" >> "$GITHUB_OUTPUT"
+
+      # Uses the Chrome Web Store API v2 (service account auth). The v1.1
+      # OAuth flow (client id/secret/refresh token) is deprecated and stops
+      # working October 15th, 2026.
+      - name: Submit to Chrome Web Store
+        if: steps.chrome-creds.outputs.present == 'true'
+        run: npx wxt submit --chrome-zip .output/*-chrome.zip
+        env:
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+
+      - name: Submit to Firefox Add-ons
+        if: steps.firefox-creds.outputs.present == 'true'
+        run: npx wxt submit --firefox-zip .output/*-firefox.zip --firefox-sources-zip .output/*-sources.zip
+        env:
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
