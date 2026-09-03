@@ -13,6 +13,8 @@ interface FilterPanelProps {
   filters: FilterState;
   facets: Facets;
   statusColumns: { key: StatusKey; label: string }[];
+  /** Lets the board's F shortcut open the panel by clicking the trigger. */
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
   onChange: (next: FilterState) => void;
   onClear: () => void;
 }
@@ -39,6 +41,7 @@ export function FilterPanel({
   filters,
   facets,
   statusColumns,
+  triggerRef,
   onChange,
   onClear,
 }: FilterPanelProps) {
@@ -65,6 +68,7 @@ export function FilterPanel({
   return (
     <div className="pdt-filter" ref={wrapRef}>
       <button
+        ref={triggerRef}
         type="button"
         className={`pdt-btn ${count > 0 ? 'pdt-btn-primary' : ''}`}
         aria-expanded={open}

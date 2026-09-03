@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { BoardTask } from '../lib/model';
-import { dueBucket, type DueBucket } from '../lib/filters';
-import type { CardDensity, Priority, StatusKey } from '../lib/types';
+import { dueBadgeText, dueState, dueStateLabel } from '../lib/dates';
+import type { Suggestion } from '../lib/suggestions';
+import type {
+  CardDensity,
+  CardFieldVisibility,
+  DateFormat,
+  Priority,
+  StatusKey,
+} from '../lib/types';
+import { Combobox } from './Combobox';
+import { LabelInput } from './LabelInput';
+import { DueDateControl } from './DueDateControl';
 
 const STATUS_OPTIONS: { value: StatusKey; label: string }[] = [
   { value: 'todo', label: 'To Do' },
@@ -16,14 +26,6 @@ const PRIORITY_OPTIONS: { value: '' | Priority; label: string }[] = [
   { value: 'low', label: 'Low' },
 ];
 
-/** Short, non-color label + glyph for each due bucket (color is never the only cue). */
-const DUE_META: Record<Exclude<DueBucket, 'none'>, { glyph: string; word: string }> = {
-  overdue: { glyph: '⚠', word: 'Overdue' },
-  today: { glyph: '★', word: 'Due today' },
-  soon: { glyph: '◷', word: 'Due soon' },
-  upcoming: { glyph: '◇', word: 'Due' },
-};
-
 const PRIORITY_GLYPH: Record<Priority, string> = { high: '⚑', medium: '▲', low: '▽' };
 
 interface EditableTaskCardProps {
@@ -32,11 +34,31 @@ interface EditableTaskCardProps {
   sections: string[];
   density: CardDensity;
   showDescriptionPreview: boolean;
+  cardFields: CardFieldVisibility;
+  dateFormat: DateFormat;
+  /** Which board view the card is shown in (drives section/status chips). */
+  view: 'workflow' | 'sections' | 'swimlane';
+  assigneeSuggestions: Suggestion[];
+  labelSuggestions: Suggestion[];
   now: Date;
   /** Position of this card within its column (for Move up/down and announcements). */
   position: { index: number; count: number };
   /** When true, the card grabs DOM focus once (used after a move). */
   focus: boolean;
+  /** Bulk-selection state; when non-null the card shows a selection checkbox. */
+  selection?: { selected: boolean; onToggle: (e: React.MouseEvent) => void } | null;
+  /** Disable drag handles (e.g. while a non-manual sort is active). */
+  dragDisabled?: boolean;
+  /** Briefly highlight this card (after quick-add creation). */
+  highlight?: boolean;
+  /**
+   * Keyboard-driven imperative signals, present only on the focused card.
+   * Bumping a counter expands details / focuses the title / focuses the move
+   * control, matching the E, Enter and M shortcuts.
+   */
+  signals?: { open: number; edit: number; move: number };
+  /** Report that this card received DOM focus (keyboard navigation cursor). */
+  onFocusCard?: () => void;
   onFocusHandled: () => void;
   onToggleDone: () => void;
   onPatch: (patch: Partial<Omit<BoardTask, 'id' | 'order'>>) => void;
@@ -57,9 +79,19 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     sections,
     density,
     showDescriptionPreview,
+    cardFields,
+    dateFormat,
+    view,
+    assigneeSuggestions,
+    labelSuggestions,
     now,
     position,
     focus,
+    selection,
+    dragDisabled,
+    highlight,
+    signals,
+    onFocusCard,
     onFocusHandled,
     onToggleDone,
     onPatch,
@@ -75,8 +107,10 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
 
   const [open, setOpen] = useState(false);
   const articleRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const sectionRef = useRef<HTMLSelectElement>(null);
   const done = task.status === 'done';
-  const bucket = dueBucket(task.due, now);
+  const state = dueState(task.due, now, done);
   const statusLabel = statusColumns.find((c) => c.key === task.status)?.label ?? task.status;
 
   useEffect(() => {
@@ -85,6 +119,23 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
       onFocusHandled();
     }
   }, [focus, onFocusHandled]);
+
+  // React to keyboard shortcut signals from the board (E / Enter / M).
+  const openSig = signals?.open ?? 0;
+  const editSig = signals?.edit ?? 0;
+  const moveSig = signals?.move ?? 0;
+  useEffect(() => {
+    if (openSig > 0) setOpen(true);
+  }, [openSig]);
+  useEffect(() => {
+    if (editSig > 0) titleRef.current?.focus();
+  }, [editSig]);
+  useEffect(() => {
+    if (moveSig > 0) {
+      setOpen(true);
+      window.setTimeout(() => sectionRef.current?.focus(), 0);
+    }
+  }, [moveSig]);
 
   // Keyboard movement: Alt+Arrow moves the card without a mouse.
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -100,10 +151,11 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
 
   const stateWords: string[] = [];
   if (done) stateWords.push('Completed');
-  if (bucket !== 'none' && !done) stateWords.push(DUE_META[bucket].word);
+  if (state !== 'none' && !done) stateWords.push(dueStateLabel(state));
   if (task.priority === 'high' && !done) stateWords.push('High priority');
   const ariaLabel =
     `Task: ${task.title || 'Untitled'}. ${statusLabel}, section ${task.section}.` +
+    (selection ? ` ${selection.selected ? 'Selected' : 'Not selected'}.` : '') +
     (stateWords.length ? ` ${stateWords.join(', ')}.` : '');
 
   return (
@@ -111,12 +163,20 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
       ref={articleRef}
       className={`pdt-taskcard pdt-taskcard--${task.status} ${
         density === 'compact' ? 'pdt-taskcard--compact' : ''
-      } ${done ? 'is-done' : ''}`}
+      } ${done ? 'is-done' : ''} ${selection?.selected ? 'is-selected' : ''} ${
+        highlight ? 'is-new' : ''
+      }`}
       role="listitem"
       tabIndex={0}
       aria-label={ariaLabel}
-      draggable
+      aria-selected={selection ? selection.selected : undefined}
+      onFocus={onFocusCard}
+      draggable={!dragDisabled}
       onDragStart={(e) => {
+        if (dragDisabled) {
+          e.preventDefault();
+          return;
+        }
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', task.id);
         onDragStartCard();
@@ -130,6 +190,16 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
       onKeyDown={onKeyDown}
     >
       <div className="pdt-card__top">
+        {selection && (
+          <input
+            type="checkbox"
+            className="pdt-native-check pdt-card__select"
+            checked={selection.selected}
+            aria-label={selection.selected ? 'Deselect task' : 'Select task'}
+            onChange={() => {}}
+            onClick={(e) => selection.onToggle(e)}
+          />
+        )}
         <button
           type="button"
           className={`pdt-check ${done ? 'pdt-check--on' : ''}`}
@@ -140,6 +210,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
           {done ? '✓' : ''}
         </button>
         <input
+          ref={titleRef}
           className={`pdt-card__title-input ${done ? 'pdt-card__title--done' : ''}`}
           value={task.title}
           placeholder="Task title…"
@@ -160,7 +231,18 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
 
       {/* Collapsed metadata row. Each state carries a glyph + text, not color alone. */}
       <div className="pdt-card__tags">
-        {task.priority && (
+        {view === 'workflow' && cardFields.sectionInWorkflow && (
+          <span className="pdt-tag pdt-tag--section" title={`Section: ${task.section}`}>
+            <span aria-hidden="true">▤ </span>
+            {task.section}
+          </span>
+        )}
+        {view === 'sections' && cardFields.statusInSections && (
+          <span className="pdt-tag pdt-tag--status" title={`Status: ${statusLabel}`}>
+            {statusLabel}
+          </span>
+        )}
+        {cardFields.priority && task.priority && (
           <span
             className={`pdt-tag pdt-prio--${task.priority}`}
             title={`${task.priority} priority`}
@@ -169,29 +251,28 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
             {task.priority[0]!.toUpperCase() + task.priority.slice(1)}
           </span>
         )}
-        {task.due && (
+        {cardFields.due && task.due && (
           <span
-            className={`pdt-tag pdt-due--${bucket}`}
-            title={`${bucket === 'none' ? 'Due' : DUE_META[bucket].word}: ${task.due}`}
+            className={`pdt-tag pdt-due--${state}`}
+            title={`${dueStateLabel(state)}: ${task.due}`}
           >
-            {bucket !== 'none' && <span aria-hidden="true">{DUE_META[bucket].glyph} </span>}
-            {bucket === 'overdue' || bucket === 'today' || bucket === 'soon'
-              ? `${DUE_META[bucket].word}`
-              : task.due}
+            <span aria-hidden="true">◇ </span>
+            {dueBadgeText(task.due, state, dateFormat)}
           </span>
         )}
-        {task.assignee && (
+        {cardFields.assignee && task.assignee && (
           <span className="pdt-tag pdt-tag--who" title={`Assignee: ${task.assignee}`}>
             <span aria-hidden="true">@</span>
             {task.assignee}
           </span>
         )}
-        {task.labels.map((label) => (
-          <span key={label} className="pdt-tag pdt-tag--label" title={`Label: ${label}`}>
-            #{label}
-          </span>
-        ))}
-        {task.description && (
+        {cardFields.labels &&
+          task.labels.map((label) => (
+            <span key={label} className="pdt-tag pdt-tag--label" title={`Label: ${label}`}>
+              #{label}
+            </span>
+          ))}
+        {cardFields.description && task.description && (
           <span className="pdt-tag pdt-tag--desc" title={task.description}>
             <span aria-hidden="true">🗎 </span>
             {showDescriptionPreview ? truncate(task.description, 40) : 'Note'}
@@ -230,6 +311,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
             <label className="pdt-field pdt-field--grow">
               <span className="pdt-field-label">Section</span>
               <select
+                ref={sectionRef}
                 className="pdt-input"
                 value={task.section}
                 onChange={(e) => onSetSection(e.target.value)}
@@ -260,36 +342,40 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
                 ))}
               </select>
             </label>
-            <label className="pdt-field pdt-field--grow">
+            <div className="pdt-field pdt-field--grow">
               <span className="pdt-field-label">Due date</span>
-              <input
-                type="date"
-                className="pdt-input"
-                value={isoDate(task.due)}
-                onChange={(e) => onPatch({ due: e.target.value || undefined })}
+              <DueDateControl
+                value={task.due}
+                onChange={(due) => onPatch({ due })}
+                now={now}
+                format={dateFormat}
+                completed={done}
+                ariaLabel="Due date"
               />
-            </label>
+            </div>
           </div>
 
-          <label className="pdt-field">
+          <div className="pdt-field">
             <span className="pdt-field-label">Assignee</span>
-            <input
-              className="pdt-input"
+            <Combobox
               value={task.assignee ?? ''}
+              suggestions={assigneeSuggestions}
+              onChange={(assignee) => onPatch({ assignee: assignee.trim() || undefined })}
               placeholder="e.g. Sam Rivera"
-              onChange={(e) => onPatch({ assignee: e.target.value.trim() || undefined })}
+              ariaLabel="Assignee"
+              showCounts
             />
-          </label>
+          </div>
 
-          <label className="pdt-field">
+          <div className="pdt-field">
             <span className="pdt-field-label">Labels</span>
-            <input
-              className="pdt-input"
-              value={task.labels.join(', ')}
-              placeholder="comma, separated"
-              onChange={(e) => onPatch({ labels: parseLabels(e.target.value) })}
+            <LabelInput
+              labels={task.labels}
+              suggestions={labelSuggestions}
+              onChange={(labels) => onPatch({ labels })}
+              ariaLabel="Labels"
             />
-          </label>
+          </div>
 
           <div className="pdt-card__move">
             <span className="pdt-field-label">Move</span>
@@ -330,19 +416,6 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
       )}
     </article>
   );
-}
-
-/** Coerce a stored due value into `yyyy-mm-dd` for the date input, else ''. */
-function isoDate(value?: string): string {
-  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return value.trim();
-  return '';
-}
-
-function parseLabels(value: string): string[] {
-  return value
-    .split(',')
-    .map((l) => l.trim().replace(/^#/, ''))
-    .filter(Boolean);
 }
 
 function truncate(text: string, max: number): string {
