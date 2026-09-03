@@ -344,7 +344,9 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
         title: clean,
         atTop: settings.newCardsAtTop,
       });
-      const next = due?.trim() ? updateTaskInModel(withTask, taskId, { due: due.trim() }) : withTask;
+      const next = due?.trim()
+        ? updateTaskInModel(withTask, taskId, { due: due.trim() })
+        : withTask;
 
       const m = markerRef.current;
       const ok = writePreservingFocus(root, serializeModel(next, m));
