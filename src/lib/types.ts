@@ -2,6 +2,10 @@
  * Shared domain types for Proton Docs as Task.
  */
 
+import type { DateFormat } from './dates';
+
+export type { DateFormat };
+
 /** Canonical task status keys used internally. */
 export type StatusKey = 'todo' | 'doing' | 'done';
 
@@ -58,11 +62,33 @@ export interface ColumnDef {
   label: string;
 }
 
-/** The two board layouts. Workflow groups by status, Sections by heading. */
-export type BoardView = 'workflow' | 'sections';
+/**
+ * The board layouts. Workflow groups by status, Sections by heading, and
+ * Swimlane crosses the two (status columns × section rows).
+ */
+export type BoardView = 'workflow' | 'sections' | 'swimlane';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type CardDensity = 'comfortable' | 'compact';
+
+/** How completed tasks are presented (never removed from the document). */
+export type CompletedDisplay = 'show' | 'collapse' | 'hide';
+
+/**
+ * Which optional fields a card shows. The title and completion control are
+ * always visible and are intentionally absent here.
+ */
+export interface CardFieldVisibility {
+  description: boolean;
+  priority: boolean;
+  due: boolean;
+  assignee: boolean;
+  labels: boolean;
+  /** Show the section chip in Workflow view. */
+  sectionInWorkflow: boolean;
+  /** Show the status chip in Sections view. */
+  statusInSections: boolean;
+}
 
 /** Document synchronization state shown in the board header. */
 export type SaveState = 'saved' | 'saving' | 'error' | 'conflict';
@@ -96,4 +122,12 @@ export interface Settings {
   confirmDelete: boolean;
   /** Show the completion progress bar in the header. */
   showProgressBar: boolean;
+  /** Which optional fields cards display. */
+  cardFields: CardFieldVisibility;
+  /** How completed tasks are presented. */
+  completedDisplay: CompletedDisplay;
+  /** Display format for due dates. */
+  dateFormat: DateFormat;
+  /** The user's own assignee name, enabling the "My open tasks" filter. */
+  userAssignee: string;
 }
