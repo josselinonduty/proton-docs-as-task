@@ -3,6 +3,7 @@ import type { Settings } from './types';
 import { DEFAULT_SETTINGS, withDefaults } from './defaults';
 
 export {
+  DEFAULT_CARD_FIELDS,
   DEFAULT_COLUMNS,
   DEFAULT_MARKERS,
   DEFAULT_SETTINGS,

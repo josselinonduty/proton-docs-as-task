@@ -22,12 +22,101 @@ it lives under) are independent. The board shows the same tasks in two layouts:
 - **Sections** — columns for the document's `## Headings`. Moving a card changes
   its section; its status is untouched. You can add, rename, reorder and delete
   sections here.
+- **Swimlane** — a grid with status columns _and_ section rows at once. Drag a
+  card sideways to change its status, up or down to change its section, or
+  diagonally to change both.
 
 Switch views from the board header without ever changing your task data. Search
 and filters (status, section, priority, assignee, label, due date, completion)
 stay active across the switch, card and section moves can be **undone**, and
 every move is announced for screen readers and reachable without a mouse
 (`Alt`+`↑`/`↓` to reorder, or the explicit **Move** / **Move to…** controls).
+
+---
+
+## Working on the board
+
+Beyond the two-way status/section model, the board is built for fast day-to-day
+use. None of the features below change the Markdown — sorting, filters, density,
+collapsed columns and view selection are **UI preferences**, remembered per
+document for the current browser session only.
+
+### Quick capture
+
+- **Add task** in the board header opens a compact form — only the title is
+  required; status defaults to _To Do_ and the section to the one you used last.
+  `Cmd`/`Ctrl`+`Enter` (or `Enter` in the title) creates it; the new card is
+  briefly highlighted, and if active filters would hide it you’re told and
+  offered **Clear filters**. Every column keeps its own **+ Add task** too.
+- The **extension popup** can add a task without opening the board: type a
+  title, optionally pick a section and due date, and it writes straight into the
+  active document — only reporting success once the write is confirmed.
+
+### Sorting
+
+Each view has a **Sort** menu — by due date, priority, title, assignee, recently
+created, or back to **Manual order**. Sorting is non-destructive: it only changes
+how cards are displayed, and switching back to Manual restores the saved document
+order. Drag-and-drop is disabled while a non-manual sort is active; use **Apply
+this order to document** to bake the current order in (undoable).
+
+### Filters & presets
+
+Active filters show as removable **chips** in the header, and one-click
+**presets** cover the common cases — _My open tasks_ (once you set your name in
+settings), _Overdue_, _Due this week_, _High priority_, _Unassigned_ and
+_Recently completed_. Assignee and label inputs suggest values already used in
+the document, with usage counts.
+
+### Bulk actions
+
+Enter **selection mode** (the ⋮ menu, `Space` on a focused card, or
+`Cmd`/`Ctrl`+`A`), then select multiple cards — `Shift`-click selects a range
+within a column. The toolbar can set status, section, priority, assignee or due
+date, add or remove a label, mark complete, or delete — each as a **single,
+undoable** document write. Destructive actions ask first.
+
+### Swimlanes
+
+**Swimlane** view crosses status (columns) with section (rows), so you can see
+and move both dimensions at once. Rows collapse individually, empty
+intersections stay valid drop targets, and a keyboard alternative (open the card
+and use its Status/Section menus, or `M`) covers everyone who doesn’t drag.
+
+### Keyboard & command palette
+
+| Key                    | Action                          |
+| ---------------------- | ------------------------------- |
+| `N`                    | Open quick-add task             |
+| `/`                    | Focus search                    |
+| `F`                    | Open filters                    |
+| `V`                    | Change board view               |
+| `S`                    | Open sort menu                  |
+| `J` / `K`              | Focus next / previous card      |
+| `Enter`                | Open focused card               |
+| `E`                    | Edit focused card title         |
+| `Space`                | Select focused card             |
+| `X`                    | Toggle completion               |
+| `M`                    | Open the move menu              |
+| `Delete` / `Backspace` | Delete selected card (confirm)  |
+| `Cmd`/`Ctrl`+`Z`       | Undo last board action          |
+| `Cmd`/`Ctrl`+`K`       | Open the command palette        |
+| `Esc`                  | Close the active menu or dialog |
+| `?`                    | Open the shortcut reference     |
+
+Shortcuts don’t fire while you’re typing in a field (except the documented
+submission shortcuts). The **command palette** (`Cmd`/`Ctrl`+`K`) exposes the
+same actions — add a task, switch view, change sorting, clear filters, show/hide
+completed, open settings, retry a failed save — searchable, with recently used
+commands first.
+
+### Display preferences
+
+The options page controls **card density** (comfortable / compact), which
+**fields** cards show (description, priority, due date, assignee, labels, and the
+section/status chips), how **completed tasks** are presented (shown, Done column
+collapsed, or hidden — never removed from the document), the **date format**, and
+**your name** for the _My open tasks_ filter.
 
 ---
 
@@ -191,16 +280,19 @@ or the "Settings & syntax guide" link in the popup) to:
 
 - enable / disable the extension and choose whether activated boards open
   automatically,
-- pick the default view (Workflow or Sections), theme (System / Light / Dark)
-  and card density (Comfortable / Compact),
+- pick the default view (Workflow, Sections or Swimlane), theme (System / Light /
+  Dark) and card density (Comfortable / Compact),
 - tune board behavior — new cards at top or bottom, description previews,
-  collapse Done by default, confirm-before-delete, and the progress bar,
+  confirm-before-delete, and the progress bar,
+- set **display preferences** — which fields cards show, how completed tasks are
+  presented (shown / Done collapsed / hidden), the date format, and your own name
+  for the _My open tasks_ filter,
 - rename the workflow labels (the internal keys stay `todo` / `doing` / `done`,
   so renaming never changes a task's status),
 - customize the activation markers (an empty marker list is rejected).
 
-Settings are stored in `browser.storage.sync`, and a v0.4 board opens with no
-manual migration.
+Settings are stored in `browser.storage.sync`, and a v0.4 or v0.5 board opens
+with no manual migration.
 
 ## Project layout
 
@@ -212,16 +304,25 @@ src/
 │  ├─ popup/                      # toolbar popup (status + quick toggles)
 │  └─ options/                    # settings & syntax guide
 ├─ components/                    # React board UI (OverlayApp, EditableBoard,
-│                                 #   EditableTaskCard, FilterPanel, Dialog)
+│                                 #   EditableTaskCard, QuickAddForm, SortMenu,
+│                                 #   FilterBar/FilterPanel, BulkBar, Combobox,
+│                                 #   LabelInput, DueDateControl, CommandPalette,
+│                                 #   ShortcutHelp, Dialog) — with interaction tests
 └─ lib/
-   ├─ parser.ts                   # marker detection + task DSL parser   (tested)
-   ├─ model.ts                    # flat task model, views, serialization (tested)
-   ├─ filters.ts                  # search + filters + due-date buckets   (tested)
+   ├─ parser.ts                   # marker detection + task DSL parser    (tested)
+   ├─ model.ts                    # flat task model, views, serialization,
+   │                              #   bulk actions                        (tested)
+   ├─ filters.ts                  # search, filters, exclude, presets     (tested)
+   ├─ sorting.ts                  # non-destructive sort + apply-to-doc   (tested)
+   ├─ dates.ts                    # due-date shortcuts + display states   (tested)
+   ├─ suggestions.ts              # assignee / label autocomplete indexes (tested)
+   ├─ session.ts / sessionStore.ts# per-document session preferences      (tested)
    ├─ sync.ts                     # external-change / conflict detection  (tested)
    ├─ board.ts                    # grouping + summary helpers            (tested)
    ├─ extractor.ts                # Lexical DOM → text serialization
    ├─ docwriter.ts                # text → Lexical editor (debounced write)
    ├─ settings.ts / defaults.ts   # persisted settings
+   ├─ platform.ts                 # OS-aware shortcut labels
    ├─ messaging.ts                # popup ↔ content-script contract
    └─ types.ts
 ```
@@ -236,10 +337,12 @@ src/
   version** or **Cancel** rather than a silent overwrite.
 - Because it depends on the editor's DOM structure, a major redesign of the
   Proton Docs editor could require updating the selectors in `extractor.ts`.
-- **Out of scope for v0.5:** custom workflow statuses, comments, attachments,
-  subtasks, recurring tasks, reminders, dependencies, multiple boards per
-  document, saved filters, real-time multi-user merge, and any cloud/back-end
-  service. Everything runs locally.
+- **Out of scope for v0.6:** custom workflow statuses, comments, attachments,
+  subtasks, recurring tasks, reminders/notifications, task dependencies, estimates
+  or time tracking, saved custom filter sets, shared user profiles, Proton
+  Contacts integration, cross-document dashboards, real-time multi-user merge, and
+  any cloud/back-end service. Everything runs locally, and natural-language date
+  parsing is not attempted — date shortcuts resolve to exact calendar dates.
 - Built with [WXT](https://wxt.dev), React and TypeScript.
 
 ## License

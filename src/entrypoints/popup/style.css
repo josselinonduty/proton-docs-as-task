@@ -74,3 +74,35 @@ code {
   border-top: 1px solid var(--pdt-border-norm);
   padding-top: var(--pdt-space-3);
 }
+
+/* ---------- Popup quick-add ---------- */
+.pp-quickadd {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-2);
+  margin-bottom: var(--pdt-space-3);
+}
+.pp-quickadd__row {
+  display: flex;
+  gap: var(--pdt-space-2);
+}
+.pp-quickadd__grow {
+  flex: 1;
+}
+.pp-btn--ghost {
+  background: var(--pdt-background-weak);
+  color: var(--pdt-text-norm);
+}
+.pp-feedback {
+  margin: 0;
+  font-size: var(--pdt-text-xs);
+}
+.pp-feedback--saved {
+  color: var(--pdt-signal-success);
+}
+.pp-feedback--error {
+  color: var(--pdt-signal-danger);
+}
+.pp-feedback--conflict {
+  color: var(--pdt-signal-warning);
+}
