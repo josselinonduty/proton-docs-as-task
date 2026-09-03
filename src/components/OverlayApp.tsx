@@ -21,6 +21,7 @@ import { settingsItem, setSettings as persistSettings, withDefaults } from '../l
 import type { BoardView, SaveState, Settings } from '../lib/types';
 import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
+import { Icon } from './Icon';
 
 interface OverlayAppProps {
   root: HTMLElement;
@@ -454,7 +455,7 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
         onClick={openBoard}
         title="Open task board"
       >
-        <span aria-hidden="true">✓</span>
+        <Icon name="checkmark-circle" size={18} />
         <span>Tasks</span>
         {pending > 0 && <span className="pdt-fab__badge">{pending}</span>}
       </button>
@@ -471,7 +472,7 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
           onClick={convertToTaskDoc}
         >
           <span className="pdt-convert__icon" aria-hidden="true">
-            ✓
+            <Icon name="checkmark" size={14} />
           </span>
           Convert to task board
         </button>

@@ -41,7 +41,6 @@ export const DEFAULT_SETTINGS: Settings = {
   showDescriptionPreview: true,
   collapseDoneByDefault: false,
   confirmDelete: true,
-  showProgressBar: true,
   cardFields: DEFAULT_CARD_FIELDS,
   completedDisplay: 'show',
   dateFormat: 'iso',
