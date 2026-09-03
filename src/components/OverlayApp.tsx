@@ -225,7 +225,12 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     (key: string) => setCollapsedRows((l) => toggleInList(l, key)),
     [],
   );
-  const openSettingsPage = useCallback(() => void browser.runtime.openOptionsPage(), []);
+  // Content scripts can't call `openOptionsPage` directly, so hand it off to
+  // the background script.
+  const openSettingsPage = useCallback(
+    () => void browser.runtime.sendMessage({ type: 'open-options' }),
+    [],
+  );
 
   const openBoard = useCallback(() => {
     const next = fromParseResult(parseDocument(text, settings.markers));

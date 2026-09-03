@@ -629,28 +629,6 @@
   margin-top: 2px;
 }
 
-/* ---------- Empty board ---------- */
-.pdt-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: var(--pdt-space-8);
-  text-align: center;
-}
-.pdt-empty__title {
-  margin: 0;
-  font-size: var(--pdt-text-lg);
-  font-weight: var(--pdt-font-weight-bold);
-}
-.pdt-empty__hint {
-  margin: 0;
-  color: var(--pdt-text-weak);
-  font-size: var(--pdt-text-sm);
-}
-
 /* ---------- Undo toast ---------- */
 .pdt-toast {
   position: fixed;
@@ -854,15 +832,38 @@
 }
 
 /* ---------- Due date control ---------- */
+.pdt-duedate {
+  width: 100%;
+}
+/* The trigger is styled like the other form inputs (Status/Section/Priority)
+ * so the field row reads consistently: a full-width bordered control with a
+ * chevron affordance on the right. */
 .pdt-duedate__trigger {
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-2);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--pdt-text-norm);
+}
+.pdt-duedate__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdt-duedate__trigger--overdue .pdt-duedate__value {
+  color: var(--pdt-signal-danger);
+}
+.pdt-duedate__trigger--today .pdt-duedate__value {
+  color: var(--pdt-signal-warning);
 }
 .pdt-duedate__panel {
-  position: absolute;
-  z-index: 40;
-  top: calc(100% + 4px);
-  left: 0;
-  min-width: 220px;
+  /* Positioned via inline `position: fixed` + top/left so it floats above the
+   * scrolling card body instead of being clipped inside it. */
+  z-index: 2147483001;
+  width: 240px;
   display: flex;
   flex-direction: column;
   gap: var(--pdt-space-2);
