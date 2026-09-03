@@ -18,6 +18,12 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         id: 'proton-docs-as-task@josselinonduty.fr',
+        // The extension makes no network requests and collects nothing —
+        // see PRIVACY.md. Required by Firefox for all new extensions:
+        // https://mzl.la/firefox-builtin-data-consent
+        data_collection_permissions: {
+          required: ['none'],
+        },
       },
     },
   },
