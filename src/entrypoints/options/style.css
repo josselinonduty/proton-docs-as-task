@@ -10,7 +10,7 @@ body {
   color: var(--pdt-text-norm);
   font-family: var(--pdt-font-family);
   font-size: var(--pdt-text-md);
-  line-height: 1.45;
+  line-height: var(--pdt-line-height);
 }
 code {
   padding: 1px 5px;
@@ -29,17 +29,16 @@ code {
   margin: 0 auto;
   padding: var(--pdt-space-8) var(--pdt-space-5) 48px;
 }
-/* A dark "chrome" band, echoing the persistent dark navigation Proton's own
- * settings pages use behind their white content cards (see STYLEGUIDE.md). */
+/* Page header on Proton's light "Snow" chrome: plain surface, hairline border. */
 .op-head {
   display: flex;
   align-items: center;
   gap: var(--pdt-space-3);
   margin-bottom: var(--pdt-space-6);
   padding: var(--pdt-space-4) var(--pdt-space-5);
+  border: 1px solid var(--pdt-border-weak);
   border-radius: var(--pdt-radius-lg);
-  background: var(--pdt-nav-bg);
-  color: var(--pdt-nav-text);
+  background: var(--pdt-background-norm);
 }
 .op-logo {
   display: inline-flex;
@@ -47,19 +46,19 @@ code {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: var(--pdt-radius-lg);
-  background: var(--pdt-primary);
-  color: var(--pdt-primary-contrast);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary);
   font-size: var(--pdt-text-xl);
 }
 .op-head h1 {
   margin: 0;
   font-size: var(--pdt-text-xl);
-  color: var(--pdt-nav-text);
+  font-weight: var(--pdt-font-weight-bold);
 }
 .op-sub {
   margin: 2px 0 0;
-  color: var(--pdt-nav-text-weak);
+  color: var(--pdt-text-weak);
 }
 .op-saved {
   margin-left: auto;
@@ -70,7 +69,8 @@ code {
 }
 .op-card h2 {
   margin: 0 0 var(--pdt-space-3);
-  font-size: 15px;
+  font-size: var(--pdt-text-lg);
+  font-weight: var(--pdt-font-weight-bold);
 }
 .op-hint {
   margin: 0 0 var(--pdt-space-3);
@@ -84,7 +84,7 @@ code {
   justify-content: space-between;
   gap: var(--pdt-space-4);
   padding: var(--pdt-space-3) 0;
-  border-top: 1px solid var(--pdt-border-norm);
+  border-top: 1px solid var(--pdt-border-weak);
 }
 .op-row:first-of-type {
   border-top: none;
@@ -116,7 +116,7 @@ code {
 
 .op-error {
   margin: var(--pdt-space-2) 0 0;
-  color: var(--pdt-signal-danger);
+  color: var(--pdt-signal-danger-text);
   font-size: var(--pdt-text-sm);
   font-weight: var(--pdt-font-weight-medium);
 }

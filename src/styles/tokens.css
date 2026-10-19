@@ -1,9 +1,9 @@
 /**
  * Design tokens — shared across the popup, options page and the in-page
- * board overlay. Values follow Proton's product design language (purple
- * brand accent, quiet neutral surfaces, pill-shaped primary actions,
- * generous corner radii) as closely as a font-and-network-free browser
- * extension reasonably can. See STYLEGUIDE.md for the full rationale.
+ * board overlay. Values are taken from Proton's own generated themes
+ * (`@proton/colors`: `snow.theme.css` for light, `carbon.theme.css` for dark)
+ * and `@proton/styles` (14px/20px base type, 8px radius, 3px focus ring), so
+ * the board reads as part of Proton Docs. See STYLEGUIDE.md for the mapping.
  *
  * Applied to `:root` for normal documents (popup, options) and to
  * `.pdt-host` for the shadow-DOM board overlay, so every surface reads
@@ -12,43 +12,80 @@
 
 :root,
 .pdt-host {
-  color-scheme: light dark;
+  color-scheme: light;
 
-  /* ---------- Brand / interactive ---------- */
+  /* ---------- Brand / interactive (Snow) ---------- */
+  /* `primary` tints accents and text; `interaction-norm` fills solid buttons
+     — Proton keeps them separate because they diverge in dark mode. */
   --pdt-primary: #6d4aff;
-  --pdt-primary-hover: #7c5cff;
-  --pdt-primary-active: #573ae0;
+  --pdt-primary-hover: #6243e6;
+  --pdt-primary-active: #573bcc;
   --pdt-primary-contrast: #ffffff;
-  --pdt-primary-weak: rgba(109, 74, 255, 0.12);
+  --pdt-primary-weak: #f0edff;
+  /* Primary text on the `-weak` tint (major-1 / major-2 step: AA at 12px). */
+  --pdt-primary-text: #6243e6;
+  --pdt-interaction-norm: #6d4aff;
+  --pdt-interaction-norm-hover: #6243e6;
+  --pdt-interaction-norm-active: #573bcc;
+  /* Neutral hover/pressed wash for ghost buttons, menu items and rows. */
+  --pdt-interaction-hover: rgb(194 193 192 / 0.2);
+  --pdt-interaction-active: rgb(194 192 190 / 0.35);
+  /* Bordered secondary button (Proton's `button-outline-weak`). */
+  --pdt-interaction-weak-border: #dedbd9;
+  --pdt-interaction-weak-hover: #f9f8f7;
 
-  /* ---------- Surfaces & text (light) ---------- */
+  /* ---------- Surfaces & text ---------- */
   --pdt-background-norm: #ffffff;
-  --pdt-background-weak: #f5f5f7;
-  --pdt-background-strong: #ececf1;
-  --pdt-border-norm: #e2e2ea;
-  --pdt-border-weak: #ececf1;
+  --pdt-background-weak: #f5f4f2;
+  --pdt-background-strong: #e5e4e1;
+  /* Canvas behind columns, and raised surfaces (cards, popovers). */
+  --pdt-background-lowered: #f5f4f2;
+  --pdt-background-elevated: #ffffff;
+  --pdt-background-invert: #0c0c14;
+  --pdt-border-norm: #d1cfcd;
+  --pdt-border-weak: #eae7e4;
   --pdt-text-norm: #0c0c14;
-  --pdt-text-weak: #5c5c6e;
-  --pdt-text-hint: #8f8fa3;
+  --pdt-text-weak: #5c5958;
+  --pdt-text-hint: #8f8d8a;
   --pdt-text-invert: #ffffff;
 
-  /* ---------- Signal colors ---------- */
+  /* ---------- Form fields ---------- */
+  --pdt-field-norm: #adaba8;
+  --pdt-field-hover: #8f8d8a;
+
+  /* ---------- Focus ---------- */
+  --pdt-focus-outline: #6d4aff;
+  --pdt-focus-ring: rgb(109 74 255 / 0.2);
+
+  /* ---------- Signal colors ----------
+   * `-weak` is the tinted chip background (Proton's `minor-2`); `-text` is
+   * the darker step (`major-2`/`major-3`) used for text on that tint, so
+   * small chip labels keep a readable contrast. */
   --pdt-signal-danger: #dc3251;
-  --pdt-signal-danger-weak: rgba(220, 50, 81, 0.12);
+  --pdt-signal-danger-hover: #c62d49;
+  --pdt-signal-danger-active: #b02841;
+  --pdt-signal-danger-weak: #fcebee;
+  --pdt-signal-danger-text: #b02841;
   --pdt-signal-warning: #ff9900;
-  --pdt-signal-warning-weak: rgba(255, 153, 0, 0.14);
+  --pdt-signal-warning-weak: #fff5e6;
+  /* Proton's darkest warning step (#d94c00) is 3.9:1 on its tint; this one
+     step darker keeps small chip text at WCAG AA (5.2:1). */
+  --pdt-signal-warning-text: #b84000;
   --pdt-signal-success: #1ea885;
-  --pdt-signal-success-weak: rgba(30, 168, 133, 0.14);
-  --pdt-signal-info: #5b74e8;
-  --pdt-signal-info-weak: rgba(91, 116, 232, 0.14);
+  --pdt-signal-success-weak: #e9f6f3;
+  --pdt-signal-success-text: #15765d;
+  --pdt-signal-info: #239ece;
+  --pdt-signal-info-weak: #e9f5fa;
+  --pdt-signal-info-text: #196f90;
 
   /* ---------- Elevation ---------- */
-  --pdt-shadow-sm: 0 1px 2px rgba(20, 18, 40, 0.06);
-  --pdt-shadow-md: 0 4px 12px rgba(20, 18, 40, 0.1);
-  --pdt-shadow-lg: 0 10px 30px rgba(20, 18, 40, 0.18);
+  --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.1);
+  --pdt-shadow-lg: 0 8px 24px rgb(0 0 0 / 0.16);
+  --pdt-backdrop: rgb(38 42 51 / 0.48);
 
-  /* ---------- Radius ---------- */
-  --pdt-radius-sm: 6px;
+  /* ---------- Radius (Proton: --border-radius 8) ---------- */
+  --pdt-radius-sm: 4px;
   --pdt-radius-md: 8px;
   --pdt-radius-lg: 12px;
   --pdt-radius-xl: 16px;
@@ -64,80 +101,142 @@
   --pdt-space-8: 32px;
 
   /* ---------- Typography ---------- */
-  /* Proton's own editor defaults to Arial, so it leads the stack — see
-     STYLEGUIDE.md. */
+  /* Proton's apps ship Inter; a page-level @font-face also applies inside
+     the board's shadow root, so the board picks up Proton's own Inter when
+     the page has loaded it — the extension still bundles no font. */
   --pdt-font-family:
-    Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
-  --pdt-font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    InterVariable, Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  --pdt-font-mono:
+    ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   --pdt-text-2xs: 11px;
   --pdt-text-xs: 12px;
   --pdt-text-sm: 13px;
   --pdt-text-md: 14px;
   --pdt-text-lg: 16px;
   --pdt-text-xl: 20px;
+  --pdt-line-height: 20px;
   --pdt-font-weight-regular: 400;
-  --pdt-font-weight-medium: 600;
-  --pdt-font-weight-bold: 700;
+  --pdt-font-weight-medium: 500;
+  --pdt-font-weight-bold: 600;
+
+  /* ---------- Control sizes (Proton button-medium / button-small) ---------- */
+  --pdt-control-md: 36px;
+  --pdt-control-sm: 28px;
 
   /* ---------- Motion ---------- */
-  --pdt-transition-fast: 0.12s ease;
-  --pdt-transition-base: 0.15s ease;
-
-  /* ---------- Chrome (always-dark "navigation" surface) ----------
-   * Proton's settings/app navigation stays a dark near-black navy even in
-   * light mode — content is white, chrome is dark. These tokens are for
-   * that persistent chrome, not for the light/dark content theme, so they
-   * do NOT change under prefers-color-scheme. */
-  --pdt-nav-bg: #171620;
-  --pdt-nav-text: #ece9f4;
-  --pdt-nav-text-weak: #a09cb8;
-  --pdt-nav-active-bg: rgba(130, 102, 255, 0.22);
+  --pdt-transition-fast: 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  --pdt-transition-base: 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Dark palette, shared by the OS preference and an explicit dark override. */
+/* Dark palette (Proton "Carbon"), shared by the OS preference and an explicit
+ * dark override. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']),
   .pdt-host:not([data-theme='light']) {
-    --pdt-primary: #8266ff;
-    --pdt-primary-hover: #9784ff;
-    --pdt-primary-active: #6d4aff;
+    color-scheme: dark;
 
-    --pdt-background-norm: #1c1b24;
-    --pdt-background-weak: #131218;
-    --pdt-background-strong: #292833;
-    --pdt-border-norm: #322f3d;
-    --pdt-border-weak: #26242f;
-    --pdt-text-norm: #edecf2;
-    --pdt-text-weak: #a0a0ad;
-    --pdt-text-hint: #726f82;
-    --pdt-text-invert: #16151c;
+    --pdt-primary: #8a6eff;
+    --pdt-primary-hover: #967dff;
+    --pdt-primary-active: #a18bff;
+    --pdt-primary-weak: #29214d;
+    --pdt-primary-text: #a18bff;
+    --pdt-interaction-norm: #6d4aff;
+    --pdt-interaction-norm-hover: #7c5cff;
+    --pdt-interaction-norm-active: #8a6eff;
+    --pdt-interaction-hover: rgb(91 87 107 / 0.2);
+    --pdt-interaction-active: rgb(91 87 107 / 0.4);
+    --pdt-interaction-weak-border: #5c5969;
+    --pdt-interaction-weak-hover: #16151a;
 
-    --pdt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --pdt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-    --pdt-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --pdt-background-norm: #16141c;
+    --pdt-background-weak: #292733;
+    --pdt-background-strong: #3f3b4c;
+    --pdt-background-lowered: #0e0d12;
+    --pdt-background-elevated: #1e1c26;
+    --pdt-background-invert: #ffffff;
+    --pdt-border-norm: #4a4658;
+    --pdt-border-weak: #343140;
+    --pdt-text-norm: #ffffff;
+    --pdt-text-weak: #a7a4b5;
+    --pdt-text-hint: #6d697d;
+    --pdt-text-invert: #1c1b24;
+
+    --pdt-field-norm: #5b576b;
+    --pdt-field-hover: #6d697d;
+    --pdt-focus-ring: rgb(109 74 255 / 0.3);
+
+    --pdt-signal-danger: #f5385a;
+    --pdt-signal-danger-hover: #f64c6b;
+    --pdt-signal-danger-active: #f7607b;
+    --pdt-signal-danger-weak: #4a111b;
+    --pdt-signal-danger-text: #f8748c;
+    --pdt-signal-warning-weak: #4d1b00;
+    --pdt-signal-warning-text: #ffb84d;
+    --pdt-signal-success-weak: #093228;
+    --pdt-signal-success-text: #62c2aa;
+    --pdt-signal-info-weak: #0b2f3e;
+    --pdt-signal-info-text: #65bbdd;
+
+    --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.44);
+    --pdt-shadow-lg: 0 8px 24px rgb(0 0 0 / 0.75);
+    --pdt-backdrop: rgb(22 20 28 / 0.48);
   }
 }
 
 /* Explicit "Dark" theme choice — wins regardless of the OS preference. */
 :root[data-theme='dark'],
 .pdt-host[data-theme='dark'] {
-  --pdt-primary: #8266ff;
-  --pdt-primary-hover: #9784ff;
-  --pdt-primary-active: #6d4aff;
+  color-scheme: dark;
 
-  --pdt-background-norm: #1c1b24;
-  --pdt-background-weak: #131218;
-  --pdt-background-strong: #292833;
-  --pdt-border-norm: #322f3d;
-  --pdt-border-weak: #26242f;
-  --pdt-text-norm: #edecf2;
-  --pdt-text-weak: #a0a0ad;
-  --pdt-text-hint: #726f82;
-  --pdt-text-invert: #16151c;
+  --pdt-primary: #8a6eff;
+  --pdt-primary-hover: #967dff;
+  --pdt-primary-active: #a18bff;
+  --pdt-primary-weak: #29214d;
+  --pdt-primary-text: #a18bff;
+  --pdt-interaction-norm: #6d4aff;
+  --pdt-interaction-norm-hover: #7c5cff;
+  --pdt-interaction-norm-active: #8a6eff;
+  --pdt-interaction-hover: rgb(91 87 107 / 0.2);
+  --pdt-interaction-active: rgb(91 87 107 / 0.4);
+  --pdt-interaction-weak-border: #5c5969;
+  --pdt-interaction-weak-hover: #16151a;
 
-  --pdt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --pdt-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --pdt-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --pdt-background-norm: #16141c;
+  --pdt-background-weak: #292733;
+  --pdt-background-strong: #3f3b4c;
+  --pdt-background-lowered: #0e0d12;
+  --pdt-background-elevated: #1e1c26;
+  --pdt-background-invert: #ffffff;
+  --pdt-border-norm: #4a4658;
+  --pdt-border-weak: #343140;
+  --pdt-text-norm: #ffffff;
+  --pdt-text-weak: #a7a4b5;
+  --pdt-text-hint: #6d697d;
+  --pdt-text-invert: #1c1b24;
+
+  --pdt-field-norm: #5b576b;
+  --pdt-field-hover: #6d697d;
+  --pdt-focus-ring: rgb(109 74 255 / 0.3);
+
+  --pdt-signal-danger: #f5385a;
+  --pdt-signal-danger-hover: #f64c6b;
+  --pdt-signal-danger-active: #f7607b;
+  --pdt-signal-danger-weak: #4a111b;
+  --pdt-signal-danger-text: #f8748c;
+  --pdt-signal-warning-weak: #4d1b00;
+  --pdt-signal-warning-text: #ffb84d;
+  --pdt-signal-success-weak: #093228;
+  --pdt-signal-success-text: #62c2aa;
+  --pdt-signal-info-weak: #0b2f3e;
+  --pdt-signal-info-text: #65bbdd;
+
+  --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.44);
+  --pdt-shadow-lg: 0 8px 24px rgb(0 0 0 / 0.75);
+  --pdt-backdrop: rgb(22 20 28 / 0.48);
 }
 
 /* Explicit "Light" theme choice keeps the light palette defined on :root above,

@@ -137,8 +137,9 @@ export function App() {
         )}
         {tab.state === 'inactive' && (
           <p className="pdt-text-weak">
-            This document isn't a task board yet. Make its first line{' '}
-            <code>{settings.markers[0]}</code> to activate it.
+            This document isn't a task board yet. An empty document shows a{' '}
+            <strong>Convert to task board</strong> button; any other document activates when its
+            first line is <code>{settings.markers[0]}</code>.
           </p>
         )}
         {tab.state === 'active' && (

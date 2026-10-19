@@ -73,7 +73,7 @@ export function FilterPanel({
       <button
         ref={triggerRef}
         type="button"
-        className={`pdt-btn ${count > 0 ? 'pdt-btn-primary' : ''}`}
+        className={`pdt-btn ${count > 0 ? 'pdt-btn-selected' : ''}`}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setOpen((v) => !v)}
