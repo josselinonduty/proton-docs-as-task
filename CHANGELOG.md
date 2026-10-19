@@ -27,6 +27,32 @@ A rebuilt saving system that works through Proton's own editor.
   tab is hidden or closed, which matters on mobile.
 - Requires Chrome 111+ or Firefox 128+.
 
+## [1.0.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v0.7.1...v1.0.0) (2026-10-19)
+
+
+### Features
+
+* align the design system with Proton's current Snow and Carbon themes ([82ab70a](https://github.com/josselinonduty/proton-docs-as-task/commit/82ab70aa9b5b476e7356e23f6da354933b0e446d))
+* **board:** task details panel, board header and keyboard/a11y fixes ([9007949](https://github.com/josselinonduty/proton-docs-as-task/commit/9007949547a191ab69b11dc8440f19131632848f))
+* **branding:** brand the Docs shell and add a kanban board icon ([091e813](https://github.com/josselinonduty/proton-docs-as-task/commit/091e81339685c80c586453981b6ba8759e0dc076))
+* new app icon, also used in the settings and popup headers ([bb72f50](https://github.com/josselinonduty/proton-docs-as-task/commit/bb72f50cc713424b87972cc7185c317d6a85e102))
+
+
+### Bug fixes
+
+* **editor:** only bridge to the document editor, not Sheets editors ([dca0c5e](https://github.com/josselinonduty/proton-docs-as-task/commit/dca0c5e88f7c7df3d057992180f56c6eee0afb9f))
+
+
+### Refactoring
+
+* save through Proton's Lexical editor instead of DOM paste ([3808904](https://github.com/josselinonduty/proton-docs-as-task/commit/38089046069f00c090b44baa7e7f981df5bd1bce))
+* save through Proton's Lexical editor instead of DOM paste ([d528391](https://github.com/josselinonduty/proton-docs-as-task/commit/d52839189c6a1864d40134ef593ecc425dc90e17))
+
+
+### Chores
+
+* release 1.0.0 ([1e31e10](https://github.com/josselinonduty/proton-docs-as-task/commit/1e31e109ddf19993f40e85d8962c065e0f651786))
+
 ## 0.6.2
 
 Follow-up board fixes.
