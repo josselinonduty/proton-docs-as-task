@@ -4,66 +4,87 @@ interface DialogProps {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  /** Panel width: `md` (default) for confirmations, `lg` for forms. */
+  size?: 'md' | 'lg';
+  /** Element to focus first; defaults to the first focusable control. */
+  initialFocus?: React.RefObject<HTMLElement | null>;
 }
 
 const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** The focused element as seen from `node`'s tree (document or shadow root). */
+function activeElementOf(node: Node): Element | null {
+  const root = node.getRootNode() as Document | ShadowRoot;
+  return root.activeElement ?? null;
+}
 
 /**
  * A modal dialog that traps focus, closes on Escape or backdrop click, and
- * restores focus to the element that opened it. See the accessibility section
- * of the v0.5 spec — every dialog must trap focus and close with Escape.
+ * restores focus to the element that opened it.
+ *
+ * The board lives in a shadow root, where `document.activeElement` is just the
+ * shadow host — so focus is always read from the dialog's own root node.
+ * Keys are handled on the panel (not the document) so a nested popover, such
+ * as an open autocomplete or date picker, can consume Escape first.
  */
-export function Dialog({ title, children, onClose }: DialogProps) {
+export function Dialog({ title, children, onClose, size = 'md', initialFocus }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
+  // Mount-only: parents pass inline `onClose` callbacks, and re-running this
+  // on every render would steal focus back to the first control.
   useEffect(() => {
-    previouslyFocused.current = (document.activeElement as HTMLElement) ?? null;
     const panel = panelRef.current;
-    // Focus the first focusable control (or the panel itself).
-    const first = panel?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? panel)?.focus();
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if (e.key !== 'Tab' || !panel) return;
-      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null || el === document.activeElement,
-      );
-      if (items.length === 0) return;
-      const firstEl = items[0]!;
-      const lastEl = items[items.length - 1]!;
-      const active = document.activeElement;
-      if (e.shiftKey && active === firstEl) {
-        e.preventDefault();
-        lastEl.focus();
-      } else if (!e.shiftKey && active === lastEl) {
-        e.preventDefault();
-        firstEl.focus();
-      }
-    };
-
-    document.addEventListener('keydown', onKeyDown, true);
+    if (!panel) return;
+    const previouslyFocused = activeElementOf(panel) as HTMLElement | null;
+    const first = initialFocus?.current ?? panel.querySelector<HTMLElement>(FOCUSABLE);
+    (first ?? panel).focus();
     return () => {
-      document.removeEventListener('keydown', onKeyDown, true);
-      previouslyFocused.current?.focus?.();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onCloseRef.current();
+      return;
+    }
+    const panel = panelRef.current;
+    if (e.key !== 'Tab' || !panel) return;
+    const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+      (el) => el.getClientRects().length > 0,
+    );
+    if (items.length === 0) return;
+    const firstEl = items[0]!;
+    const lastEl = items[items.length - 1]!;
+    const active = activeElementOf(panel);
+    if (e.shiftKey && (active === firstEl || active === panel)) {
+      e.preventDefault();
+      lastEl.focus();
+    } else if (!e.shiftKey && active === lastEl) {
+      e.preventDefault();
+      firstEl.focus();
+    }
+  };
 
   return (
-    <div className="pdt-modal" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="pdt-modal"
+      onMouseDown={(e) => e.target === e.currentTarget && onCloseRef.current()}
+    >
       <div
-        className="pdt-modal__panel"
+        className={`pdt-modal__panel pdt-modal__panel--${size}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
         ref={panelRef}
+        onKeyDown={onKeyDown}
       >
         <h2 className="pdt-modal__title">{title}</h2>
         {children}

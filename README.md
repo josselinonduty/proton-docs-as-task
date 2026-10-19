@@ -41,6 +41,17 @@ use. None of the features below change the Markdown — sorting, filters, densit
 collapsed columns and view selection are **UI preferences**, remembered per
 document for the current browser session only.
 
+### Board layout
+
+The header shows the board's title (the text after the activation marker) and
+its progress (_4 of 12 done_). Cards are compact summaries — completion
+checkbox, title, then priority, due date, labels and assignee. Click a card (or
+focus it and press `Enter`) to open it in the **details panel** on the right,
+where every field is edited; `Esc` closes the panel and puts focus back on the
+card. Section names are renamed in place in the Sections view and saved on
+`Enter` or when you leave the field (`Esc` cancels); a name that already
+exists is refused rather than silently merging two sections.
+
 ### Quick capture
 
 - **Add task** in the board header opens a compact form — only the title is
@@ -93,11 +104,11 @@ and use its Status/Section menus, or `M`) covers everyone who doesn’t drag.
 | `V`                    | Change board view               |
 | `S`                    | Open sort menu                  |
 | `J` / `K`              | Focus next / previous card      |
-| `Enter`                | Open focused card               |
-| `E`                    | Edit focused card title         |
+| `Enter`                | Open focused card's details     |
+| `E`                    | Edit focused card's title       |
 | `Space`                | Select focused card             |
 | `X`                    | Toggle completion               |
-| `M`                    | Open the move menu              |
+| `M`                    | Move focused card (Section)     |
 | `Delete` / `Backspace` | Delete selected card (confirm)  |
 | `Cmd`/`Ctrl`+`Z`       | Undo last board action          |
 | `Cmd`/`Ctrl`+`K`       | Open the command palette        |
@@ -238,7 +249,14 @@ for the full contributor workflow.
 npm install          # install deps (runs `wxt prepare`)
 npm run dev          # launch Chrome with the extension + HMR
 npm run dev:firefox  # launch Firefox instead
+npm run playground   # board UI only, against a fake document (no extension)
 ```
+
+The **playground** (`playground/`, dev-only, never part of the extension build)
+mounts the real board overlay against an in-memory document at
+<http://localhost:5199>. It can simulate a collaborator's edit and a locked
+(offline) editor, and `?empty` opens an empty document. Use it to iterate on UI
+and to run usability sessions without loading the extension into Proton.
 
 To load a production build manually:
 
@@ -260,6 +278,7 @@ Open a document on `docs.proton.me`, make its first line `#!tasks`, and add a fe
 | Command                           | Description                                                   |
 | --------------------------------- | ------------------------------------------------------------- |
 | `npm run dev` / `dev:firefox`     | Dev server with hot reload                                    |
+| `npm run playground`              | Board UI against a fake document, in any browser              |
 | `npm run build` / `build:firefox` | Production build                                              |
 | `npm run zip` / `zip:firefox`     | Zip a build for release / distribution                        |
 | `npm run submit`                  | Submit built zips to the extension stores (needs credentials) |
@@ -351,7 +370,7 @@ or the "Settings & syntax guide" link in the popup) to:
 - pick the default view (Workflow, Sections or Swimlane), theme (System / Light /
   Dark) and card density (Comfortable / Compact),
 - tune board behavior — new cards at top or bottom, description previews,
-  confirm-before-delete, and the progress bar,
+  and confirm-before-delete,
 - set **display preferences** — which fields cards show, how completed tasks are
   presented (shown / Done collapsed / hidden), the date format, and your own name
   for the _My open tasks_ filter,

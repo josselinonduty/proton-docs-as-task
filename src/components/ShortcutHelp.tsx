@@ -11,7 +11,7 @@ function groups(mod: string): { title: string; items: [string, string][] }[] {
     {
       title: 'Create & find',
       items: [
-        ['N', 'Open quick-add task'],
+        ['N', 'New task'],
         ['/', 'Focus search'],
         ['F', 'Open filters'],
         [`${mod} K`, 'Open command palette'],
@@ -29,11 +29,11 @@ function groups(mod: string): { title: string; items: [string, string][] }[] {
       title: 'Navigate & edit cards',
       items: [
         ['J / K', 'Focus next / previous card'],
-        ['Enter', 'Open focused card'],
+        ['Enter', 'Open focused card details'],
         ['E', 'Edit focused card title'],
         ['Space', 'Select focused card'],
         ['X', 'Toggle completion'],
-        ['M', 'Open move menu'],
+        ['M', 'Move focused card to another section'],
         ['Delete / Backspace', 'Delete selected card (after confirm)'],
       ],
     },
@@ -41,7 +41,7 @@ function groups(mod: string): { title: string; items: [string, string][] }[] {
       title: 'General',
       items: [
         [`${mod} Z`, 'Undo last board action'],
-        ['Esc', 'Close the active menu, editor, or dialog'],
+        ['Esc', 'Close the active menu, panel, or dialog'],
       ],
     },
   ];

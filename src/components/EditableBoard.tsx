@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addSection,
   addTask,
   applyBulkAction,
   columnsForView,
+  countTasks,
   duplicateTask,
   moveSection,
   removeSection,
@@ -41,6 +42,8 @@ import { buildAssigneeIndex, buildLabelIndex } from '../lib/suggestions';
 import { modLabel } from '../lib/platform';
 import type { BoardView, SaveState, Settings, StatusKey } from '../lib/types';
 import { EditableTaskCard } from './EditableTaskCard';
+import { TaskDetailsPanel, type DetailsFocus } from './TaskDetailsPanel';
+import { SectionNameInput } from './SectionNameInput';
 import { FilterPanel } from './FilterPanel';
 import { FilterBar } from './FilterBar';
 import { SortMenu } from './SortMenu';
@@ -81,10 +84,10 @@ interface EditableBoardProps {
 
 type PendingSectionDelete = { name: string; count: number };
 
-const VIEW_LABELS: { key: BoardView; label: string }[] = [
-  { key: 'workflow', label: 'Workflow' },
-  { key: 'sections', label: 'Sections' },
-  { key: 'swimlane', label: 'Swimlane' },
+const VIEW_LABELS: { key: BoardView; label: string; hint: string }[] = [
+  { key: 'workflow', label: 'Workflow', hint: 'Columns by status (V)' },
+  { key: 'sections', label: 'Sections', hint: 'Columns by document heading (V)' },
+  { key: 'swimlane', label: 'Swimlane', hint: 'Status columns × section rows (V)' },
 ];
 
 /** Order in which the V shortcut cycles through views. */
@@ -151,7 +154,10 @@ export function EditableBoard(props: EditableBoardProps) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [cardSignal, setCardSignal] = useState({ id: '', open: 0, edit: 0, move: 0 });
+  const [details, setDetails] = useState<{ id: string; focus: DetailsFocus; nonce: number } | null>(
+    null,
+  );
+  const [focusSection, setFocusSection] = useState<string | null>(null);
 
   const draggedId = useRef<string | null>(null);
   const boardRef = useRef<HTMLElement>(null);
@@ -185,6 +191,11 @@ export function EditableBoard(props: EditableBoardProps) {
       document.removeEventListener('keydown', onDocKey);
     };
   }, [menuOpen]);
+
+  // The task shown in the details panel was deleted (here or elsewhere).
+  useEffect(() => {
+    if (details && !model.tasks.some((t) => t.id === details.id)) setDetails(null);
+  }, [details, model]);
 
   // Clear the new-task highlight after a moment.
   useEffect(() => {
@@ -247,6 +258,9 @@ export function EditableBoard(props: EditableBoardProps) {
     onChange(removeTask(model, task.id), 'Deleted task');
     announce(`${task.title || 'Task'} deleted`);
     setPendingCardDelete(null);
+    // The card (and maybe the details panel) is gone; keep keyboard focus on the board.
+    if (details?.id === task.id) setDetails(null);
+    requestAnimationFrame(() => boardRef.current?.focus());
   };
 
   const duplicate = (task: BoardTask) => {
@@ -412,10 +426,9 @@ export function EditableBoard(props: EditableBoardProps) {
   const requestSectionDelete = (name: string) => {
     const count = model.tasks.filter((t) => t.section === name).length;
     if (count === 0) {
-      if (confirm(`Delete the empty section "${name}"?`)) {
-        onChange(removeSection(model, name), 'Deleted section');
-        announce(`Section ${name} deleted`);
-      }
+      // Nothing to lose and the toast offers Undo — no confirmation needed.
+      onChange(removeSection(model, name), `Deleted section “${name}”`);
+      announce(`Section ${name} deleted`);
       return;
     }
     setPendingSectionDelete({ name, count });
@@ -431,6 +444,8 @@ export function EditableBoard(props: EditableBoardProps) {
     }
     setMenuOpen(false);
   };
+
+  const clearFocusSection = useCallback(() => setFocusSection(null), []);
 
   const cycleView = () => {
     const i = VIEW_ORDER.indexOf(view);
@@ -448,7 +463,9 @@ export function EditableBoard(props: EditableBoardProps) {
 
   // ---- Keyboard shortcuts -------------------------------------------------
   const navOrderRef = useRef<string[]>([]);
-  const cardMetaRef = useRef<Map<string, { colKey: string; ids: string[] }>>(new Map());
+  const cardMetaRef = useRef<
+    Map<string, { colKey: string; colLabel: string; ids: string[]; tasks: BoardTask[] }>
+  >(new Map());
 
   const focusCardAt = (delta: number) => {
     const order = navOrderRef.current;
@@ -460,12 +477,21 @@ export function EditableBoard(props: EditableBoardProps) {
     setFocusedCardId(id);
   };
 
-  const bumpSignal = (kind: 'open' | 'edit' | 'move') => {
-    if (!focusedCardId) return;
-    setCardSignal((s) => ({ ...s, id: focusedCardId, [kind]: s[kind] + 1 }));
+  const openDetails = (id: string, focus: DetailsFocus = 'panel') =>
+    setDetails((d) => ({ id, focus, nonce: (d?.nonce ?? 0) + 1 }));
+
+  const closeDetails = () => {
+    if (details) setFocusTaskId(details.id);
+    setDetails(null);
   };
 
-  const anyOverlayOpen = paletteOpen || helpOpen || pendingCardDelete != null || pendingBulkDelete;
+  const anyOverlayOpen =
+    paletteOpen ||
+    helpOpen ||
+    quickAddOpen ||
+    pendingCardDelete != null ||
+    pendingBulkDelete ||
+    pendingSectionDelete != null;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const target = e.target as HTMLElement;
@@ -475,6 +501,9 @@ export function EditableBoard(props: EditableBoardProps) {
       target.tagName === 'SELECT' ||
       target.isContentEditable;
     const mod = e.metaKey || e.ctrlKey;
+    // Card shortcuts (Enter, E, M, X, Space, Delete) act only on a card that
+    // actually has focus — never on a button that happens to follow one.
+    const cardId = target.classList.contains('pdt-taskcard') ? focusedCardId : null;
 
     // Always-available shortcuts (work even while typing).
     if (mod && (e.key === 'k' || e.key === 'K')) {
@@ -487,7 +516,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
     if (e.key === 'Escape') {
       if (sortOpen) return setSortOpen(false);
-      if (quickAddOpen) return setQuickAddOpen(false);
+      if (details) return closeDetails();
       if (selectionMode) return exitSelection();
       return;
     }
@@ -544,28 +573,28 @@ export function EditableBoard(props: EditableBoardProps) {
         focusCardAt(-1);
         break;
       case 'Enter':
-        if (focusedCardId) {
+        if (cardId) {
           e.preventDefault();
-          bumpSignal('open');
+          openDetails(cardId);
         }
         break;
       case 'e':
       case 'E':
-        if (focusedCardId) {
+        if (cardId) {
           e.preventDefault();
-          bumpSignal('edit');
+          openDetails(cardId, 'title');
         }
         break;
       case 'm':
       case 'M':
-        if (focusedCardId) {
+        if (cardId) {
           e.preventDefault();
-          bumpSignal('move');
+          openDetails(cardId, 'section');
         }
         break;
       case 'x':
       case 'X': {
-        const t = focusedCardId ? model.tasks.find((x) => x.id === focusedCardId) : undefined;
+        const t = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
         if (t) {
           e.preventDefault();
           toggleDone(t);
@@ -573,8 +602,8 @@ export function EditableBoard(props: EditableBoardProps) {
         break;
       }
       case ' ': {
-        const meta = focusedCardId ? cardMetaRef.current.get(focusedCardId) : undefined;
-        const t = focusedCardId ? model.tasks.find((x) => x.id === focusedCardId) : undefined;
+        const meta = cardId ? cardMetaRef.current.get(cardId) : undefined;
+        const t = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
         if (t && meta) {
           e.preventDefault();
           toggleSelect(t, meta.colKey, meta.ids, false);
@@ -583,7 +612,7 @@ export function EditableBoard(props: EditableBoardProps) {
       }
       case 'Delete':
       case 'Backspace': {
-        const t = focusedCardId ? model.tasks.find((x) => x.id === focusedCardId) : undefined;
+        const t = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
         if (selectionMode && selected.size > 0) {
           e.preventDefault();
           setPendingBulkDelete(true);
@@ -630,10 +659,17 @@ export function EditableBoard(props: EditableBoardProps) {
   });
 
   const mod = modLabel();
+  const progress = countTasks(model);
+  const detailsTask = details ? model.tasks.find((t) => t.id === details.id) : undefined;
+  // Read after the columns render (they fill `cardMetaRef`), so it's current.
+  const positionOf = (id: string) => {
+    const meta = cardMetaRef.current.get(id);
+    return meta ? { index: meta.ids.indexOf(id), count: meta.ids.length } : null;
+  };
 
   return (
     <section
-      className="pdt-board"
+      className={`pdt-board ${selectionMode ? 'pdt-board--selecting' : ''}`}
       role="region"
       aria-label="Task board"
       tabIndex={-1}
@@ -641,7 +677,97 @@ export function EditableBoard(props: EditableBoardProps) {
       onKeyDown={handleKeyDown}
     >
       <header className="pdt-board__header">
-        <div className="pdt-board__row pdt-board__row--primary">
+        <div className="pdt-board__row pdt-board__row--top">
+          <button
+            type="button"
+            className="pdt-btn pdt-btn-ghost pdt-btn-sm pdt-board__back"
+            onClick={onClose}
+            title="Back to document"
+          >
+            <Icon name="arrow-left" size={14} />
+            <span>Document</span>
+          </button>
+
+          <div className="pdt-board__titlewrap">
+            <h1 className="pdt-board__title">{model.title || 'Task board'}</h1>
+            <BoardProgress done={progress.done} total={progress.total} />
+          </div>
+
+          <div className="pdt-board__spacer" />
+
+          <SaveIndicator state={saveState} onRetry={onRetry} />
+
+          <button
+            className="pdt-btn pdt-btn-primary"
+            onClick={() => setQuickAddOpen(true)}
+            aria-haspopup="dialog"
+            title="Add task (N)"
+          >
+            <Icon name="plus" size={16} />
+            Add task
+          </button>
+
+          <div className="pdt-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="pdt-btn pdt-btn-icon"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label="More actions"
+              title="More actions"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <Icon name="dots-vertical" />
+            </button>
+            {menuOpen && (
+              <div className="pdt-menu__panel" role="menu">
+                <MenuItem
+                  label={selectionMode ? 'Exit selection' : 'Select tasks'}
+                  hint={`${mod} A`}
+                  onClick={() => {
+                    if (selectionMode) exitSelection();
+                    else setSelectionMode(true);
+                    setMenuOpen(false);
+                  }}
+                />
+                <MenuItem label="Copy board as Markdown" onClick={copyBoardMarkdown} />
+                <MenuItem
+                  label="Reload from document"
+                  onClick={() => {
+                    onReloadFromDoc();
+                    setMenuOpen(false);
+                  }}
+                />
+                <div className="pdt-menu__sep" role="separator" />
+                <MenuItem
+                  label="Command palette"
+                  hint={`${mod} K`}
+                  onClick={() => {
+                    setPaletteOpen(true);
+                    setMenuOpen(false);
+                  }}
+                />
+                <MenuItem
+                  label="Keyboard shortcuts"
+                  hint="?"
+                  onClick={() => {
+                    setHelpOpen(true);
+                    setMenuOpen(false);
+                  }}
+                />
+                <MenuItem
+                  label="Extension settings"
+                  onClick={() => {
+                    onOpenSettings();
+                    setMenuOpen(false);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="pdt-board__row pdt-board__row--tools">
           <div className="pdt-segment" role="tablist" aria-label="Board view">
             {VIEW_LABELS.map((v) => (
               <button
@@ -649,6 +775,7 @@ export function EditableBoard(props: EditableBoardProps) {
                 role="tab"
                 aria-selected={view === v.key}
                 className={`pdt-segment__btn ${view === v.key ? 'is-active' : ''}`}
+                title={v.hint}
                 onClick={() => onViewChange(v.key)}
               >
                 {v.label}
@@ -656,15 +783,28 @@ export function EditableBoard(props: EditableBoardProps) {
             ))}
           </div>
 
-          <input
-            ref={searchRef}
-            type="search"
-            className="pdt-input pdt-search"
-            value={filters.search}
-            placeholder="Search tasks… ( / )"
-            aria-label="Search tasks"
-            onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-          />
+          <div className="pdt-search">
+            <Icon name="magnifier" size={16} className="pdt-search__icon" />
+            <input
+              ref={searchRef}
+              type="search"
+              className="pdt-input pdt-search__input"
+              value={filters.search}
+              placeholder="Search tasks"
+              aria-label="Search tasks"
+              aria-keyshortcuts="/"
+              onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' && filters.search) {
+                  e.stopPropagation();
+                  onFiltersChange({ ...filters, search: '' });
+                }
+              }}
+            />
+            <kbd className="pdt-search__kbd" aria-hidden="true">
+              /
+            </kbd>
+          </div>
 
           <FilterPanel
             filters={filters}
@@ -683,134 +823,41 @@ export function EditableBoard(props: EditableBoardProps) {
             onApplyToDocument={applySortToDocument}
           />
 
-          <div className="pdt-board__spacer" />
-
-          <button
-            className="pdt-btn pdt-btn-primary"
-            onClick={() => setQuickAddOpen((v) => !v)}
-            aria-expanded={quickAddOpen}
-            title="Add task (N)"
-          >
-            <Icon name="plus" size={14} />
-            Add task
-          </button>
-
-          <SaveIndicator state={saveState} onRetry={onRetry} />
-
-          <button className="pdt-btn" onClick={onClose} title="Back to document">
-            Back to document
-          </button>
-
-          <div className="pdt-menu" ref={menuRef}>
-            <button
-              type="button"
-              className="pdt-btn pdt-btn-icon"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              aria-label="More actions"
-              onClick={() => setMenuOpen((v) => !v)}
-            >
-              <Icon name="dots-vertical" />
-            </button>
-            {menuOpen && (
-              <div className="pdt-menu__panel" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="pdt-menu__item"
-                  onClick={() => {
-                    setPaletteOpen(true);
-                    setMenuOpen(false);
-                  }}
-                >
-                  Command palette ({mod} K)
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="pdt-menu__item"
-                  onClick={() => {
-                    setSelectionMode((v) => !v);
-                    setMenuOpen(false);
-                  }}
-                >
-                  {selectionMode ? 'Exit selection mode' : 'Select tasks…'}
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="pdt-menu__item"
-                  onClick={copyBoardMarkdown}
-                >
-                  Copy board as Markdown
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="pdt-menu__item"
-                  onClick={() => {
-                    setHelpOpen(true);
-                    setMenuOpen(false);
-                  }}
-                >
-                  Keyboard shortcuts (?)
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="pdt-menu__item"
-                  onClick={() => {
-                    onReloadFromDoc();
-                    setMenuOpen(false);
-                  }}
-                >
-                  Reload from document
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="pdt-menu__item"
-                  onClick={() => {
-                    onOpenSettings();
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Icon name="cog" size={14} />
-                  Extension settings
-                </button>
-              </div>
-            )}
-          </div>
+          <FilterBar
+            filters={filters}
+            presets={presets}
+            statusColumns={statusColumns}
+            onChange={onFiltersChange}
+            onApplyPreset={(preset: Preset) => {
+              onFiltersChange(preset.filters);
+              if (preset.recommendedSort) onSortChange(preset.recommendedSort);
+            }}
+            onUnavailablePreset={(preset: Preset) => {
+              announce(preset.reason ?? `${preset.label} is unavailable`);
+              onOpenSettings();
+            }}
+          />
         </div>
-
-        <FilterBar
-          filters={filters}
-          presets={presets}
-          statusColumns={statusColumns}
-          onChange={onFiltersChange}
-          onApplyPreset={(preset: Preset) => {
-            onFiltersChange(preset.filters);
-            if (preset.recommendedSort) onSortChange(preset.recommendedSort);
-          }}
-        />
       </header>
 
       {quickAddOpen && (
-        <QuickAddForm
-          sections={model.sections}
-          statusColumns={statusColumns}
-          assigneeSuggestions={assigneeSuggestions}
-          labelSuggestions={labelSuggestions}
-          defaultSection={
-            lastQuickAddSection && model.sections.includes(lastQuickAddSection)
-              ? lastQuickAddSection
-              : (model.sections[0] ?? 'Tasks')
-          }
-          now={now}
-          dateFormat={settings.dateFormat}
-          onSubmit={submitHeaderQuickAdd}
-          onClose={() => setQuickAddOpen(false)}
-        />
+        <Dialog title="New task" size="lg" onClose={() => setQuickAddOpen(false)}>
+          <QuickAddForm
+            sections={model.sections}
+            statusColumns={statusColumns}
+            assigneeSuggestions={assigneeSuggestions}
+            labelSuggestions={labelSuggestions}
+            defaultSection={
+              lastQuickAddSection && model.sections.includes(lastQuickAddSection)
+                ? lastQuickAddSection
+                : (model.sections[0] ?? 'Tasks')
+            }
+            now={now}
+            dateFormat={settings.dateFormat}
+            onSubmit={submitHeaderQuickAdd}
+            onClose={() => setQuickAddOpen(false)}
+          />
+        </Dialog>
       )}
 
       {hiddenNotice && (
@@ -826,27 +873,47 @@ export function EditableBoard(props: EditableBoardProps) {
             >
               Clear filters
             </button>
-            <button className="pdt-btn pdt-btn-sm" onClick={() => setHiddenNotice(false)}>
+            <button
+              className="pdt-btn pdt-btn-sm pdt-btn-ghost"
+              onClick={() => setHiddenNotice(false)}
+            >
               Dismiss
             </button>
           </div>
         </div>
       )}
 
-      {view === 'swimlane' && model.sections.length > 6 && (
-        <div className="pdt-banner pdt-banner--info" role="note">
-          <span className="pdt-banner__text">
-            Swimlane view can be wide with {model.sections.length} sections.
-          </span>
-          <div className="pdt-banner__actions">
-            <button className="pdt-btn pdt-btn-sm" onClick={() => onViewChange('workflow')}>
-              Back to Workflow
-            </button>
-          </div>
+      <div className="pdt-board__body">
+        <div className="pdt-board__main">
+          {view === 'swimlane' ? renderSwimlane() : renderColumns(baseColumns)}
         </div>
-      )}
-
-      {view === 'swimlane' ? renderSwimlane() : renderColumns(baseColumns)}
+        {detailsTask && (
+          <TaskDetailsPanel
+            task={detailsTask}
+            statusColumns={statusColumns}
+            sections={model.sections}
+            assigneeSuggestions={assigneeSuggestions}
+            labelSuggestions={labelSuggestions}
+            now={now}
+            dateFormat={settings.dateFormat}
+            position={positionOf(detailsTask.id)}
+            focusTarget={details!.focus}
+            focusRequest={details!.nonce}
+            onPatch={(patch) => patchTask(detailsTask.id, patch)}
+            onToggleDone={() => toggleDone(detailsTask)}
+            onSetStatus={(st) => setStatus(detailsTask, st)}
+            onSetSection={(sec) => setSection(detailsTask, sec)}
+            onMoveWithin={(delta) => {
+              const meta = cardMetaRef.current.get(detailsTask.id);
+              if (meta) moveWithin(meta.tasks, meta.colLabel, detailsTask, delta);
+            }}
+            onDuplicate={() => duplicate(detailsTask)}
+            onCopyMarkdown={() => void copyMarkdown(detailsTask)}
+            onDelete={() => requestDelete(detailsTask)}
+            onClose={closeDetails}
+          />
+        )}
+      </div>
 
       {selectionMode && (
         <BulkBar
@@ -950,30 +1017,30 @@ export function EditableBoard(props: EditableBoardProps) {
     colLabel: string,
     colVisibleIds: string[],
     visibleTasks: BoardTask[],
-    index: number,
     dropHandler: () => void,
     dragStart: () => void,
   ) {
     navOrderRef.current.push(task.id);
-    cardMetaRef.current.set(task.id, { colKey, ids: colVisibleIds });
+    cardMetaRef.current.set(task.id, {
+      colKey,
+      colLabel,
+      ids: colVisibleIds,
+      tasks: visibleTasks,
+    });
     return (
       <EditableTaskCard
         key={task.id}
         task={task}
         statusColumns={statusColumns}
-        sections={model.sections}
         density={settings.density}
         showDescriptionPreview={settings.showDescriptionPreview}
         cardFields={settings.cardFields}
         dateFormat={settings.dateFormat}
         view={view}
-        assigneeSuggestions={assigneeSuggestions}
-        labelSuggestions={labelSuggestions}
         now={now}
-        position={{ index, count: visibleTasks.length }}
         focus={focusTaskId === task.id}
+        active={details?.id === task.id}
         highlight={highlightId === task.id}
-        signals={cardSignal.id === task.id ? cardSignal : undefined}
         selection={
           selectionMode
             ? {
@@ -986,13 +1053,8 @@ export function EditableBoard(props: EditableBoardProps) {
         onFocusCard={() => setFocusedCardId(task.id)}
         onFocusHandled={() => setFocusTaskId(null)}
         onToggleDone={() => toggleDone(task)}
-        onPatch={(patch) => patchTask(task.id, patch)}
-        onSetStatus={(s) => setStatus(task, s)}
-        onSetSection={(s) => setSection(task, s)}
+        onOpen={() => openDetails(task.id)}
         onMoveWithin={(delta) => moveWithin(visibleTasks, colLabel, task, delta)}
-        onDuplicate={() => duplicate(task)}
-        onDelete={() => requestDelete(task)}
-        onCopyMarkdown={() => void copyMarkdown(task)}
         onDragStartCard={dragStart}
         onDropOnCard={dropHandler}
       />
@@ -1025,38 +1087,52 @@ export function EditableBoard(props: EditableBoardProps) {
               }}
             >
               <div className="pdt-column__head">
+                <button
+                  type="button"
+                  className="pdt-btn pdt-btn-icon pdt-btn-sm"
+                  aria-expanded={!collapsed}
+                  aria-label={collapsed ? `Expand ${col.label}` : `Collapse ${col.label}`}
+                  title={collapsed ? 'Expand' : 'Collapse'}
+                  onClick={() => onToggleColumnCollapse(col.key)}
+                >
+                  <Icon name={collapsed ? 'chevron-right' : 'chevron-down'} />
+                </button>
                 {view === 'sections' ? (
-                  <input
-                    className="pdt-column__name-input"
-                    value={col.label}
-                    aria-label={`Section name: ${col.label}`}
-                    onChange={(e) => onChange(renameSection(model, col.key, e.target.value))}
+                  <SectionNameInput
+                    name={col.key}
+                    otherNames={model.sections.filter((x) => x !== col.key)}
+                    autoFocus={focusSection === col.key}
+                    onFocusHandled={clearFocusSection}
+                    onRename={(next, viaKeyboard) => {
+                      onChange(renameSection(model, col.key, next), `Renamed section to “${next}”`);
+                      announce(`Section renamed to ${next}`);
+                      if (viaKeyboard) setFocusSection(next);
+                    }}
+                    onInvalid={announce}
                   />
                 ) : (
                   <span className="pdt-column__name">{col.label}</span>
                 )}
-                <span className="pdt-column__count" aria-label={`${col.tasks.length} tasks`}>
+                <span
+                  className="pdt-column__count"
+                  aria-label={
+                    filtersActive || hideCompleted
+                      ? `${visibleTasks.length} of ${col.tasks.length} tasks shown`
+                      : `${col.tasks.length} tasks`
+                  }
+                >
                   {filtersActive || hideCompleted
                     ? `${visibleTasks.length}/${col.tasks.length}`
                     : col.tasks.length}
                 </span>
 
-                <button
-                  type="button"
-                  className="pdt-btn pdt-btn-icon"
-                  aria-expanded={!collapsed}
-                  aria-label={collapsed ? `Expand ${col.label}` : `Collapse ${col.label}`}
-                  onClick={() => onToggleColumnCollapse(col.key)}
-                >
-                  <Icon name={collapsed ? 'chevron-right' : 'chevron-down'} />
-                </button>
-
                 {view === 'sections' && (
                   <div className="pdt-column__ops">
                     <button
                       type="button"
-                      className="pdt-btn pdt-btn-icon"
-                      aria-label="Move section left"
+                      className="pdt-btn pdt-btn-icon pdt-btn-sm"
+                      aria-label={`Move ${col.label} left`}
+                      title="Move left"
                       disabled={model.sections.indexOf(col.key) === 0}
                       onClick={() => onChange(moveSection(model, col.key, -1))}
                     >
@@ -1064,8 +1140,9 @@ export function EditableBoard(props: EditableBoardProps) {
                     </button>
                     <button
                       type="button"
-                      className="pdt-btn pdt-btn-icon"
-                      aria-label="Move section right"
+                      className="pdt-btn pdt-btn-icon pdt-btn-sm"
+                      aria-label={`Move ${col.label} right`}
+                      title="Move right"
                       disabled={model.sections.indexOf(col.key) === model.sections.length - 1}
                       onClick={() => onChange(moveSection(model, col.key, 1))}
                     >
@@ -1073,26 +1150,26 @@ export function EditableBoard(props: EditableBoardProps) {
                     </button>
                     <button
                       type="button"
-                      className="pdt-btn pdt-btn-icon"
+                      className="pdt-btn pdt-btn-icon pdt-btn-sm"
                       aria-label={`Delete section ${col.label}`}
+                      title="Delete section"
                       onClick={() => requestSectionDelete(col.key)}
                     >
-                      <Icon name="cross" />
+                      <Icon name="trash" />
                     </button>
                   </div>
                 )}
               </div>
 
               {!collapsed && (
-                <div className="pdt-column__body">
-                  {visibleTasks.map((task, i) =>
+                <div className="pdt-column__body" role="list" aria-label={col.label}>
+                  {visibleTasks.map((task) =>
                     renderCard(
                       task,
                       col.key,
                       col.label,
                       visibleIds,
                       visibleTasks,
-                      i,
                       () => handleDrop(col, task.id),
                       () => (draggedId.current = task.id),
                     ),
@@ -1105,16 +1182,17 @@ export function EditableBoard(props: EditableBoardProps) {
                         : 'No tasks yet.'}
                     </p>
                   )}
-
-                  {!isDoneCol && (
-                    <QuickAdd
-                      open={adding === col.key}
-                      label={col.label}
-                      onOpen={() => setAdding(col.key)}
-                      onCancel={() => setAdding(null)}
-                      onSubmit={(title) => submitColumnQuickAdd(col, title)}
-                    />
-                  )}
+                </div>
+              )}
+              {!collapsed && !isDoneCol && (
+                <div className="pdt-column__foot">
+                  <QuickAdd
+                    open={adding === col.key}
+                    label={col.label}
+                    onOpen={() => setAdding(col.key)}
+                    onCancel={() => setAdding(null)}
+                    onSubmit={(title) => submitColumnQuickAdd(col, title)}
+                  />
                 </div>
               )}
             </div>
@@ -1143,7 +1221,11 @@ export function EditableBoard(props: EditableBoardProps) {
   function renderSwimlane() {
     return (
       <div className="pdt-swimlane" role="table" aria-label="Swimlane board">
-        <div className="pdt-swimlane__head" role="row">
+        <div
+          className="pdt-swimlane__head"
+          role="row"
+          style={{ '--pdt-swimlane-cols': statusColumns.length } as React.CSSProperties}
+        >
           <div className="pdt-swimlane__corner" role="columnheader">
             Section
           </div>
@@ -1158,7 +1240,12 @@ export function EditableBoard(props: EditableBoardProps) {
           const rowCollapsed = collapsedRows.includes(section);
           const rowCount = model.tasks.filter((t) => t.section === section).length;
           return (
-            <div key={section} className="pdt-swimlane__row" role="row">
+            <div
+              key={section}
+              className="pdt-swimlane__row"
+              role="row"
+              style={{ '--pdt-swimlane-cols': statusColumns.length } as React.CSSProperties}
+            >
               <div className="pdt-swimlane__rowhead" role="rowheader">
                 <button
                   type="button"
@@ -1196,22 +1283,16 @@ export function EditableBoard(props: EditableBoardProps) {
                           handleSwimlaneDrop(section, c.key);
                         }}
                       >
-                        {visibleTasks.map((task, i) =>
+                        {visibleTasks.map((task) =>
                           renderCard(
                             task,
                             cellCol.key,
                             cellCol.label,
                             visibleIds,
                             visibleTasks,
-                            i,
                             () => handleSwimlaneDrop(section, c.key),
                             () => (draggedId.current = task.id),
                           ),
-                        )}
-                        {visibleTasks.length === 0 && (
-                          <p className="pdt-swimlane__empty" aria-hidden="true">
-                            +
-                          </p>
                         )}
                       </div>
                     );
@@ -1309,6 +1390,38 @@ function buildCommands(a: BuildCommandsArgs): Command[] {
       run: a.retry,
     },
   ];
+}
+
+function MenuItem({ label, hint, onClick }: { label: string; hint?: string; onClick: () => void }) {
+  return (
+    <button type="button" role="menuitem" className="pdt-menu__item" onClick={onClick}>
+      <span>{label}</span>
+      {hint && <kbd className="pdt-menu__hint">{hint}</kbd>}
+    </button>
+  );
+}
+
+/** Board completion summary next to the title: "4 of 12 done" with a bar. */
+function BoardProgress({ done, total }: { done: number; total: number }) {
+  if (total === 0) return null;
+  const pct = Math.round((done / total) * 100);
+  return (
+    <span className="pdt-progress" title={`${pct}% complete`}>
+      <span
+        className="pdt-progress__bar"
+        role="progressbar"
+        aria-label="Tasks completed"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={done}
+      >
+        <span className="pdt-progress__fill" style={{ width: `${pct}%` }} />
+      </span>
+      <span className="pdt-progress__text">
+        {done} of {total} done
+      </span>
+    </span>
+  );
 }
 
 /**

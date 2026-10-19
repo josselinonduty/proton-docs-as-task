@@ -31,19 +31,27 @@ describe('FilterBar', () => {
     expect(onApplyPreset).toHaveBeenCalledWith(expect.objectContaining({ id: 'overdue' }));
   });
 
-  it('disables "My open tasks" without a configured name', () => {
+  it('routes "My open tasks" to setup instead of applying it without a configured name', async () => {
+    const user = userEvent.setup();
+    const onApplyPreset = vi.fn();
+    const onUnavailablePreset = vi.fn();
     render(
       <FilterBar
         filters={{ ...EMPTY_FILTERS }}
         presets={buildPresets({})}
         statusColumns={STATUS}
         onChange={vi.fn()}
-        onApplyPreset={vi.fn()}
+        onApplyPreset={onApplyPreset}
+        onUnavailablePreset={onUnavailablePreset}
       />,
     );
-    expect(
-      (screen.getByRole('button', { name: 'My open tasks' }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    const mine = screen.getByRole('button', { name: 'My open tasks' });
+    // Still reachable by keyboard, but marked unavailable.
+    expect((mine as HTMLButtonElement).disabled).toBe(false);
+    expect(mine.getAttribute('aria-disabled')).toBe('true');
+    await user.click(mine);
+    expect(onApplyPreset).not.toHaveBeenCalled();
+    expect(onUnavailablePreset).toHaveBeenCalledWith(expect.objectContaining({ id: 'my-open' }));
   });
 
   it('renders a removable chip for each active filter', async () => {

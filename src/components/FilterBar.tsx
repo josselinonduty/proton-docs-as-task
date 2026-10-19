@@ -6,6 +6,7 @@ import {
   type Preset,
 } from '../lib/filters';
 import type { Priority, StatusKey } from '../lib/types';
+import { Icon } from './Icon';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -13,6 +14,8 @@ interface FilterBarProps {
   statusColumns: { key: StatusKey; label: string }[];
   onChange: (filters: FilterState) => void;
   onApplyPreset: (preset: Preset) => void;
+  /** A preset that needs setup (e.g. "My open tasks" without a name) was chosen. */
+  onUnavailablePreset?: (preset: Preset) => void;
 }
 
 interface Chip {
@@ -104,6 +107,7 @@ export function FilterBar({
   statusColumns,
   onChange,
   onApplyPreset,
+  onUnavailablePreset,
 }: FilterBarProps) {
   const chips = buildChips(filters, statusColumns, onChange);
   const active = hasActiveFilters(filters);
@@ -114,14 +118,20 @@ export function FilterBar({
         {presets.map((preset) => {
           const on = preset.available && matchesPreset(filters, preset);
           return (
+            // An unavailable preset stays focusable (a disabled button would
+            // hide its explanation from keyboard users) and leads to setup.
             <button
               key={preset.id}
               type="button"
               className={`pdt-chip pdt-chip--preset ${on ? 'is-active' : ''}`}
-              disabled={!preset.available}
+              aria-disabled={!preset.available || undefined}
               aria-pressed={on}
               title={preset.available ? undefined : preset.reason}
-              onClick={() => (on ? onChange({ ...EMPTY_FILTERS }) : onApplyPreset(preset))}
+              onClick={() => {
+                if (!preset.available) onUnavailablePreset?.(preset);
+                else if (on) onChange({ ...EMPTY_FILTERS });
+                else onApplyPreset(preset);
+              }}
             >
               {preset.label}
             </button>
@@ -136,11 +146,11 @@ export function FilterBar({
               {chip.label}
               <button
                 type="button"
-                className="pdt-chip__x"
+                className="pdt-chip__x pdt-focusable"
                 aria-label={`Remove filter ${chip.label}`}
                 onClick={chip.onRemove}
               >
-                ✕
+                <Icon name="cross" size={12} />
               </button>
             </span>
           ))}
