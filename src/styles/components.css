@@ -2,130 +2,187 @@
  * Shared component classes. Depends on tokens.css being loaded first —
  * every surface (popup, options, board overlay) imports both and composes
  * these classes instead of hand-rolling one-off buttons, inputs, etc.
- * See STYLEGUIDE.md for naming and usage guidance.
+ * Shapes, sizes and states follow Proton's `ButtonLike.scss` and field
+ * styles. See STYLEGUIDE.md for naming and usage guidance.
  */
 
+/* ---------- Focus ----------
+ * Proton's focus treatment: the control's border takes the focus color and a
+ * soft 3px ring surrounds it. Only shown for keyboard focus. */
+.pdt-btn:focus-visible,
+.pdt-link:focus-visible,
+.pdt-focusable:focus-visible {
+  outline: none;
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+
 /* ---------- Buttons ---------- */
+/* Default: Proton's bordered neutral (`button-outline-weak`), 36px tall.
+ * An open popup trigger (`aria-haspopup` + `aria-expanded`) keeps the pressed
+ * look; a plain expand/collapse toggle doesn't, since expanded is its rest state. */
 .pdt-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--pdt-space-2);
-  padding: 8px 14px;
-  border: 1px solid var(--pdt-border-norm);
+  min-height: var(--pdt-control-md);
+  padding: 7px 15px;
+  border: 1px solid var(--pdt-interaction-weak-border);
   border-radius: var(--pdt-radius-md);
   background: var(--pdt-background-norm);
   color: var(--pdt-text-norm);
   font-family: inherit;
-  font-size: var(--pdt-text-sm);
-  font-weight: var(--pdt-font-weight-medium);
+  font-size: var(--pdt-text-md);
+  font-weight: var(--pdt-font-weight-regular);
+  line-height: var(--pdt-line-height);
+  white-space: nowrap;
   cursor: pointer;
   transition:
-    background var(--pdt-transition-fast),
+    background-color var(--pdt-transition-fast),
     border-color var(--pdt-transition-fast),
     color var(--pdt-transition-fast),
-    transform var(--pdt-transition-fast);
+    box-shadow var(--pdt-transition-fast);
 }
 .pdt-btn:hover {
-  background: var(--pdt-background-weak);
+  background: var(--pdt-interaction-weak-hover);
+  border-color: var(--pdt-field-norm);
+}
+.pdt-btn:active,
+.pdt-btn[aria-haspopup][aria-expanded='true'] {
+  background: var(--pdt-interaction-active);
 }
 .pdt-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
+/* Solid primary (`button-solid-norm`) — one per screen. */
 .pdt-btn-primary {
-  border-color: var(--pdt-primary);
-  background: var(--pdt-primary);
+  border-color: var(--pdt-interaction-norm);
+  background: var(--pdt-interaction-norm);
   color: var(--pdt-primary-contrast);
 }
 .pdt-btn-primary:hover {
-  border-color: var(--pdt-primary-hover);
-  background: var(--pdt-primary-hover);
+  border-color: var(--pdt-interaction-norm-hover);
+  background: var(--pdt-interaction-norm-hover);
   color: var(--pdt-primary-contrast);
 }
-.pdt-btn-primary:active {
-  background: var(--pdt-primary-active);
-  border-color: var(--pdt-primary-active);
+.pdt-btn-primary:active,
+.pdt-btn-primary[aria-haspopup][aria-expanded='true'] {
+  border-color: var(--pdt-interaction-norm-active);
+  background: var(--pdt-interaction-norm-active);
+}
+.pdt-btn-primary:focus-visible {
+  border-color: var(--pdt-interaction-norm-active);
+}
+
+/* "Selected" state for a neutral toggle button (e.g. Filters with filters
+ * applied): tinted, not a second solid primary competing with the CTA. */
+.pdt-btn-selected {
+  border-color: var(--pdt-primary);
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary-text);
+}
+.pdt-btn-selected:hover {
+  border-color: var(--pdt-primary-hover);
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary-hover);
 }
 
 .pdt-btn-pill {
   border-radius: var(--pdt-radius-pill);
-  padding: 10px 18px;
   box-shadow: var(--pdt-shadow-md);
 }
-.pdt-btn-pill:hover {
-  transform: translateY(-1px);
-}
 
+/* Outline danger (`button-outline-danger`). */
 .pdt-btn-danger {
-  color: var(--pdt-signal-danger);
+  border-color: var(--pdt-signal-danger-hover);
+  color: var(--pdt-signal-danger-hover);
 }
 .pdt-btn-danger:hover {
-  border-color: var(--pdt-signal-danger);
+  border-color: var(--pdt-signal-danger-active);
   background: var(--pdt-signal-danger-weak);
-  color: var(--pdt-signal-danger);
+  color: var(--pdt-signal-danger-active);
 }
 
-/* Solid destructive button (red fill, white text) for the confirmed
- * destructive action in a dialog. */
+/* Solid destructive (`button-solid-danger`) for a confirmed delete. */
 .pdt-btn-danger-solid {
   border-color: var(--pdt-signal-danger);
   background: var(--pdt-signal-danger);
   color: #fff;
 }
 .pdt-btn-danger-solid:hover {
-  border-color: var(--pdt-signal-danger);
-  background: #c32944;
+  border-color: var(--pdt-signal-danger-hover);
+  background: var(--pdt-signal-danger-hover);
   color: #fff;
 }
 .pdt-btn-danger-solid:active {
-  background: #a82239;
+  background: var(--pdt-signal-danger-active);
 }
 
+/* Ghost (`button-ghost-weak`): no border, neutral wash on hover. */
 .pdt-btn-ghost {
   border-color: transparent;
   background: transparent;
 }
 .pdt-btn-ghost:hover {
   border-color: transparent;
-  background: var(--pdt-background-weak);
+  background: var(--pdt-interaction-hover);
   color: var(--pdt-text-norm);
 }
+.pdt-btn-ghost:active,
+.pdt-btn-ghost[aria-haspopup][aria-expanded='true'] {
+  background: var(--pdt-interaction-active);
+}
 
+/* Square ghost icon button (`button-for-icon`), 36px; 28px with -sm. */
 .pdt-btn-icon {
-  padding: 4px 8px;
+  min-width: var(--pdt-control-md);
+  padding: 9px;
   border-color: transparent;
   background: transparent;
   color: var(--pdt-text-weak);
-  font-size: var(--pdt-text-md);
   line-height: 1;
 }
 .pdt-btn-icon:hover {
   border-color: transparent;
-  background: var(--pdt-background-weak);
+  background: var(--pdt-interaction-hover);
   color: var(--pdt-text-norm);
 }
+.pdt-btn-icon:active,
+.pdt-btn-icon[aria-haspopup][aria-expanded='true'] {
+  background: var(--pdt-interaction-active);
+}
 
+/* Small (`button-small`), 28px. */
 .pdt-btn-sm {
-  padding: 5px 10px;
-  font-size: var(--pdt-text-xs);
+  min-height: var(--pdt-control-sm);
+  padding: 3px 11px;
+  font-size: var(--pdt-text-md);
+}
+.pdt-btn-icon.pdt-btn-sm {
+  min-width: var(--pdt-control-sm);
+  padding: 5px;
 }
 
 /* ---------- Link (quiet, text-only action) ---------- */
 .pdt-link {
-  border: none;
+  border: 1px solid transparent;
+  border-radius: var(--pdt-radius-sm);
   background: none;
-  padding: 0;
+  padding: 0 2px;
   color: var(--pdt-primary);
   font-family: inherit;
-  font-size: var(--pdt-text-sm);
-  font-weight: var(--pdt-font-weight-medium);
+  font-size: var(--pdt-text-md);
+  font-weight: var(--pdt-font-weight-regular);
   cursor: pointer;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .pdt-link:hover {
-  text-decoration: underline;
+  color: var(--pdt-primary-hover);
 }
 
 /* ---------- Inputs ---------- */
@@ -133,23 +190,33 @@
 .pdt-select,
 .pdt-textarea {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--pdt-border-norm);
+  min-height: var(--pdt-control-md);
+  padding: 7px 11px;
+  border: 1px solid var(--pdt-field-norm);
   border-radius: var(--pdt-radius-md);
   background: var(--pdt-background-norm);
   color: var(--pdt-text-norm);
   font-family: inherit;
-  font-size: var(--pdt-text-sm);
+  font-size: var(--pdt-text-md);
+  line-height: var(--pdt-line-height);
   transition:
-    outline-color var(--pdt-transition-fast),
-    background var(--pdt-transition-fast);
+    border-color var(--pdt-transition-fast),
+    box-shadow var(--pdt-transition-fast);
+}
+.pdt-input::placeholder,
+.pdt-textarea::placeholder {
+  color: var(--pdt-text-hint);
 }
 .pdt-select:hover,
-.pdt-input:hover {
-  background: var(--pdt-background-weak);
+.pdt-input:hover,
+.pdt-textarea:hover {
+  border-color: var(--pdt-field-hover);
 }
 .pdt-textarea {
   resize: vertical;
+}
+/* Raw syntax editing (activation markers) keeps a code-like treatment. */
+.pdt-textarea-code {
   background: var(--pdt-background-weak);
   font-family: var(--pdt-font-mono);
   font-size: var(--pdt-text-xs);
@@ -157,8 +224,12 @@
 .pdt-input:focus,
 .pdt-select:focus,
 .pdt-textarea:focus {
-  outline: 2px solid var(--pdt-primary);
-  outline-offset: -1px;
+  outline: none;
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.pdt-input[aria-invalid='true'] {
+  border-color: var(--pdt-signal-danger);
 }
 .pdt-select {
   cursor: pointer;
@@ -166,9 +237,9 @@
 
 /* Checkbox / radio accent, left as native controls with a matching hue. */
 .pdt-native-check {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--pdt-primary);
+  width: 16px;
+  height: 16px;
+  accent-color: var(--pdt-interaction-norm);
 }
 
 /* ---------- Switch (toggle) ---------- */
@@ -179,8 +250,12 @@
   cursor: pointer;
   user-select: none;
 }
+/* Visually hidden, but still focusable for keyboard users. */
 .pdt-switch-row input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 .pdt-switch-row > span:first-child {
   flex: 1;
@@ -192,7 +267,7 @@
   width: 38px;
   height: 22px;
   border-radius: var(--pdt-radius-pill);
-  background: var(--pdt-border-norm);
+  background: var(--pdt-field-norm);
   transition: background var(--pdt-transition-base);
 }
 .pdt-switch::after {
@@ -203,21 +278,24 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--pdt-background-norm);
+  background: #fff;
   box-shadow: var(--pdt-shadow-sm);
   transition: transform var(--pdt-transition-base);
 }
 .pdt-switch-row input:checked + .pdt-switch {
-  background: var(--pdt-primary);
+  background: var(--pdt-interaction-norm);
 }
 .pdt-switch-row input:checked + .pdt-switch::after {
   transform: translateX(16px);
+}
+.pdt-switch-row input:focus-visible + .pdt-switch {
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
 }
 
 /* ---------- Card / panel ---------- */
 .pdt-card {
   background: var(--pdt-background-norm);
-  border: 1px solid var(--pdt-border-norm);
+  border: 1px solid var(--pdt-border-weak);
   border-radius: var(--pdt-radius-lg);
   padding: var(--pdt-space-5);
 }
@@ -230,42 +308,41 @@
   border-radius: var(--pdt-radius-pill);
   background: var(--pdt-background-strong);
   color: var(--pdt-text-weak);
-  font-size: var(--pdt-text-2xs);
+  font-size: var(--pdt-text-xs);
   font-weight: var(--pdt-font-weight-medium);
-  line-height: 1.6;
+  line-height: 1.4;
 }
 .pdt-badge-primary {
   background: var(--pdt-primary-weak);
-  color: var(--pdt-primary);
+  color: var(--pdt-primary-text);
 }
 .pdt-badge-danger {
   background: var(--pdt-signal-danger-weak);
-  color: var(--pdt-signal-danger);
+  color: var(--pdt-signal-danger-text);
 }
 .pdt-badge-warning {
   background: var(--pdt-signal-warning-weak);
-  color: var(--pdt-signal-warning);
+  color: var(--pdt-signal-warning-text);
 }
 .pdt-badge-success {
   background: var(--pdt-signal-success-weak);
-  color: var(--pdt-signal-success);
+  color: var(--pdt-signal-success-text);
 }
 
-/* Solid pill chip, for a status readout (e.g. "Active") rather than a
- * lightweight tag — Proton uses filled chips like this for account/plan
- * status ("ACTIF") and defaults ("DÉFAUT"). */
+/* Solid pill chip, for a status readout (e.g. "Active"). */
 .pdt-badge-solid {
   font-weight: var(--pdt-font-weight-bold);
-  color: var(--pdt-text-invert);
+  color: #fff;
 }
 .pdt-badge-solid-primary {
-  background: var(--pdt-primary);
+  background: var(--pdt-interaction-norm);
 }
 .pdt-badge-solid-danger {
   background: var(--pdt-signal-danger);
 }
 .pdt-badge-solid-warning {
   background: var(--pdt-signal-warning);
+  color: #000;
 }
 .pdt-badge-solid-success {
   background: var(--pdt-signal-success);
@@ -287,13 +364,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--pdt-space-1);
+  min-width: 0;
 }
+/* Proton field labels: sentence case, semibold, normal size. */
 .pdt-field-label {
-  font-size: var(--pdt-text-2xs);
+  font-size: var(--pdt-text-sm);
   font-weight: var(--pdt-font-weight-bold);
-  color: var(--pdt-text-weak);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  color: var(--pdt-text-norm);
 }
 
 /* ---------- Muted text helper ---------- */

@@ -230,7 +230,7 @@ export function App() {
           <code>#!tasks Sprint 42</code>.
         </p>
         <textarea
-          className="pdt-textarea"
+          className="pdt-textarea pdt-textarea-code"
           rows={4}
           value={markersText}
           onChange={(e) => setMarkersText(e.target.value)}
