@@ -126,29 +126,42 @@ Proton Docs renders its content inside a sandboxed **Lexical** editor iframe
 (`docs-editor.proton.me`) embedded in the Docs shell (`docs.proton.me`). This
 extension:
 
-1. **Injects a content script** into that editor frame.
-2. **Reads the editor DOM** and serializes it to plain text, preserving
-   headings, checkboxes and list items (see [`src/lib/extractor.ts`](src/lib/extractor.ts)).
-   It keys off structural attributes Lexical emits (`role="checkbox"`,
-   `aria-checked`, `<h1..6>`) rather than Proton's CSS class names, so it keeps
-   working across styling changes.
+1. **Bridges to Proton's editor.** A small script runs in the editor frame's
+   own JavaScript world ([`src/lib/editorBridge.ts`](src/lib/editorBridge.ts))
+   and attaches to the same Lexical editor instance Proton uses. It talks to
+   the extension's content script through DOM events
+   ([`src/lib/bridgeProtocol.ts`](src/lib/bridgeProtocol.ts)).
+2. **Reads the editor state**, not the DOM: every Lexical update is serialized
+   to plain text lines — headings, check-list items and their checked state —
+   ([`src/lib/editorDoc.ts`](src/lib/editorDoc.ts)) and tagged with its origin
+   (the board itself, a collaborator or another device, undo, or typing in
+   Proton).
 3. **Detects the activation marker** on the first non-empty line. If none is
    present but the document is empty, it offers a **Convert to task board**
    button; otherwise it stays completely dormant on that document.
 4. **Parses** the rest into a task model ([`src/lib/parser.ts`](src/lib/parser.ts)).
 5. **Renders** a React board inside a Shadow DOM overlay, so the extension's
    styles never leak into (or inherit from) Proton's UI.
-6. **Writes edits back** to the document. While the board is open it is
-   authoritative: each change is serialized to plain text
-   ([`src/lib/model.ts`](src/lib/model.ts)) and pushed into the Lexical editor
-   ([`src/lib/docwriter.ts`](src/lib/docwriter.ts)). The board rebuilds from the
-   freshly parsed document each time you reopen it.
+6. **Writes edits back through Proton's own editor.** Each change is
+   serialized ([`src/lib/model.ts`](src/lib/model.ts)), merged with anything
+   that changed in the document meanwhile
+   ([`src/lib/lineMerge.ts`](src/lib/lineMerge.ts)), and applied as one tagged
+   Lexical update that touches only the blocks that changed — `## Section`
+   becomes a real heading and tasks real check-list items. Proton's Yjs
+   collaboration, history and saving then handle it exactly like typed text,
+   so edits from two devices merge instead of overwriting each other.
+7. **Follows the document live.** Changes made anywhere else appear on the
+   open board immediately; if Proton has editing locked (loading, offline,
+   view-only), board edits wait and are written once it unlocks.
 
 ```
 docs.proton.me  (outer shell frame)
-└── iframe: docs-editor.proton.me   ◄── content script runs here
-    ├── [data-lexical-editor] …     ── read + observed via MutationObserver
-    └── #shadow-root (pdt-host)      ── React board overlay is mounted here
+└── iframe: docs-editor.proton.me   ◄── content scripts run here
+    ├── [data-lexical-editor] …     ── Proton's Lexical editor (+ Yjs sync)
+    │     ▲ editor.update / update listener
+    ├── editor bridge (page world)  ── reads state, applies board edits
+    │     ▲ DOM CustomEvents
+    └── #shadow-root (pdt-host)      ── React board overlay (isolated world)
 ```
 
 Everything runs locally in the browser. The extension requests only the
@@ -340,6 +353,7 @@ with no manual migration.
 src/
 ├─ entrypoints/
 │  ├─ background.ts              # opens options on first install
+│  ├─ editor-bridge.content.ts   # page-world script: Proton's Lexical editor
 │  ├─ proton-task.content/       # content script + board overlay + styles
 │  ├─ popup/                      # toolbar popup (status + quick toggles)
 │  └─ options/                    # settings & syntax guide
@@ -357,10 +371,13 @@ src/
    ├─ dates.ts                    # due-date shortcuts + display states   (tested)
    ├─ suggestions.ts              # assignee / label autocomplete indexes (tested)
    ├─ session.ts / sessionStore.ts# per-document session preferences      (tested)
-   ├─ sync.ts                     # external-change / conflict detection  (tested)
+   ├─ sync.ts                     # canonical compare + task id reconcile (tested)
    ├─ board.ts                    # grouping + summary helpers            (tested)
-   ├─ extractor.ts                # Lexical DOM → text serialization
-   ├─ docwriter.ts                # text → Lexical editor (debounced write)
+   ├─ editorDoc.ts                # Lexical state ↔ lines, minimal edits  (tested)
+   ├─ lineMerge.ts                # LCS + three-way line merge            (tested)
+   ├─ editorBridge.ts             # page-world editor bridge (real Lexical +
+   │                              #   Yjs tests)                          (tested)
+   ├─ editorClient.ts / bridgeProtocol.ts # content-script ↔ bridge contract
    ├─ settings.ts / defaults.ts   # persisted settings
    ├─ platform.ts                 # OS-aware shortcut labels
    ├─ messaging.ts                # popup ↔ content-script contract
@@ -369,14 +386,20 @@ src/
 
 ## Scope & limitations
 
-- **The board reads from and writes back to the document.** While it is open the
-  board is authoritative: edits update the UI immediately and are serialized back
-  into the editor on a short debounce. The header shows a live save state
-  (_Saving…_ / _Saved_ / _Save failed_ with **Retry**), and if the document
-  changes underneath an open board you're offered **Reload**, **Keep board
-  version** or **Cancel** rather than a silent overwrite.
-- Because it depends on the editor's DOM structure, a major redesign of the
-  Proton Docs editor could require updating the selectors in `extractor.ts`.
+- **The board reads from and writes back to the document** — through Proton's
+  own Lexical editor, so Proton's sync and saving carry every change. The board
+  follows the document live: edits made elsewhere (another device, a
+  collaborator, the editor itself) show up on the open board, and concurrent
+  edits are merged rather than overwritten. Proton shows its own save status;
+  the board header only flags a failed write (with **Retry**) or edits
+  _waiting to save_ while Proton has editing locked.
+- The board writes `## Sections` as headings and tasks as native check-list
+  items. A board written by an older version (plain-text lines) is converted
+  to these native blocks the first time the board edits it; the text stays the
+  same.
+- The editor bridge relies on Lexical internals Proton doesn't control
+  (`__lexicalEditor`, the node registry), and needs Chrome 111+ or Firefox
+  128+ for page-world content scripts.
 - **Out of scope for v0.6:** custom workflow statuses, comments, attachments,
   subtasks, recurring tasks, reminders/notifications, task dependencies, estimates
   or time tracking, saved custom filter sets, shared user profiles, Proton

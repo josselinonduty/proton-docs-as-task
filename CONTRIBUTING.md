@@ -35,12 +35,14 @@ npm run build:firefox # Firefox production build
 
 ## Guidelines
 
-- **Keep the core logic pure and tested.** Parsing, grouping, and DOM
-  serialization live in `src/lib` with unit tests (`*.test.ts`). Add or update
-  tests alongside behavior changes — the DOM serializer (`extractor.ts`)
-  especially, since it tracks Proton's editor structure.
-- **Read-only by design.** The extension must never write back into the Proton
-  Docs document; the document stays the single source of truth.
+- **Keep the core logic pure and tested.** Parsing, grouping, merging and the
+  editor-state mapping live in `src/lib` with unit tests (`*.test.ts`). Add or
+  update tests alongside behavior changes — the editor bridge especially
+  (`editorDoc.ts`, `editorBridge.ts`), since it tracks Proton's Lexical setup;
+  its tests run against the same Lexical version Proton ships.
+- **The document is the single source of truth.** Every write goes through
+  Proton's editor via the bridge — never by faking input events — and is
+  merged with concurrent changes rather than overwriting them.
 - **Least privilege.** Don't add manifest permissions or host origins unless a
   feature genuinely needs them, and explain why in the PR.
 - **Formatting is enforced by Prettier**, so don't hand-format — just run

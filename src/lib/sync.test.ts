@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseDocument } from './parser';
 import { DEFAULT_MARKERS } from './defaults';
 import { fromParseResult, setTaskStatus, serializeModel } from './model';
-import { canonicalDoc, documentsDiverged } from './sync';
+import { canonicalDoc, documentsDiverged, reconcileIds } from './sync';
 
 const MARKERS = DEFAULT_MARKERS;
 const MARKER = '#!tasks';
@@ -34,5 +34,30 @@ describe('documentsDiverged', () => {
     model = setTaskStatus(model, model.tasks[0]!.id, 'done');
     // Editor still holds the old document.
     expect(documentsDiverged(DOC, model, MARKERS, MARKER)).toBe(true);
+  });
+});
+
+describe('reconcileIds', () => {
+  const parse = (text: string) => fromParseResult(parseDocument(text, MARKERS));
+
+  it('keeps the ids of tasks that survive a re-parse', () => {
+    const prev = parse(DOC);
+    const next = reconcileIds(
+      prev,
+      parse(['#!tasks Board', '## S', '- [x] b', '- [ ] a'].join('\n')),
+    );
+    expect(next.tasks.find((t) => t.title === 'a')!.id).toBe(prev.tasks[0]!.id);
+    expect(next.tasks.find((t) => t.title === 'b')!.id).toBe(prev.tasks[1]!.id);
+  });
+
+  it('follows a task whose status changed elsewhere, and gives new tasks new ids', () => {
+    const prev = parse(DOC);
+    const next = reconcileIds(
+      prev,
+      parse(['#!tasks Board', '## S', '- [x] a', '- [x] b', '- [ ] c'].join('\n')),
+    );
+    expect(next.tasks[0]!.id).toBe(prev.tasks[0]!.id);
+    expect(next.tasks[1]!.id).toBe(prev.tasks[1]!.id);
+    expect(prev.tasks.map((t) => t.id)).not.toContain(next.tasks[2]!.id);
   });
 });

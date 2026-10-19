@@ -75,8 +75,6 @@ interface EditableBoardProps {
   onUndo: () => void;
   onRetry: () => void;
   onReloadFromDoc: () => void;
-  onOverwriteDoc: () => void;
-  onDismissConflict: () => void;
   onOpenSettings: () => void;
   onClose: () => void;
 }
@@ -117,8 +115,6 @@ export function EditableBoard(props: EditableBoardProps) {
     onUndo,
     onRetry,
     onReloadFromDoc,
-    onOverwriteDoc,
-    onDismissConflict,
     onOpenSettings,
     onClose,
   } = props;
@@ -799,25 +795,6 @@ export function EditableBoard(props: EditableBoardProps) {
         />
       </header>
 
-      {saveState === 'conflict' && (
-        <div className="pdt-banner pdt-banner--warning" role="alert">
-          <span className="pdt-banner__text">
-            The underlying document changed while the board was open.
-          </span>
-          <div className="pdt-banner__actions">
-            <button className="pdt-btn pdt-btn-sm" onClick={onReloadFromDoc}>
-              Reload from document
-            </button>
-            <button className="pdt-btn pdt-btn-sm" onClick={onOverwriteDoc}>
-              Keep board version
-            </button>
-            <button className="pdt-btn pdt-btn-sm" onClick={onDismissConflict}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
       {quickAddOpen && (
         <QuickAddForm
           sections={model.sections}
@@ -1337,8 +1314,8 @@ function buildCommands(a: BuildCommandsArgs): Command[] {
 /**
  * Save state indicator. Proton Docs shows its own "Saved / Saving" status, so
  * the board only surfaces the states Proton can't: a failed write (with a
- * retry action) and an external-change conflict. The normal saved/saving
- * states render nothing.
+ * retry action) and edits waiting for Proton to unlock editing. The normal
+ * saved/saving states render nothing.
  */
 function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
   if (state === 'error') {
@@ -1351,10 +1328,14 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
       </span>
     );
   }
-  if (state === 'conflict') {
+  if (state === 'paused') {
     return (
-      <span className="pdt-save pdt-save--warning" role="status">
-        <Icon name="exclamation-circle" size={14} /> Document changed
+      <span
+        className="pdt-save pdt-save--warning"
+        role="status"
+        title="Proton Docs has editing paused (still loading, offline, or view-only). Your changes will be saved as soon as editing resumes."
+      >
+        <Icon name="exclamation-circle" size={14} /> Waiting to save
       </span>
     );
   }
