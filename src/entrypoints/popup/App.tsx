@@ -10,7 +10,7 @@ type TabStatus =
   | { state: 'inactive' } // Docs open, but no editor / no task marker
   | { state: 'active'; status: StatusResponse };
 
-type SaveFeedback = { kind: 'idle' | 'saving' | 'saved' | 'error' | 'conflict'; message?: string };
+type SaveFeedback = { kind: 'idle' | 'saving' | 'saved' | 'error' | 'warning'; message?: string };
 
 async function queryActiveTab(): Promise<{ id?: number; url?: string }> {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -82,13 +82,6 @@ export function App() {
     if (tabId == null || tab.state !== 'active') return;
     const title = qaTitle.trim();
     if (!title) return;
-    if (tab.status.conflict) {
-      setFeedback({
-        kind: 'conflict',
-        message: 'The document changed — open the board to resolve it first.',
-      });
-      return;
-    }
     setFeedback({ kind: 'saving' });
     const res = await sendAddTask(tabId, {
       type: 'add-task',
@@ -103,10 +96,10 @@ export function App() {
       // Refresh counts.
       const status = await sendToTab(tabId, { type: 'get-status' });
       if (status && status.activated) setTab({ state: 'active', status });
-    } else if (res?.blocked === 'conflict') {
+    } else if (res?.error === 'read-only') {
       setFeedback({
-        kind: 'conflict',
-        message: 'The document changed — open the board to resolve it first.',
+        kind: 'warning',
+        message: 'Proton has editing paused (offline or view-only). Try again in a moment.',
       });
     } else {
       setFeedback({ kind: 'error', message: 'Could not save the task. Try opening the board.' });

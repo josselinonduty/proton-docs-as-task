@@ -90,8 +90,12 @@ export interface CardFieldVisibility {
   statusInSections: boolean;
 }
 
-/** Document synchronization state shown in the board header. */
-export type SaveState = 'saved' | 'saving' | 'error' | 'conflict';
+/**
+ * Document synchronization state shown in the board header. `paused` means
+ * Proton has editing locked (still loading, offline, or view-only access);
+ * pending changes are written as soon as it unlocks.
+ */
+export type SaveState = 'saved' | 'saving' | 'paused' | 'error';
 
 /** Persisted user settings. */
 export interface Settings {

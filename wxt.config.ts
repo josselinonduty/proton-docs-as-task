@@ -15,9 +15,13 @@ export default defineConfig({
     action: {
       default_title: 'Proton Docs as Task',
     },
+    // The editor bridge is a `world: "MAIN"` content script (Chrome 111+,
+    // Firefox 128+), needed to reach Proton's Lexical editor instance.
+    minimum_chrome_version: '111',
     browser_specific_settings: {
       gecko: {
         id: 'proton-docs-as-task@josselinonduty.fr',
+        strict_min_version: '128.0',
         // The extension makes no network requests and collects nothing —
         // see PRIVACY.md. Required by Firefox for all new extensions:
         // https://mzl.la/firefox-builtin-data-consent
