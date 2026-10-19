@@ -48,15 +48,19 @@ npm run build:firefox # Firefox production build
 
 ## Commit & PR
 
-- Use clear, descriptive commit messages.
+- Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`,
+  `fix:`, `refactor:`, `docs:`, `chore:` …) — the release version and changelog
+  are generated from them. Squash-merge PRs so the PR title is the commit.
 - Describe the user-facing effect of the change in the PR, and note anything a
   reviewer should manually verify in the browser.
-- Update `CHANGELOG.md` under an `Unreleased` heading for user-visible changes.
+- Don't edit `CHANGELOG.md` or the `package.json` version by hand — the release
+  PR does that.
 
 ## Releasing
 
-Releasing is documented in the [README](README.md#releasing): bump the version
-in `package.json`, tag `vX.Y.Z`, and push the tag — the release workflow builds
-the Chrome and Firefox packages, attaches them to a GitHub Release, and (once
-the [store credentials](README.md#store-credentials) are configured as repo
-secrets) submits them to the Chrome Web Store and Firefox Add-ons for review.
+Releasing is documented in the [README](README.md#releasing): release-please
+keeps a release PR open on `main`; merge it to tag and publish. The release
+workflow builds the Chrome and Firefox packages, attaches them to the GitHub
+Release, and (once the [store credentials](README.md#store-credentials) are
+configured as repo secrets) submits them to the Chrome Web Store and Firefox
+Add-ons for review.
