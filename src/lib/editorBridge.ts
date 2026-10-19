@@ -243,9 +243,17 @@ function area(el: Element): number {
   return r.width * r.height;
 }
 
+/**
+ * Proton's document editor carries this class (`Containers/Docs/Editor.tsx` in
+ * ProtonMail/WebClients). Sheets also mounts small Lexical editors (comments,
+ * dialogs) with no document behind them; without this check they read as an
+ * empty document.
+ */
+const DOCUMENT_EDITOR_SELECTOR = '[data-lexical-editor].DocumentEditor';
+
 /** The document's main (top-level, largest) Lexical editor, if mounted. */
 export function findLexicalEditor(doc: Document): LexicalEditorLike | null {
-  const candidates = Array.from(doc.querySelectorAll<EditorElement>('[data-lexical-editor]'))
+  const candidates = Array.from(doc.querySelectorAll<EditorElement>(DOCUMENT_EDITOR_SELECTOR))
     .filter((el) => el.__lexicalEditor && !el.__lexicalEditor._parentEditor)
     .sort((a, b) => area(b) - area(a));
   return candidates[0]?.__lexicalEditor ?? null;
