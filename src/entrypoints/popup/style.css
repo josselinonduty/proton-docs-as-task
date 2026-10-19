@@ -98,11 +98,11 @@ code {
   font-size: var(--pdt-text-xs);
 }
 .pp-feedback--saved {
-  color: var(--pdt-signal-success);
+  color: var(--pdt-signal-success-text);
 }
 .pp-feedback--error {
-  color: var(--pdt-signal-danger);
+  color: var(--pdt-signal-danger-text);
 }
 .pp-feedback--warning {
-  color: var(--pdt-signal-warning);
+  color: var(--pdt-signal-warning-text);
 }

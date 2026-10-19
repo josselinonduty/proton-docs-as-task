@@ -25,46 +25,52 @@ reintroduce colors, radii or button/input styling locally — extend
 
 ## Matching Proton's design language
 
-Proton's product UI (Mail, Drive, Docs, …) is built on its own internal
-design system, so this extension can't literally reuse it — instead
-`tokens.css` approximates its conventions as closely as a self-contained,
-network-free browser extension reasonably can:
+Proton's product UI (Mail, Drive, Docs, …) is built on its own design system
+in the open-source [`ProtonMail/WebClients`][webclients] monorepo. The
+extension can't import it (it's self-contained and network-free), so
+`tokens.css` mirrors its values directly:
 
-- **Brand purple accent** (`--pdt-primary`, `#6d4aff`) on otherwise quiet,
-  low-saturation neutral surfaces — Proton uses color sparingly, reserved for
-  primary actions, active states and the brand mark.
-- **Semantic, not literal, color names** (`background-norm` / `-weak` /
-  `-strong`, `text-norm` / `-weak` / `-hint`, `border-norm` / `-weak`,
-  `signal-danger` / `-warning` / `-success` / `-info`) mirroring the naming
-  used across Proton's own web apps, so the palette is easy to reason about
-  and to re-theme.
-- **Rounded, friendly geometry**: 8px as the default control radius, up to a
-  full pill for primary/floating actions (`--pdt-radius-*`).
-- **Restrained elevation**: flat by default, a soft shadow only on floating
-  or overlay elements (`--pdt-shadow-*`), never on inline content.
-- **Arial-led font stack**: Proton's own document editor defaults to Arial,
-  so the extension leads with it rather than a system-UI font, falling back
-  to the platform stack. No webfont is bundled — the extension makes no
-  network requests and ships no font assets — so this is as close as it
-  gets to Proton's actual typeface without one.
-- **Neutral secondary buttons**: most Proton buttons (e.g. "Add a payment
-  method") are white with a gray border and a plain gray hover background —
-  purple is reserved for the one primary action on a screen. `.pdt-btn`'s
-  default and hover states follow that; only `.pdt-btn-primary` uses purple.
-- **White, bordered form controls**: Proton's own dropdowns/inputs sit on
-  white with a visible border rather than a tinted fill; `.pdt-input` /
-  `.pdt-select` match that, while `.pdt-textarea` keeps a tinted,
-  monospaced treatment for the one code-like use case (raw marker editing).
-- **Solid status chips**: Proton renders account/plan status ("ACTIF",
-  "DÉFAUT") as small solid-color pills with white text, not tinted badges —
-  `.pdt-badge-solid-*` covers that; the plain `.pdt-badge-*` tint remains
-  for lighter-weight tags.
-- **Persistent dark chrome**: Proton's settings navigation stays a dark
-  near-black navy even in light mode, with white content cards next to it.
-  `--pdt-nav-*` tokens capture that (independent of `prefers-color-scheme`)
-  and back the options page's header band.
-- **Automatic light/dark** via `prefers-color-scheme` for content surfaces,
-  matching how Proton's own apps follow the OS theme.
+| Proton source                                  | What the extension takes from it                                                                                      |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `packages/colors/themes/dist/snow.theme.css`   | Light palette: warm neutrals (`#f5f4f2`, `#d1cfcd`, `#5c5958`), brand `#6d4aff`, signal colors, `minor`/`major` steps |
+| `packages/colors/themes/dist/carbon.theme.css` | Dark palette: `#16141c` surfaces, `#8a6eff` accent, while solid buttons keep `interaction-norm` `#6d4aff`             |
+| `packages/styles/scss/lib/_config.scss`        | 14px / 20px base type, 3px focus ring                                                                                 |
+| `packages/atoms/src/Button/ButtonLike.scss`    | Button shapes (solid / outline / ghost), 36px medium and 28px small heights, hover = one step _darker_                |
+| `packages/styles/scss/base/_fonts.scss`        | Inter as the UI typeface                                                                                              |
+
+Conventions that follow from it:
+
+- **Purple is for the one primary action** (`.pdt-btn-primary`, e.g. _Add
+  task_). Toggle-like controls that are "on" (Filters with filters applied,
+  an active sort) use the tinted `.pdt-btn-selected`, never a second solid
+  purple button.
+- **Semantic color names** (`background-norm` / `-weak` / `-strong` /
+  `-lowered` / `-elevated`, `text-norm` / `-weak` / `-hint`, `border-norm` /
+  `-weak`, `field-norm` / `-hover`, `interaction-hover` / `-active`) mirror
+  Proton's variables, so the palette is easy to reason about and re-theme.
+- **Readable signal chips**: each signal has a base color, a `-weak` tint for
+  chip backgrounds and a `-text` step for text on that tint. `-text` uses
+  Proton's darker steps so 12px chip labels meet WCAG AA; the light warning
+  text is one step darker than Proton's palette for the same reason (noted in
+  `tokens.css`).
+- **Inter without bundling it**: the font stack leads with `InterVariable,
+Inter`. Proton's page already loads them, and page-level `@font-face`
+  rules apply inside the board's shadow root, so the board renders in
+  Proton's typeface without the extension shipping a font file.
+- **Visible keyboard focus everywhere**: interactive elements get Proton's
+  focus treatment (focus-colored border + 3px `--pdt-focus-ring`) on
+  `:focus-visible`. Use `.pdt-focusable` on custom controls that aren't
+  `.pdt-btn`/`.pdt-link`.
+- **Light chrome**: Proton's current default theme (Snow) has light
+  navigation, so there is no always-dark "nav" surface any more. Floating
+  feedback (the undo toast) uses `--pdt-background-invert`, like Proton
+  notifications.
+- **Restrained elevation**: flat by default; `--pdt-shadow-*` only on cards,
+  popovers, dialogs and floating bars.
+- **Automatic light/dark** via `prefers-color-scheme`, overridable with the
+  Theme setting.
+
+[webclients]: https://github.com/ProtonMail/WebClients
 
 ## Tokens (`src/styles/tokens.css`)
 
@@ -76,19 +82,20 @@ a token (`var(--pdt-...)`) over a hard-coded value.
 
 ## Components (`src/styles/components.css`)
 
-| Class                                                                                                                   | Use for                                                                                                                             |
-| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `.pdt-btn` (+ `.pdt-btn-primary`, `.pdt-btn-danger`, `.pdt-btn-ghost`, `.pdt-btn-icon`, `.pdt-btn-pill`, `.pdt-btn-sm`) | Every clickable button. Compose the base class with one modifier for color/shape.                                                   |
-| `.pdt-link`                                                                                                             | A text-only action styled as a link, never a bordered button.                                                                       |
-| `.pdt-input`, `.pdt-select`, `.pdt-textarea`                                                                            | Form controls — consistent border, radius, focus ring.                                                                              |
-| `.pdt-native-check`                                                                                                     | Native checkboxes/radios that should pick up the brand accent color.                                                                |
-| `.pdt-switch-row` / `.pdt-switch`                                                                                       | An on/off toggle (`<label class="pdt-switch-row"><span>Label</span><input type="checkbox"/><span class="pdt-switch"/></label>`).    |
-| `.pdt-card`                                                                                                             | A bordered, padded panel/section.                                                                                                   |
-| `.pdt-badge` (+ `-primary`, `-danger`, `-warning`, `-success`)                                                          | Small tinted status/count pills.                                                                                                    |
-| `.pdt-badge-solid` (+ `-primary`, `-danger`, `-warning`, `-success`)                                                    | Solid-fill status pill (white text), for a prominent state readout like Proton's "ACTIF"/"DÉFAUT" chips. Combine with `.pdt-badge`. |
-| `.pdt-code`                                                                                                             | Inline code snippets outside the board overlay (`.pdt-host code` is styled automatically inside it).                                |
-| `.pdt-field` / `.pdt-field-label`                                                                                       | A labeled form field wrapper.                                                                                                       |
-| `.pdt-text-weak`                                                                                                        | Secondary/muted text.                                                                                                               |
+| Class                                                                                                                                                                 | Use for                                                                                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `.pdt-btn` (+ `.pdt-btn-primary`, `.pdt-btn-selected`, `.pdt-btn-danger`, `.pdt-btn-danger-solid`, `.pdt-btn-ghost`, `.pdt-btn-icon`, `.pdt-btn-pill`, `.pdt-btn-sm`) | Every clickable button. Compose the base class with one modifier for color/shape.                                                   |
+| `.pdt-link`                                                                                                                                                           | A text-only action styled as a link, never a bordered button.                                                                       |
+| `.pdt-input`, `.pdt-select`, `.pdt-textarea` (+ `.pdt-textarea-code` for raw syntax)                                                                                  | Form controls — consistent border, radius, focus ring.                                                                              |
+| `.pdt-focusable`                                                                                                                                                      | Adds the standard focus ring to a custom interactive element.                                                                       |
+| `.pdt-native-check`                                                                                                                                                   | Native checkboxes/radios that should pick up the brand accent color.                                                                |
+| `.pdt-switch-row` / `.pdt-switch`                                                                                                                                     | An on/off toggle (`<label class="pdt-switch-row"><span>Label</span><input type="checkbox"/><span class="pdt-switch"/></label>`).    |
+| `.pdt-card`                                                                                                                                                           | A bordered, padded panel/section.                                                                                                   |
+| `.pdt-badge` (+ `-primary`, `-danger`, `-warning`, `-success`)                                                                                                        | Small tinted status/count pills.                                                                                                    |
+| `.pdt-badge-solid` (+ `-primary`, `-danger`, `-warning`, `-success`)                                                                                                  | Solid-fill status pill (white text), for a prominent state readout like Proton's "ACTIF"/"DÉFAUT" chips. Combine with `.pdt-badge`. |
+| `.pdt-code`                                                                                                                                                           | Inline code snippets outside the board overlay (`.pdt-host code` is styled automatically inside it).                                |
+| `.pdt-field` / `.pdt-field-label`                                                                                                                                     | A labeled form field wrapper.                                                                                                       |
+| `.pdt-text-weak`                                                                                                                                                      | Secondary/muted text.                                                                                                               |
 
 Surface-specific classes (`pp-*` for the popup, `op-*` for options, the
 board's own `pdt-board__*` / `pdt-column__*` / etc.) are layout-only: they
@@ -115,4 +122,7 @@ pdt-btn-primary pdt-btn-sm"`).
    one-off in a surface stylesheet) so the next surface can reuse it.
 3. Check both color schemes — every token already has a dark-mode override,
    so components built from tokens get dark mode for free; verify visually
-   with the OS theme toggled.
+   with the OS theme toggled. `npm run playground` mounts the real board
+   against a fake document for exactly this (see README).
+4. Check text-on-tint contrast (≥ 4.5:1 for text under 18px) when adding a
+   colored chip.

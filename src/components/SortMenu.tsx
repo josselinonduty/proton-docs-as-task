@@ -40,7 +40,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
     <div className="pdt-sortmenu" ref={wrapRef}>
       <button
         type="button"
-        className={`pdt-btn ${active ? 'pdt-btn-primary' : ''}`}
+        className={`pdt-btn ${active ? 'pdt-btn-selected' : ''}`}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => onOpenChange(!open)}
@@ -72,7 +72,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
             <div className="pdt-sortmenu__dir" role="group" aria-label="Sort direction">
               <button
                 type="button"
-                className={`pdt-btn pdt-btn-sm ${sort.dir === 'asc' ? 'pdt-btn-primary' : ''}`}
+                className={`pdt-btn pdt-btn-sm ${sort.dir === 'asc' ? 'pdt-btn-selected' : ''}`}
                 aria-pressed={sort.dir === 'asc'}
                 onClick={() => onChange({ ...sort, dir: 'asc' })}
               >
@@ -80,7 +80,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
               </button>
               <button
                 type="button"
-                className={`pdt-btn pdt-btn-sm ${sort.dir === 'desc' ? 'pdt-btn-primary' : ''}`}
+                className={`pdt-btn pdt-btn-sm ${sort.dir === 'desc' ? 'pdt-btn-selected' : ''}`}
                 aria-pressed={sort.dir === 'desc'}
                 onClick={() => onChange({ ...sort, dir: 'desc' })}
               >
