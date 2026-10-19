@@ -258,23 +258,38 @@ Open a document on `docs.proton.me`, make its first line `#!tasks`, and add a fe
 
 ### Releasing
 
-Releases are built and published by the
-[`release` workflow](.github/workflows/release.yml) when a version tag is
-pushed:
+Releases are automated with [release-please][release-please]. Commits on
+`main` follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-1. Bump `version` in `package.json` (WXT uses it for the manifest version).
-2. Commit the bump.
-3. Tag and push:
+| Prefix                                         | Effect                           |
+| ---------------------------------------------- | -------------------------------- |
+| `fix:`                                         | patch bump (`0.7.1` → `0.7.2`)   |
+| `feat:`                                        | minor bump (`0.7.1` → `0.8.0`)   |
+| `feat!:` / `fix!:` / `BREAKING CHANGE:` footer | minor while `0.x`, major from 1+ |
+| `perf:`, `refactor:`, `docs:`                  | listed in the changelog          |
+| `chore:`, `ci:`, `build:`, `test:`, `style:`   | no release, not in the changelog |
 
-   ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
-   ```
+The [`release-please` workflow](.github/workflows/release-please.yml) keeps a
+standing **"chore(main): release X.Y.Z"** pull request open against `main`. It
+accumulates everything merged since the last release, bumps the version in
+`package.json` / `package-lock.json` (WXT uses it for the manifest version) and
+prepends the new section to `CHANGELOG.md`. Nothing is released until you merge
+that PR; merging it creates the `vX.Y.Z` tag and GitHub Release, then calls the
+[`release` workflow](.github/workflows/release.yml). Use squash merges (or
+conventional merge titles) so the PR title is the commit that gets parsed.
 
-The workflow type-checks, tests, builds the Chrome and Firefox packages, and
-attaches them (plus a Firefox sources archive) to a new GitHub Release with
-auto-generated notes. The tag must match the `package.json` version (e.g.
-`v0.1.0` ↔ `0.1.0`) or the run fails.
+The `release` workflow type-checks, tests, builds the Chrome and Firefox
+packages, and attaches them (plus a Firefox sources archive) to that GitHub
+Release. It can also be re-run by hand from the Actions tab with an existing
+tag, e.g. `v0.8.0`.
+
+One-time repository setup: enable **Settings → Actions → General → Allow GitHub
+Actions to create and approve pull requests**. PRs opened by the default
+`GITHUB_TOKEN` don't trigger CI; to get checks on the release PR, add a
+`RELEASE_PLEASE_TOKEN` secret (a PAT or GitHub App token with contents and
+pull-requests write).
+
+[release-please]: https://github.com/googleapis/release-please
 
 If the store credentials below are configured as repository secrets, the
 workflow also submits the packages to the Chrome Web Store and Firefox

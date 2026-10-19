@@ -1,0 +1,50 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# release-please keeps a standing "release" PR open on main. It accumulates
+# the conventional commits merged since the last release, bumps the version
+# in package.json / package-lock.json and prepends the CHANGELOG. Merging
+# that PR creates the tag and GitHub Release, then the build job below runs.
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # PRs opened with the default GITHUB_TOKEN don't trigger other
+      # workflows, so CI wouldn't run on the release PR. Set the optional
+      # RELEASE_PLEASE_TOKEN secret (a PAT or GitHub App token with
+      # contents + pull-requests write) to get CI on it; without it the
+      # default token is used and everything else still works.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Tags created with GITHUB_TOKEN don't fire `on: push: tags`, so the
+  # build/publish workflow is called directly once a release is created.
+  release:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
