@@ -22,6 +22,7 @@ import type { BoardView, SaveState, Settings } from '../lib/types';
 import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
 import { Icon } from './Icon';
+import { announceBoard } from '../lib/branding';
 
 interface OverlayAppProps {
   client: EditorClient;
@@ -375,6 +376,12 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.activated, settings.autoShow]);
 
+  // Brand the Docs shell (favicon, header icon) while this is a task board.
+  useEffect(() => {
+    announceBoard(result.activated);
+    return () => announceBoard(false);
+  }, [result.activated]);
+
   // Write any pending edit on unmount.
   useEffect(() => {
     return () => {
@@ -513,13 +520,13 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     const pendingCount = result.tasks.filter((t) => t.status !== 'done').length;
     return (
       <button
-        className="pdt-btn pdt-btn-primary pdt-btn-pill pdt-fab"
+        className="pdt-btn pdt-btn-pill pdt-fab"
         onClick={openBoard}
-        title="Open task board"
+        title="Open the task board"
         aria-label={`Open task board, ${pendingCount} open ${pendingCount === 1 ? 'task' : 'tasks'}`}
       >
-        <Icon name="checkmark-circle" size={18} />
-        <span>Tasks</span>
+        <Icon name="kanban" size={16} />
+        <span>Open board</span>
         {pendingCount > 0 && (
           <span className="pdt-fab__badge" aria-hidden="true">
             {pendingCount}
@@ -534,15 +541,16 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     return (
       <div className="pdt-convert" role="region" aria-label="Convert to task board">
         <span className="pdt-convert__icon" aria-hidden="true">
-          <Icon name="checkmark-circle" size={24} />
+          <Icon name="kanban" size={24} />
         </span>
-        <p className="pdt-convert__title">Plan this document as a task board</p>
+        <p className="pdt-convert__title">Turn this document into a task board</p>
         <p className="pdt-convert__hint">
-          Tasks are saved in this document as a checklist, so they sync and share like any other
-          Proton doc.
+          Your tasks are saved in this document as a checklist, so they sync and share like any
+          other Proton doc.
         </p>
         <button type="button" className="pdt-btn pdt-btn-primary" onClick={convertToTaskDoc}>
-          Convert to task board
+          <Icon name="plus" size={16} />
+          <span>Create task board</span>
         </button>
       </div>
     );
