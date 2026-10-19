@@ -1,42 +1,21 @@
 import { createShadowRootUi, defineContentScript } from '#imports';
 import ReactDOM from 'react-dom/client';
 import { OverlayApp } from '../../components/OverlayApp';
-import { findEditorRoot } from '../../lib/extractor';
+import { connectEditor } from '../../lib/editorClient';
 import { getSettings } from '../../lib/settings';
 import './style.css';
-
-/**
- * Wait for the Lexical editor root to appear in this frame. Returns null in
- * frames that never host an editor (e.g. the outer Docs shell frame).
- */
-function waitForEditor(ctx: { isValid: boolean }, timeoutMs = 30_000): Promise<HTMLElement | null> {
-  return new Promise((resolve) => {
-    const existing = findEditorRoot();
-    if (existing) return resolve(existing);
-
-    const started = Date.now();
-    const interval = setInterval(() => {
-      if (!ctx.isValid || Date.now() - started > timeoutMs) {
-        clearInterval(interval);
-        resolve(findEditorRoot());
-        return;
-      }
-      const root = findEditorRoot();
-      if (root) {
-        clearInterval(interval);
-        resolve(root);
-      }
-    }, 500);
-  });
-}
 
 export default defineContentScript({
   matches: ['https://docs.proton.me/*', 'https://docs-editor.proton.me/*'],
   allFrames: true,
   cssInjectionMode: 'ui',
   async main(ctx) {
-    const root = await waitForEditor(ctx);
-    if (!root || !ctx.isValid) return;
+    // Wait for the editor bridge to report Proton's editor. Frames that never
+    // host an editor (e.g. the outer Docs shell) simply never get past this.
+    const client = connectEditor(document);
+    ctx.onInvalidated(() => client.stop());
+    const initialState = await client.ready;
+    if (!ctx.isValid) return;
 
     const settings = await getSettings();
 
@@ -50,7 +29,14 @@ export default defineContentScript({
         host.className = 'pdt-host';
         container.append(host);
         const reactRoot = ReactDOM.createRoot(host);
-        reactRoot.render(<OverlayApp root={root} host={host} initialSettings={settings} />);
+        reactRoot.render(
+          <OverlayApp
+            client={client}
+            initialState={initialState}
+            host={host}
+            initialSettings={settings}
+          />,
+        );
         return reactRoot;
       },
       onRemove(reactRoot) {

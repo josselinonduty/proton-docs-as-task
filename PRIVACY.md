@@ -6,9 +6,10 @@ it has no server of its own.
 
 ## What the extension does
 
-- It reads the DOM of the Proton Docs editor (`docs.proton.me` and
+- It reads the open document from the Proton Docs editor (`docs.proton.me` and
   `docs-editor.proton.me` only) to parse a document's checklist into a task
-  board, and writes edits back into that same document as plain text.
+  board, and writes edits back into that same document through Proton's own
+  editor, which saves and syncs them like any other edit.
 - It never reads, modifies, or has access to any other website, browser tab,
   or Proton service (Mail, Calendar, Drive files other than the open Doc,
   account settings, etc.).

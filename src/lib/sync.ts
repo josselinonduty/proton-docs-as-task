@@ -1,13 +1,20 @@
 /**
  * Helpers for reconciling the in-memory board with the underlying document.
  *
- * The board is authoritative while open, but the Proton document can still
- * change underneath it (another tab, a collaborator, an undo in the editor).
- * These pure helpers let the overlay detect that divergence without a false
- * positive from cosmetic whitespace differences in the editor's DOM.
+ * The board follows the Proton document live: changes made elsewhere (another
+ * tab or device, a collaborator, an undo in the editor) are folded into the
+ * open board. These pure helpers compare the two without a false positive
+ * from cosmetic differences, and keep task identities stable across a
+ * re-parse so open cards and selections survive.
  */
 
-import { fromParseResult, serializeModel, type BoardModel } from './model';
+import {
+  fromParseResult,
+  serializeModel,
+  serializeTaskLine,
+  type BoardModel,
+  type BoardTask,
+} from './model';
 import { parseDocument } from './parser';
 
 /**
@@ -30,8 +37,7 @@ export function canonicalModel(model: BoardModel, marker: string): string {
 
 /**
  * True when `editorText` represents a different board than `model` — i.e. the
- * document changed in a way the board did not make. Used to raise the
- * "document changed" conflict state.
+ * document changed in a way the board did not make.
  */
 export function documentsDiverged(
   editorText: string,
@@ -40,4 +46,44 @@ export function documentsDiverged(
   marker: string,
 ): boolean {
   return canonicalDoc(editorText, markers) !== canonicalModel(model, marker);
+}
+
+/** Ways to recognize the same task across a re-parse, strictest first. */
+const IDENTITY_KEYS: Array<(task: BoardTask) => string | null> = [
+  (t) => `${t.section}\n${serializeTaskLine(t)}`,
+  (t) => serializeTaskLine(t),
+  (t) => (t.title.trim() ? `${t.section}\n${t.title}` : null),
+  (t) => (t.title.trim() ? t.title : null),
+];
+
+/**
+ * Carry task ids from `prev` over to the matching tasks of a freshly parsed
+ * `next`, so a document change made elsewhere doesn't remount every card.
+ */
+export function reconcileIds(prev: BoardModel, next: BoardModel): BoardModel {
+  const ids: Array<string | undefined> = next.tasks.map(() => undefined);
+  const used = new Set<string>();
+
+  for (const keyOf of IDENTITY_KEYS) {
+    const available = new Map<string, string[]>();
+    for (const task of prev.tasks) {
+      const key = keyOf(task);
+      if (key === null || used.has(task.id)) continue;
+      available.set(key, [...(available.get(key) ?? []), task.id]);
+    }
+    next.tasks.forEach((task, i) => {
+      if (ids[i]) return;
+      const key = keyOf(task);
+      const id = key === null ? undefined : available.get(key)?.shift();
+      if (id) {
+        ids[i] = id;
+        used.add(id);
+      }
+    });
+  }
+
+  return {
+    ...next,
+    tasks: next.tasks.map((task, i) => (ids[i] ? { ...task, id: ids[i]! } : task)),
+  };
 }
