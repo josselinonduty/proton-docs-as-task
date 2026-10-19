@@ -1,0 +1,165 @@
+#!/usr/bin/env node
+/**
+ * Regenerates the board screenshots in assets/screenshots/.
+ *
+ * The shots come from the dev playground (`playground/`), which mounts the real
+ * board overlay against a fake Proton Docs page, so no extension install or
+ * Proton account is needed. The script starts the playground itself, unless one
+ * is already listening on the port, and stops it again when done.
+ *
+ *   node scripts/generate-screenshots
+ *
+ * Requirements:
+ *   - playwright-core, installed without touching package.json:
+ *       npm install --no-save playwright-core@1.56.0
+ *   - A Chromium-based browser. The script uses, in order:
+ *       1. PDT_BROWSER_PATH, if set (path to a chrome/chromium executable)
+ *       2. the Google Chrome channel, if installed system-wide
+ *       3. the browser Playwright manages (`npx playwright install chromium`)
+ *
+ * Runs on Linux, macOS and Windows: no shell-specific commands, and paths are
+ * built with node:path.
+ */
+import { spawn } from 'node:child_process';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const OUT_DIR = path.join(ROOT, 'assets', 'screenshots');
+const PORT = 5199;
+const URL_BASE = `http://localhost:${PORT}/`;
+const VIEWPORT = { width: 1280, height: 800 };
+
+async function loadPlaywright() {
+  try {
+    return await import('playwright-core');
+  } catch {
+    console.error(
+      'playwright-core is not installed. Run:\n' +
+        '  npm install --no-save playwright-core@1.56.0\n' +
+        'then re-run this script (--no-save leaves package.json and the lockfile alone).',
+    );
+    process.exit(1);
+  }
+}
+
+async function launchBrowser(chromium) {
+  const attempts = [];
+  if (process.env.PDT_BROWSER_PATH) {
+    attempts.push({ executablePath: process.env.PDT_BROWSER_PATH });
+  }
+  attempts.push({ channel: 'chrome' }, {});
+
+  let lastError;
+  for (const options of attempts) {
+    try {
+      return await chromium.launch(options);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error(
+    `No usable browser found (${lastError?.message ?? 'unknown error'}).\n` +
+      'Set PDT_BROWSER_PATH to a Chrome/Chromium executable, or run ' +
+      '`npx playwright install chromium`.',
+  );
+}
+
+async function isServing() {
+  try {
+    const res = await fetch(URL_BASE);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Starts vite for the playground and resolves once it answers. */
+async function startPlayground() {
+  if (await isServing()) return null;
+
+  // Run vite's bin through the current Node binary: no shell, so it works the
+  // same on every OS and the child can be killed reliably.
+  const viteBin = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+  const child = spawn(
+    process.execPath,
+    [viteBin, '--config', path.join('playground', 'vite.config.mjs')],
+    { cwd: ROOT, stdio: 'ignore' },
+  );
+
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    if (await isServing()) return child;
+    if (child.exitCode !== null) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  child.kill();
+  throw new Error(`The playground did not start on ${URL_BASE} (run \`npm install\` first?).`);
+}
+
+async function openPage(browser, { colorScheme = 'light' } = {}) {
+  const context = await browser.newContext({
+    viewport: VIEWPORT,
+    deviceScaleFactor: 1,
+    colorScheme,
+  });
+  const page = await context.newPage();
+  page.on('pageerror', (error) => console.warn(`  page error: ${error.message}`));
+  await page.goto(URL_BASE, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1200);
+  return { context, page };
+}
+
+async function capture(page, name) {
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: path.join(OUT_DIR, `${name}.png`) });
+  console.log(`saved assets/screenshots/${name}.png`);
+}
+
+const selectView = (page, label) => page.locator(`[role="tab"]:has-text("${label}")`).click();
+
+async function main() {
+  const { chromium } = await loadPlaywright();
+  await mkdir(OUT_DIR, { recursive: true });
+
+  const server = await startPlayground();
+  const browser = await launchBrowser(chromium);
+
+  try {
+    // Light theme: workflow, other views, task details, command palette, filters.
+    const { context, page } = await openPage(browser);
+    await capture(page, '01-workflow');
+
+    await selectView(page, 'Sections');
+    await capture(page, '02-sections');
+    await selectView(page, 'Swimlane');
+    await capture(page, '03-swimlane');
+    await selectView(page, 'Workflow');
+
+    await page.locator('article.pdt-taskcard:has-text("Synthesize findings") .pdt-card__title').click();
+    await capture(page, '04-task-details');
+    await page.keyboard.press('Escape');
+
+    await page.keyboard.press('Control+k');
+    await capture(page, '05-command-palette');
+    await page.keyboard.press('Escape');
+
+    await page.locator('button:has-text("Filters")').first().click();
+    await capture(page, '06-filters');
+    await context.close();
+
+    // Dark theme follows the OS preference (theme: system).
+    const dark = await openPage(browser, { colorScheme: 'dark' });
+    await capture(dark.page, '07-workflow-dark');
+    await dark.context.close();
+  } finally {
+    await browser.close();
+    server?.kill();
+  }
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});
