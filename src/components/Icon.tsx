@@ -21,9 +21,124 @@ export type IconName =
   | 'arrow-down'
   | 'exclamation-circle'
   | 'cog'
-  | 'checkmark-circle';
+  | 'checkmark-circle'
+  | 'flag'
+  | 'calendar'
+  | 'user'
+  | 'tag'
+  | 'note'
+  | 'list'
+  | 'pen'
+  | 'trash'
+  | 'squares'
+  | 'code'
+  | 'arrow-left'
+  | 'magnifier'
+  | 'filter'
+  | 'arrows-up-down'
+  | 'circle-half';
+
+/** Outline icons drawn with a 1.4px stroke on the same 16×16 grid. */
+function Stroke({ children }: { children: ReactNode }) {
+  return (
+    <g
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {children}
+    </g>
+  );
+}
 
 const ICONS: Record<IconName, ReactNode> = {
+  flag: (
+    <Stroke>
+      <path d="M3.5 14V2.5M3.5 3h8.25l-1.75 3 1.75 3H3.5" />
+    </Stroke>
+  ),
+  calendar: (
+    <Stroke>
+      <rect x="2.5" y="3.5" width="11" height="10" rx="2" />
+      <path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" />
+    </Stroke>
+  ),
+  user: (
+    <Stroke>
+      <circle cx="8" cy="5.5" r="2.75" />
+      <path d="M2.75 13.75c.6-2.4 2.75-4 5.25-4s4.65 1.6 5.25 4" />
+    </Stroke>
+  ),
+  tag: (
+    <Stroke>
+      <path d="M2.5 2.5h5.1l6 6-5.1 5.1-6-6V2.5Z" />
+      <circle cx="5.5" cy="5.5" r=".75" fill="currentColor" stroke="none" />
+    </Stroke>
+  ),
+  note: (
+    <Stroke>
+      <path d="M4 1.75h5.5L12.5 4.75v9.5H4V1.75Z" />
+      <path d="M6 8h4.5M6 10.75h3" />
+    </Stroke>
+  ),
+  list: (
+    <Stroke>
+      <path d="M5.75 4h7.75M5.75 8h7.75M5.75 12h7.75" />
+      <circle cx="2.75" cy="4" r=".6" fill="currentColor" />
+      <circle cx="2.75" cy="8" r=".6" fill="currentColor" />
+      <circle cx="2.75" cy="12" r=".6" fill="currentColor" />
+    </Stroke>
+  ),
+  pen: (
+    <Stroke>
+      <path d="M10.5 2.75 13.25 5.5 5.5 13.25H2.75V10.5L10.5 2.75Z" />
+    </Stroke>
+  ),
+  trash: (
+    <Stroke>
+      <path d="M2.5 4.25h11M6.25 4.25V2.5h3.5v1.75M3.75 4.25l.7 9.25h7.1l.7-9.25" />
+    </Stroke>
+  ),
+  squares: (
+    <Stroke>
+      <rect x="5.25" y="5.25" width="8.25" height="8.25" rx="1.5" />
+      <path d="M10.75 5.25V3.5c0-.55-.45-1-1-1H3.5c-.55 0-1 .45-1 1v6.25c0 .55.45 1 1 1h1.75" />
+    </Stroke>
+  ),
+  code: (
+    <Stroke>
+      <path d="m5.5 4.5-3.5 3.5 3.5 3.5M10.5 4.5l3.5 3.5-3.5 3.5" />
+    </Stroke>
+  ),
+  'arrow-left': (
+    <Stroke>
+      <path d="M13 8H3.25M7 4 3 8l4 4" />
+    </Stroke>
+  ),
+  magnifier: (
+    <Stroke>
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="m10.5 10.5 3 3" />
+    </Stroke>
+  ),
+  filter: (
+    <Stroke>
+      <path d="M2.5 3.5h11M4.75 8h6.5M7 12.5h2" />
+    </Stroke>
+  ),
+  'arrows-up-down': (
+    <Stroke>
+      <path d="M5 13V3M2.5 5.5 5 3l2.5 2.5M11 3v10M8.5 10.5 11 13l2.5-2.5" />
+    </Stroke>
+  ),
+  'circle-half': (
+    <>
+      <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM3.5 8a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z" />
+      <path d="M8 4.5a3.5 3.5 0 0 1 0 7v-7Z" />
+    </>
+  ),
   'chevron-down': (
     <path d="M4.293 6.293a1 1 0 0 1 1.414 0L8 8.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 0-1.414Z" />
   ),
