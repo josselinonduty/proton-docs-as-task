@@ -7,9 +7,12 @@ Proton Docs as Task is a browser extension that runs entirely on the client. It:
 - requests only the `storage` permission and host access to `docs.proton.me`
   and `docs-editor.proton.me`;
 - makes **no network requests** and transmits nothing off the device;
-- reads the open document's editor DOM, renders a board in an isolated Shadow
-  DOM overlay, and writes edits back into that same document as plain text —
-  it never reads or writes any other page, and nothing leaves the browser.
+- reads the open document through Proton's own Lexical editor (via a small
+  script in the editor frame's page context, which has no extension APIs and
+  only exchanges document text with the content script), renders a board in an
+  isolated Shadow DOM overlay, and writes edits back into that same document —
+  it never reads or writes any other page, and nothing leaves the browser
+  except through Proton's own document sync.
 
 This is an independent, unofficial project and is **not** affiliated with
 Proton AG. Vulnerabilities in Proton Docs itself should be reported to Proton,

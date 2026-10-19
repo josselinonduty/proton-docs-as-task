@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { parseDocument } from '../lib/parser';
-import { watchEditor } from '../lib/extractor';
-import { writePreservingFocus } from '../lib/docwriter';
+import type { EditorClient } from '../lib/editorClient';
+import type { EditorStateMessage } from '../lib/bridgeProtocol';
 import {
   addTask as addTaskToModel,
   createStarterModel,
@@ -12,7 +12,7 @@ import {
   updateTask as updateTaskInModel,
   type BoardModel,
 } from '../lib/model';
-import { canonicalDoc, canonicalModel } from '../lib/sync';
+import { canonicalDoc, canonicalModel, reconcileIds } from '../lib/sync';
 import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
 import { MANUAL_SORT, type SortState } from '../lib/sorting';
 import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '../lib/session';
@@ -24,12 +24,14 @@ import { EditableBoard } from './EditableBoard';
 import { Icon } from './Icon';
 
 interface OverlayAppProps {
-  root: HTMLElement;
+  client: EditorClient;
+  initialState: EditorStateMessage;
   host: HTMLElement;
   initialSettings: Settings;
 }
 
-const WRITE_DEBOUNCE_MS = 400;
+/** Coalesces keystroke-level edits (e.g. typing a title) into one write. */
+const WRITE_DEBOUNCE_MS = 300;
 const UNDO_TIMEOUT_MS = 9000;
 
 interface UndoEntry {
@@ -37,9 +39,23 @@ interface UndoEntry {
   label: string;
 }
 
-export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
+/**
+ * Hosts the board and keeps it in sync with the Proton document.
+ *
+ * The document is the single source of truth and the board follows it live:
+ * - A board edit is written through the editor bridge as one tagged Lexical
+ *   update, merged with anything that changed in the document since the board
+ *   last read it — so Proton's own Yjs sync and saving carry it, and nothing
+ *   written elsewhere is overwritten.
+ * - A change made anywhere else (another device, a collaborator, typing or
+ *   undo in Proton) is folded into the open board immediately, unless a board
+ *   edit is still pending — then the merge at write time takes care of it.
+ * - While Proton has editing locked, edits stay pending and are written as
+ *   soon as it unlocks.
+ */
+export function OverlayApp({ client, initialState, host, initialSettings }: OverlayAppProps) {
   const [settings, setSettings] = useState(initialSettings);
-  const [text, setText] = useState('');
+  const [docState, setDocState] = useState(initialState);
   const [visible, setVisible] = useState(false);
   const [model, setModel] = useState<BoardModel | null>(null);
   const [view, setView] = useState<BoardView>(initialSettings.defaultView);
@@ -53,24 +69,19 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
   const undoRef = useRef<UndoEntry | null>(null);
   const [announcement, setAnnouncement] = useState('');
 
+  const text = docState.text;
   const wasActivated = useRef(false);
   const writeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const modelRef = useRef<BoardModel | null>(null);
-  const expectedCanonical = useRef<string | null>(null);
-  // The canonical the editor held just before the latest write. Its (delayed)
-  // MutationObserver echo would otherwise briefly look like an external change.
-  const prevExpected = useRef<string | null>(null);
-  const suppressConflict = useRef<string | null>(null);
-  const pendingWrite = useRef<BoardModel | null>(null);
+  /** The latest document lines, updated synchronously by the bridge. */
+  const docLines = useRef<string[]>(initialState.text.split('\n'));
+  /** The document lines the board's model reflects — the merge base for writes. */
+  const baseLines = useRef<string[]>(docLines.current);
+  /** A board model not yet written to the document. */
+  const pending = useRef<BoardModel | null>(null);
 
   modelRef.current = model;
   undoRef.current = undo;
-
-  // Track document text via the editor observer.
-  useEffect(() => {
-    const watcher = watchEditor(root, setText);
-    return () => watcher.stop();
-  }, [root]);
 
   // Live-update when settings change (from popup or options page).
   useEffect(() => {
@@ -136,70 +147,141 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
   const marker = result.matchedMarker ?? settings.markers[0] ?? '#!tasks';
   const markerRef = useRef(marker);
   markerRef.current = marker;
+  const markersRef = useRef(settings.markers);
+  markersRef.current = settings.markers;
 
   const announce = useCallback((message: string) => setAnnouncement(message), []);
 
-  // Perform an actual write, honoring the "don't rewrite if unchanged" rule.
-  const doWrite = useCallback(
-    (next: BoardModel) => {
-      const m = markerRef.current;
-      const canonical = canonicalModel(next, m);
-      if (canonical === expectedCanonical.current) {
-        pendingWrite.current = null;
-        setSaveState('saved');
+  const showModel = useCallback((next: BoardModel | null) => {
+    modelRef.current = next;
+    setModel(next);
+  }, []);
+
+  /**
+   * Bring the open board in line with `lines` (the current document) — a
+   * no-op when they already mean the same board. Returns true if it changed.
+   */
+  const followDocument = useCallback(
+    (lines: string[]) => {
+      baseLines.current = lines;
+      const current = modelRef.current;
+      if (!current) return false;
+      const docText = lines.join('\n');
+      if (
+        canonicalDoc(docText, markersRef.current) === canonicalModel(current, markerRef.current)
+      ) {
+        return false;
+      }
+      const parsed = parseDocument(docText, markersRef.current);
+      showModel(reconcileIds(current, fromParseResult(parsed)));
+      // An undo snapshot would now also revert the change made elsewhere.
+      setUndo(null);
+      return true;
+    },
+    [showModel],
+  );
+
+  /** Write the pending board model to the document now. */
+  const flush = useCallback(() => {
+    if (writeTimer.current) clearTimeout(writeTimer.current);
+    writeTimer.current = undefined;
+    const next = pending.current;
+    if (!next) return true;
+
+    const target = serializeModel(next, markerRef.current).split('\n');
+    const res = client.apply(baseLines.current, target);
+    if (!res.ok) {
+      // Keep the edit pending: it is retried when Proton unlocks editing, or
+      // from the Retry action.
+      setSaveState(res.reason === 'readonly' ? 'paused' : 'error');
+      if (res.reason !== 'readonly') console.warn('[proton-docs-as-task] write failed', res);
+      return false;
+    }
+    pending.current = null;
+    docLines.current = res.lines;
+    setSaveState('saved');
+    // The merge may have folded in changes made elsewhere; show them.
+    if (modelRef.current === next) {
+      if (followDocument(res.lines)) announce('Board updated with changes from the document');
+    } else {
+      baseLines.current = res.lines;
+    }
+    return true;
+  }, [client, followDocument, announce]);
+
+  /** Record a board edit and write it (debounced unless `immediate`). */
+  const commit = useCallback(
+    (next: BoardModel, immediate = false) => {
+      pending.current = next;
+      if (writeTimer.current) clearTimeout(writeTimer.current);
+      if (immediate) return flush();
+      setSaveState('saving');
+      writeTimer.current = setTimeout(flush, WRITE_DEBOUNCE_MS);
+      return true;
+    },
+    [flush],
+  );
+
+  // Follow the document as the bridge reports changes.
+  const seenState = useRef(initialState);
+  useEffect(() => {
+    const onState = (state: EditorStateMessage) => {
+      seenState.current = state;
+      const lines = state.text.split('\n');
+      docLines.current = lines;
+      setDocState(state);
+      // Our own write — `flush` already accounted for it.
+      if (state.origin === 'self') return;
+      if (pending.current) {
+        // Editing just unlocked: write what queued up meanwhile.
+        if (state.editable && !writeTimer.current) flush();
         return;
       }
-      const ok = writePreservingFocus(root, serializeModel(next, m));
-      if (ok) {
-        prevExpected.current = expectedCanonical.current;
-        expectedCanonical.current = canonical;
-        suppressConflict.current = null;
-        pendingWrite.current = null;
-        setSaveState('saved');
-      } else {
-        pendingWrite.current = next;
-        setSaveState('error');
-      }
-    },
-    [root],
-  );
+      if (followDocument(lines)) announce('Board updated with changes from the document');
+    };
+    const unsubscribe = client.subscribe(onState);
+    // Catch up on anything reported before we subscribed (e.g. Proton still
+    // loading the document while the overlay mounted).
+    if (client.state && client.state !== seenState.current) onState(client.state);
+    return unsubscribe;
+  }, [client, flush, followDocument, announce]);
 
-  const scheduleWrite = useCallback(
-    (next: BoardModel) => {
-      if (writeTimer.current) clearTimeout(writeTimer.current);
-      setSaveState('saving');
-      writeTimer.current = setTimeout(() => doWrite(next), WRITE_DEBOUNCE_MS);
-    },
-    [doWrite],
-  );
-
-  const flushWrite = useCallback(
-    (next: BoardModel) => {
-      if (writeTimer.current) clearTimeout(writeTimer.current);
-      doWrite(next);
-    },
-    [doWrite],
-  );
+  // Don't lose a debounced edit when the tab is backgrounded or closed —
+  // mobile browsers may never run the timer again.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!flush()) event.preventDefault();
+    };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', flush);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [flush]);
 
   const handleModelChange = useCallback(
     (next: BoardModel, undoLabel?: string) => {
       if (undoLabel && modelRef.current) setUndo({ model: modelRef.current, label: undoLabel });
-      setModel(next);
-      modelRef.current = next;
-      scheduleWrite(next);
+      showModel(next);
+      commit(next);
     },
-    [scheduleWrite],
+    [commit, showModel],
   );
 
   const handleUndo = useCallback(() => {
     const entry = undoRef.current;
     if (!entry) return;
-    setModel(entry.model);
-    modelRef.current = entry.model;
-    scheduleWrite(entry.model);
+    showModel(entry.model);
+    commit(entry.model);
     setUndo(null);
     announce('Change undone');
-  }, [scheduleWrite, announce]);
+  }, [commit, showModel, announce]);
 
   // Auto-dismiss the undo toast.
   useEffect(() => {
@@ -233,80 +315,55 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
   );
 
   const openBoard = useCallback(() => {
-    const next = fromParseResult(parseDocument(text, settings.markers));
-    setModel((current) => current ?? next);
-    modelRef.current = modelRef.current ?? next;
-    expectedCanonical.current = canonicalDoc(text, settings.markers);
-    suppressConflict.current = null;
-    setSaveState('saved');
+    if (!modelRef.current) {
+      // An edit still waiting for Proton to unlock is newer than the document.
+      const next =
+        pending.current ??
+        fromParseResult(parseDocument(docLines.current.join('\n'), markersRef.current));
+      if (!pending.current) baseLines.current = docLines.current;
+      showModel(next);
+    }
     setVisible(true);
-  }, [text, settings.markers]);
+  }, [showModel]);
 
   const closeBoard = useCallback(() => {
-    if (modelRef.current) flushWrite(modelRef.current);
+    flush();
     setVisible(false);
-    setModel(null);
-    modelRef.current = null;
+    showModel(null);
     setUndo(null);
-  }, [flushWrite]);
+  }, [flush, showModel]);
 
   const convertToTaskDoc = useCallback(() => {
     const starter = createStarterModel();
-    setModel(starter);
-    modelRef.current = starter;
-    expectedCanonical.current = null; // force the first write
+    baseLines.current = docLines.current;
+    showModel(starter);
     setVisible(true);
-    flushWrite(starter);
-  }, [flushWrite]);
+    commit(starter, true);
+  }, [commit, showModel]);
 
-  // --- Conflict handling ---------------------------------------------------
   const reloadFromDoc = useCallback(() => {
-    const next = fromParseResult(parseDocument(text, settings.markers));
-    setModel(next);
-    modelRef.current = next;
-    expectedCanonical.current = canonicalDoc(text, settings.markers);
-    suppressConflict.current = null;
+    if (writeTimer.current) clearTimeout(writeTimer.current);
+    writeTimer.current = undefined;
+    pending.current = null;
+    baseLines.current = docLines.current;
+    showModel(fromParseResult(parseDocument(docLines.current.join('\n'), markersRef.current)));
+    setUndo(null);
     setSaveState('saved');
     announce('Board reloaded from the document');
-  }, [text, settings.markers, announce]);
-
-  const overwriteDoc = useCallback(() => {
-    if (modelRef.current) {
-      expectedCanonical.current = null; // force overwrite
-      flushWrite(modelRef.current);
-    }
-    announce('Document overwritten with the board version');
-  }, [flushWrite, announce]);
-
-  const dismissConflict = useCallback(() => {
-    suppressConflict.current = canonicalDoc(text, settings.markers);
-    setSaveState('saved');
-  }, [text, settings.markers]);
+  }, [showModel, announce]);
 
   const retryWrite = useCallback(() => {
-    const next = pendingWrite.current ?? modelRef.current;
-    if (next) {
-      setSaveState('saving');
-      doWrite(next);
-    }
-  }, [doWrite]);
+    if (pending.current) flush();
+    else setSaveState('saved');
+  }, [flush]);
 
-  // Detect external document changes while the board is open.
+  // The document stopped being a task board (marker removed elsewhere).
   useEffect(() => {
-    if (!visible || !model) return;
-    if (saveState === 'saving' || saveState === 'error') return;
-    if (expectedCanonical.current == null) return;
-    const canonical = canonicalDoc(text, settings.markers);
-    if (canonical === expectedCanonical.current) {
-      if (saveState === 'conflict') setSaveState('saved');
-      return;
+    if (visible && !result.activated && !pending.current && text.trim() !== '') {
+      setVisible(false);
+      showModel(null);
     }
-    // The editor's MutationObserver echo lags our write by a beat; while it
-    // still reports the pre-write content, that is not an external change.
-    if (canonical === prevExpected.current) return;
-    if (canonical === suppressConflict.current) return;
-    setSaveState('conflict');
-  }, [text, visible, model, saveState, settings.markers]);
+  }, [visible, result.activated, text, showModel]);
 
   // Auto-show the board the first time a document becomes a task board.
   useEffect(() => {
@@ -318,28 +375,26 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.activated, settings.autoShow]);
 
-  // Flush any pending write on unmount.
+  // Write any pending edit on unmount.
   useEffect(() => {
     return () => {
-      if (writeTimer.current) clearTimeout(writeTimer.current);
+      flush();
     };
-  }, []);
+  }, [flush]);
 
   // Popup quick-add: write a task into the active document, whether or not the
-  // board is open. Returns success only once the write is actually dispatched.
+  // board is open. Reports success only once the task is in the document.
   const addTaskFromPopup = useCallback(
     (title: string, section?: string, due?: string): AddTaskResponse => {
       const clean = title.trim();
       if (!clean) return { ok: true, added: false, error: 'empty' };
 
-      const parsed = parseDocument(text, settings.markers);
+      // Settle any pending board edit first so the task lands on top of it.
+      flush();
+      const parsed = parseDocument(docLines.current.join('\n'), markersRef.current);
       const boardOpen = visible && modelRef.current != null;
       if (!parsed.activated && !boardOpen) {
         return { ok: true, added: false, error: 'not-a-board' };
-      }
-      // A conflict on the open board must be resolved on the board itself.
-      if (boardOpen && saveState === 'conflict') {
-        return { ok: true, added: false, blocked: 'conflict' };
       }
 
       const base = boardOpen ? modelRef.current! : fromParseResult(parsed);
@@ -354,21 +409,26 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
         ? updateTaskInModel(withTask, taskId, { due: due.trim() })
         : withTask;
 
-      const m = markerRef.current;
-      const ok = writePreservingFocus(root, serializeModel(next, m));
-      if (!ok) return { ok: true, added: false, error: 'write-failed' };
-
-      prevExpected.current = expectedCanonical.current;
-      expectedCanonical.current = canonicalModel(next, m);
-      suppressConflict.current = null;
-      setSaveState('saved');
       if (boardOpen) {
-        setModel(next);
-        modelRef.current = next;
+        showModel(next);
+        if (commit(next, true)) return { ok: true, added: true, section: targetSection };
+        // The board keeps the task pending and writes it once Proton allows.
+        const error = client.state?.editable === false ? 'read-only' : 'write-failed';
+        return { ok: true, added: false, error };
       }
+
+      const res = client.apply(
+        docLines.current,
+        serializeModel(next, markerRef.current).split('\n'),
+      );
+      if (!res.ok) {
+        const error = res.reason === 'readonly' ? 'read-only' : 'write-failed';
+        return { ok: true, added: false, error };
+      }
+      docLines.current = res.lines;
       return { ok: true, added: true, section: targetSection };
     },
-    [text, settings.markers, settings.newCardsAtTop, visible, saveState, root],
+    [visible, settings.newCardsAtTop, flush, commit, showModel, client],
   );
 
   // Respond to popup commands. Only this (editor) frame registers a listener.
@@ -383,7 +443,6 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
       doneCount,
       boardTitle: model?.title ?? result.boardTitle,
       sections: model ? model.sections : result.sections,
-      conflict: visible && saveState === 'conflict',
     });
 
     const handler = (
@@ -409,7 +468,7 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
 
     browser.runtime.onMessage.addListener(handler);
     return () => browser.runtime.onMessage.removeListener(handler);
-  }, [result, visible, model, saveState, openBoard, closeBoard, addTaskFromPopup]);
+  }, [result, visible, model, openBoard, closeBoard, addTaskFromPopup]);
 
   if (!settings.enabled) return null;
 
@@ -442,8 +501,6 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
           onUndo={handleUndo}
           onRetry={retryWrite}
           onReloadFromDoc={reloadFromDoc}
-          onOverwriteDoc={overwriteDoc}
-          onDismissConflict={dismissConflict}
           onOpenSettings={openSettingsPage}
           onClose={closeBoard}
         />
@@ -453,7 +510,7 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
 
   // Activated document, board closed → floating button to reopen it.
   if (result.activated) {
-    const pending = result.tasks.filter((t) => t.status !== 'done').length;
+    const pendingCount = result.tasks.filter((t) => t.status !== 'done').length;
     return (
       <button
         className="pdt-btn pdt-btn-primary pdt-btn-pill pdt-fab"
@@ -462,13 +519,13 @@ export function OverlayApp({ root, host, initialSettings }: OverlayAppProps) {
       >
         <Icon name="checkmark-circle" size={18} />
         <span>Tasks</span>
-        {pending > 0 && <span className="pdt-fab__badge">{pending}</span>}
+        {pendingCount > 0 && <span className="pdt-fab__badge">{pendingCount}</span>}
       </button>
     );
   }
 
-  // Empty document → offer to convert it into a task board.
-  if (text.trim() === '') {
+  // Empty document Proton lets us edit → offer to convert it into a task board.
+  if (text.trim() === '' && docState.editable) {
     return (
       <div className="pdt-convert" role="region" aria-label="Convert to task board">
         <button

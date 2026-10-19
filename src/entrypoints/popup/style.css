@@ -103,6 +103,6 @@ code {
 .pp-feedback--error {
   color: var(--pdt-signal-danger);
 }
-.pp-feedback--conflict {
+.pp-feedback--warning {
   color: var(--pdt-signal-warning);
 }
