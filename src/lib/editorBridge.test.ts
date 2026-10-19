@@ -16,7 +16,12 @@ import {
   type SerializedListNode,
 } from '@lexical/list';
 import { HeadingNode } from '@lexical/rich-text';
-import { applyLines, startEditorBridge, type LexicalEditorLike } from './editorBridge';
+import {
+  applyLines,
+  findLexicalEditor,
+  startEditorBridge,
+  type LexicalEditorLike,
+} from './editorBridge';
 import { connectEditor, type EditorClient } from './editorClient';
 import type { EditorStateMessage } from './bridgeProtocol';
 
@@ -177,6 +182,7 @@ describe('editor bridge ↔ client', () => {
     const root = document.createElement('div');
     root.contentEditable = 'true';
     root.setAttribute('data-lexical-editor', 'true');
+    root.className = 'DocumentEditor';
     document.body.append(root);
     editor = protonLikeEditor();
     editor.setRootElement(root);
@@ -231,5 +237,26 @@ describe('editor bridge ↔ client', () => {
     editor.setEditable(false);
     expect(states.at(-1)?.editable).toBe(false);
     expect(client.apply(DOC, ['#!tasks'])).toEqual({ ok: false, reason: 'readonly' });
+  });
+});
+
+describe('findLexicalEditor', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('ignores Lexical editors that are not the document editor (e.g. in Sheets)', () => {
+    const root = document.createElement('div');
+    root.contentEditable = 'true';
+    root.setAttribute('data-lexical-editor', 'true');
+    document.body.append(root);
+    const editor = protonLikeEditor();
+    editor.setRootElement(root);
+
+    expect(findLexicalEditor(document)).toBeNull();
+
+    root.className = 'DocumentEditor';
+    expect(findLexicalEditor(document)).not.toBeNull();
+    editor.setRootElement(null);
   });
 });
