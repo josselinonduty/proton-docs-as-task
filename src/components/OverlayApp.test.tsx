@@ -126,9 +126,9 @@ afterEach(() => {
 describe('OverlayApp document sync', () => {
   it('folds changes made elsewhere into the open board, without a conflict prompt', () => {
     const editor = setup();
-    expect(screen.getByDisplayValue('Write the spec')).toBeTruthy();
+    expect(screen.getByText('Write the spec')).toBeTruthy();
     editor.remoteEdit([...DOC, '- [ ] Review on mobile']);
-    expect(screen.getByDisplayValue('Review on mobile')).toBeTruthy();
+    expect(screen.getByText('Review on mobile')).toBeTruthy();
     expect(screen.queryByText(/underlying document changed/i)).toBeNull();
     expect(editor.writes).toHaveLength(0);
   });
@@ -151,7 +151,7 @@ describe('OverlayApp document sync', () => {
     expect(response.added).toBe(false);
     expect(response.error).toBe('read-only');
     expect(screen.getByText('Waiting to save')).toBeTruthy();
-    expect(screen.getByDisplayValue('Queued while offline')).toBeTruthy();
+    expect(screen.getByText('Queued while offline')).toBeTruthy();
 
     editor.setEditable(true);
     expect(editor.lines).toContain('- [ ] Queued while offline');
@@ -161,7 +161,9 @@ describe('OverlayApp document sync', () => {
   it('keeps a typed edit pending through a remote change, then merges against what it read', () => {
     vi.useFakeTimers();
     const editor = setup();
-    fireEvent.change(screen.getByDisplayValue('Write the spec'), {
+    // Titles are edited in the details panel the card opens.
+    fireEvent.click(screen.getByText('Write the spec'));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Task title' }), {
       target: { value: 'Write the full spec' },
     });
     // Arrives during the write debounce: must not wipe the typed title.
@@ -173,5 +175,38 @@ describe('OverlayApp document sync', () => {
     // remote line back in.
     expect(write.base).toEqual(DOC);
     expect(write.target).toContain('- [ ] Write the full spec');
+  });
+});
+
+describe('OverlayApp board interactions', () => {
+  it('opens a card in the details panel and returns focus to it on Escape', () => {
+    setup();
+    const card = screen.getByRole('listitem', { name: /Write the spec/ });
+    fireEvent.click(card);
+    const panel = screen.getByRole('complementary', { name: /Task details: Write the spec/ });
+    expect(panel).toBeTruthy();
+    fireEvent.keyDown(panel, { key: 'Escape' });
+    expect(screen.queryByRole('complementary', { name: /Task details/ })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('listitem', { name: /Write the spec/ }));
+  });
+
+  it('keeps card shortcuts on the card: Space on a header button does not select a card', () => {
+    setup();
+    const card = screen.getByRole('listitem', { name: /Write the spec/ });
+    act(() => card.focus());
+    const filters = screen.getByRole('button', { name: /Filters/ });
+    act(() => filters.focus());
+    fireEvent.keyDown(filters, { key: ' ' });
+    expect(screen.queryByRole('region', { name: 'Bulk actions' })).toBeNull();
+    // …while on the card itself it still selects.
+    act(() => card.focus());
+    fireEvent.keyDown(card, { key: ' ' });
+    expect(screen.getByRole('region', { name: 'Bulk actions' })).toBeTruthy();
+  });
+
+  it('shows the board title and progress in the header', () => {
+    setup(['#!tasks Sprint 42', '', '## Tasks', '- [x] Done one', '- [ ] Open one']);
+    expect(screen.getByRole('heading', { name: 'Sprint 42' })).toBeTruthy();
+    expect(screen.getByText('1 of 2 done')).toBeTruthy();
   });
 });

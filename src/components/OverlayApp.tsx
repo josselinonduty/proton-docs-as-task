@@ -516,10 +516,15 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
         className="pdt-btn pdt-btn-primary pdt-btn-pill pdt-fab"
         onClick={openBoard}
         title="Open task board"
+        aria-label={`Open task board, ${pendingCount} open ${pendingCount === 1 ? 'task' : 'tasks'}`}
       >
         <Icon name="checkmark-circle" size={18} />
         <span>Tasks</span>
-        {pendingCount > 0 && <span className="pdt-fab__badge">{pendingCount}</span>}
+        {pendingCount > 0 && (
+          <span className="pdt-fab__badge" aria-hidden="true">
+            {pendingCount}
+          </span>
+        )}
       </button>
     );
   }
@@ -528,19 +533,17 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   if (text.trim() === '' && docState.editable) {
     return (
       <div className="pdt-convert" role="region" aria-label="Convert to task board">
-        <button
-          type="button"
-          className="pdt-btn pdt-btn-primary pdt-btn-pill pdt-convert__btn"
-          onClick={convertToTaskDoc}
-        >
-          <span className="pdt-convert__icon" aria-hidden="true">
-            <Icon name="checkmark" size={14} />
-          </span>
+        <span className="pdt-convert__icon" aria-hidden="true">
+          <Icon name="checkmark-circle" size={24} />
+        </span>
+        <p className="pdt-convert__title">Plan this document as a task board</p>
+        <p className="pdt-convert__hint">
+          Tasks are saved in this document as a checklist, so they sync and share like any other
+          Proton doc.
+        </p>
+        <button type="button" className="pdt-btn pdt-btn-primary" onClick={convertToTaskDoc}>
           Convert to task board
         </button>
-        <p className="pdt-convert__hint">
-          Turn this empty document into an interactive task board.
-        </p>
       </div>
     );
   }

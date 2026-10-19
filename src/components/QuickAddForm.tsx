@@ -4,6 +4,7 @@ import type { DateFormat, Priority, StatusKey } from '../lib/types';
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
+import { PRIORITY_OPTIONS } from './taskFields';
 
 export interface QuickAddPayload {
   title: string;
@@ -27,13 +28,6 @@ interface QuickAddFormProps {
   onSubmit: (payload: QuickAddPayload) => void;
   onClose: () => void;
 }
-
-const PRIORITY_OPTIONS: { value: '' | Priority; label: string }[] = [
-  { value: '', label: 'No priority' },
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
-];
 
 /**
  * The board-header quick-capture form. Only the title is required; status
@@ -105,18 +99,13 @@ export function QuickAddForm({
   };
 
   return (
-    <div
-      className="pdt-quickadd-form"
-      role="dialog"
-      aria-label="Add task"
-      onKeyDown={onFormKeyDown}
-    >
+    <div className="pdt-quickadd-form" onKeyDown={onFormKeyDown}>
       <div className="pdt-quickadd-form__row">
         <input
           ref={titleRef}
           className="pdt-input pdt-quickadd-form__title"
           value={title}
-          placeholder="Task title…"
+          placeholder="What needs to be done?"
           aria-label="Task title (required)"
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => {
@@ -210,15 +199,15 @@ export function QuickAddForm({
 
       <div className="pdt-quickadd-form__foot">
         <span className="pdt-quickadd-form__hint">
-          <kbd>⌘/Ctrl</kbd>+<kbd>Enter</kbd> to add · <kbd>Esc</kbd> to close
+          <kbd>Enter</kbd> adds and keeps the form open for the next task
         </span>
         <div className="pdt-quickadd-form__actions">
-          <button type="button" className="pdt-btn pdt-btn-sm" onClick={onClose}>
-            Close
+          <button type="button" className="pdt-btn" onClick={onClose}>
+            Cancel
           </button>
           <button
             type="button"
-            className="pdt-btn pdt-btn-sm pdt-btn-primary"
+            className="pdt-btn pdt-btn-primary"
             disabled={!title.trim()}
             onClick={submit}
           >
