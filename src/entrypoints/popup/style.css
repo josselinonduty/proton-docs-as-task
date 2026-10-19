@@ -34,16 +34,11 @@ code {
   align-items: center;
   margin-bottom: var(--pdt-space-4);
 }
+/* The app icon (public/icon), already shaped as a rounded square. */
 .pp-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--pdt-radius-md);
-  background: var(--pdt-primary);
-  color: var(--pdt-primary-contrast);
-  font-size: var(--pdt-text-lg);
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
 }
 .pp-title {
   margin: 0;

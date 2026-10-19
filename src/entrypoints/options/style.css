@@ -40,16 +40,11 @@ code {
   border-radius: var(--pdt-radius-lg);
   background: var(--pdt-background-norm);
 }
+/* The app icon (public/icon), already shaped as a rounded square. */
 .op-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  flex: 0 0 auto;
   width: 40px;
   height: 40px;
-  border-radius: var(--pdt-radius-md);
-  background: var(--pdt-primary-weak);
-  color: var(--pdt-primary);
-  font-size: var(--pdt-text-xl);
 }
 .op-head h1 {
   margin: 0;

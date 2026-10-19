@@ -113,9 +113,7 @@ export function App() {
   return (
     <div className="pp">
       <header className="pp-head">
-        <span className="pp-logo" aria-hidden="true">
-          ✓
-        </span>
+        <img className="pp-logo" src="/icon/96.png" alt="" width={32} height={32} />
         <div>
           <h1 className="pp-title">Proton Docs as Task</h1>
           <p className="pp-sub">Checklist docs, rendered as a board</p>
