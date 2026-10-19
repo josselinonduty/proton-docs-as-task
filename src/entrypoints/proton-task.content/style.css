@@ -46,7 +46,8 @@
   height: 20px;
   padding: 0 6px;
   border-radius: var(--pdt-radius-pill);
-  background: rgb(255 255 255 / 0.24);
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary-text);
   font-size: var(--pdt-text-xs);
   font-weight: var(--pdt-font-weight-bold);
 }
