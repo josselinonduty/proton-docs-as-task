@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <title>Checkmark icon</title>
+  <defs>
+    <linearGradient id="base" x1="0" y1="512" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5A3CFC"/>
+      <stop offset="0.55" stop-color="#6A4DFC"/>
+      <stop offset="1" stop-color="#7B5CFB"/>
+    </linearGradient>
+    <radialGradient id="glowTL" cx="60" cy="20" r="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5FF8" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#8B5FF8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowBR" cx="512" cy="460" r="230" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8450FB" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#8450FB" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="shape">
+      <rect width="512" height="512" rx="94"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#shape)">
+    <rect width="512" height="512" fill="url(#base)"/>
+    <rect width="512" height="512" fill="url(#glowTL)"/>
+    <rect width="512" height="512" fill="url(#glowBR)"/>
+
+    <!-- translucent tiles, top-right -->
+    <rect x="256" y="0" width="128" height="128" fill="#fff" fill-opacity="0.44"/>
+    <rect x="384" y="0" width="128" height="128" fill="#fff" fill-opacity="0.82"/>
+    <rect x="384" y="128" width="128" height="128" fill="#fff" fill-opacity="0.44"/>
+  </g>
+
+  <!-- checkmark -->
+  <path d="M106.8 332 L165.7 390.8 L307.5 249" stroke="#fff" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

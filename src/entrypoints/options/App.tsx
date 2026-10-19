@@ -65,9 +65,7 @@ export function App() {
   return (
     <div className="op">
       <header className="op-head">
-        <span className="op-logo" aria-hidden="true">
-          ✓
-        </span>
+        <img className="op-logo" src="/icon/128.png" alt="" width={40} height={40} />
         <div>
           <h1>Proton Docs as Task</h1>
           <p className="op-sub">Turn a Proton Docs document into an interactive task board.</p>
