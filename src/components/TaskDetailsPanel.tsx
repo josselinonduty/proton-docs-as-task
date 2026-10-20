@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { BoardTask } from '../lib/model';
+import type { BoardTask, LinkKind, TaskLinks } from '../lib/model';
 import type { Suggestion } from '../lib/suggestions';
 import type { DateFormat, Priority, StatusKey } from '../lib/types';
 import { Combobox } from './Combobox';
@@ -7,6 +7,7 @@ import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
 import { Icon } from './Icon';
 import { PRIORITY_OPTIONS } from './taskFields';
+import { TaskRelations } from './TaskRelations';
 
 /** Which control to focus when the panel opens (E → title, M → section). */
 export type DetailsFocus = 'panel' | 'title' | 'section';
@@ -24,6 +25,15 @@ interface TaskDetailsPanelProps {
   /** Re-applied whenever `focusRequest` changes. */
   focusTarget: DetailsFocus;
   focusRequest: number;
+  links: TaskLinks;
+  /** Number of unfinished tasks standing in the way of this one. */
+  openBlockers: number;
+  linkCandidates: (kind: LinkKind) => BoardTask[];
+  /** Present when the panel was reached through a link. */
+  onBack?: () => void;
+  onOpenLinked: (id: string) => void;
+  onLink: (kind: LinkKind, id: string) => void;
+  onUnlink: (id: string) => void;
   onPatch: (patch: Partial<Omit<BoardTask, 'id' | 'order'>>) => void;
   onToggleDone: () => void;
   onSetStatus: (status: StatusKey) => void;
@@ -51,6 +61,13 @@ export function TaskDetailsPanel({
   position,
   focusTarget,
   focusRequest,
+  links,
+  openBlockers,
+  linkCandidates,
+  onBack,
+  onOpenLinked,
+  onLink,
+  onUnlink,
   onPatch,
   onToggleDone,
   onSetStatus,
@@ -65,6 +82,7 @@ export function TaskDetailsPanel({
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const sectionRef = useRef<HTMLSelectElement>(null);
   const done = task.status === 'done';
+  const blocked = openBlockers > 0;
 
   useEffect(() => {
     const target =
@@ -98,10 +116,22 @@ export function TaskDetailsPanel({
       onKeyDown={onKeyDown}
     >
       <header className="pdt-details__head">
+        {onBack && (
+          <button
+            type="button"
+            className="pdt-btn pdt-btn-icon pdt-btn-sm"
+            aria-label="Back to previous task"
+            title="Back"
+            onClick={onBack}
+          >
+            <Icon name="arrow-left" size={14} />
+          </button>
+        )}
         <button
           type="button"
           className={`pdt-btn pdt-btn-sm ${done ? 'pdt-btn-selected' : ''}`}
           aria-pressed={done}
+          disabled={blocked && !done}
           onClick={onToggleDone}
         >
           <Icon name="checkmark" size={14} />
@@ -138,6 +168,13 @@ export function TaskDetailsPanel({
       </header>
 
       <div className="pdt-details__body">
+        {blocked && (
+          <p className="pdt-rel__blocked" role="status">
+            <Icon name="lock" size={14} />
+            Blocked by {openBlockers} open {openBlockers === 1 ? 'task' : 'tasks'}. Finish{' '}
+            {openBlockers === 1 ? 'it' : 'them'} first.
+          </p>
+        )}
         <textarea
           ref={titleRef}
           className={`pdt-details__title ${done ? 'pdt-card__title--done' : ''}`}
@@ -158,7 +195,11 @@ export function TaskDetailsPanel({
               onChange={(e) => onSetStatus(e.target.value as StatusKey)}
             >
               {statusColumns.map((c) => (
-                <option key={c.key} value={c.key}>
+                <option
+                  key={c.key}
+                  value={c.key}
+                  disabled={blocked && c.key !== 'todo' && c.key !== task.status}
+                >
                   {c.label}
                 </option>
               ))}
@@ -235,6 +276,14 @@ export function TaskDetailsPanel({
             onChange={(e) => onPatch({ description: e.target.value || undefined })}
           />
         </label>
+
+        <TaskRelations
+          links={links}
+          candidates={linkCandidates}
+          onOpen={onOpenLinked}
+          onLink={onLink}
+          onUnlink={onUnlink}
+        />
 
         {position && position.count > 1 && (
           <div className="pdt-field">

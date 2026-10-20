@@ -5,6 +5,11 @@ import {
   addSection,
   addTask,
   applyBulkAction,
+  canLink,
+  linksOf,
+  linkTasks,
+  openBlockers,
+  unlinkTasks,
   columnsForView,
   countTasks,
   createStarterModel,
@@ -319,5 +324,67 @@ describe('bulk actions', () => {
     const next = applyBulkAction(m, ids(m, 'one', 'three'), { kind: 'delete' });
     expect(next.tasks.map((t) => t.title)).toEqual(['two']);
     expect(next.tasks[0]!.order).toBe(0);
+  });
+});
+
+describe('task relationships', () => {
+  const doc = '#!tasks\n- [ ] a\n- [ ] b\n- [ ] c';
+  const idOf = (model: BoardModel, title: string) => model.tasks.find((t) => t.title === title)!.id;
+  const task = (model: BoardModel, title: string) => model.tasks.find((t) => t.title === title)!;
+
+  it('links tasks and derives the inverse side', () => {
+    const m = build(doc);
+    const linked = linkTasks(m, idOf(m, 'a'), idOf(m, 'b'), 'blocks');
+    expect(linksOf(linked, task(linked, 'b')).blockedBy.map((t) => t.title)).toEqual(['a']);
+    expect(linksOf(linked, task(linked, 'a')).blocks.map((t) => t.title)).toEqual(['b']);
+  });
+
+  it('round-trips links through the document', () => {
+    const m = build(doc);
+    const linked = linkTasks(m, idOf(m, 'a'), idOf(m, 'b'), 'blockedBy');
+    const back = build(serializeModel(linked, MARKER));
+    expect(linksOf(back, task(back, 'a')).blockedBy.map((t) => t.title)).toEqual(['b']);
+  });
+
+  it('drops links to tasks that no longer exist when serializing', () => {
+    const m = build(doc);
+    const linked = linkTasks(m, idOf(m, 'a'), idOf(m, 'b'), 'blocks');
+    const text = serializeModel(
+      applyBulkAction(linked, [idOf(linked, 'b')], { kind: 'delete' }),
+      MARKER,
+    );
+    expect(text).not.toMatch(/@id|@blocks/);
+  });
+
+  it('refuses self links, duplicates and blocking cycles', () => {
+    const m = build(doc);
+    const [a, b] = [idOf(m, 'a'), idOf(m, 'b')];
+    const linked = linkTasks(m, a, b, 'blocks');
+    expect(canLink(linked, a, a, 'related')).toBe(false);
+    expect(canLink(linked, a, b, 'related')).toBe(false);
+    expect(canLink(linked, b, a, 'blocks')).toBe(false);
+    expect(canLink(linked, idOf(linked, 'c'), a, 'related')).toBe(true);
+  });
+
+  it('unlinks both sides', () => {
+    const m = build(doc);
+    const linked = linkTasks(m, idOf(m, 'a'), idOf(m, 'b'), 'related');
+    const cleared = unlinkTasks(linked, idOf(linked, 'b'), idOf(linked, 'a'));
+    expect(linksOf(cleared, task(cleared, 'a')).related).toEqual([]);
+  });
+
+  it('keeps a blocked task from advancing until its blockers are done', () => {
+    const m = build(doc);
+    const [a, b] = [idOf(m, 'a'), idOf(m, 'b')];
+    const linked = linkTasks(m, a, b, 'blocks');
+    expect(openBlockers(linked, task(linked, 'b'))).toHaveLength(1);
+    expect(setTaskStatus(linked, b, 'doing')).toBe(linked);
+    expect(
+      applyBulkAction(linked, [b], { kind: 'complete' }).tasks.find((t) => t.id === b)!.status,
+    ).toBe('todo');
+    const unblocked = setTaskStatus(linked, a, 'done');
+    expect(setTaskStatus(unblocked, b, 'doing').tasks.find((t) => t.id === b)!.status).toBe(
+      'doing',
+    );
   });
 });

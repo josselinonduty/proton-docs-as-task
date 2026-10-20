@@ -198,16 +198,17 @@ board title after the marker.
 - [ ] Polish styles #ui
 ```
 
-| Token                  | Meaning                                                                            |
-| ---------------------- | ---------------------------------------------------------------------------------- |
-| `- [ ]` / `- [x]`      | An open / done task (plain `- bullets` work too)                                   |
-| `## Heading`           | A section — the Sections view groups by these                                      |
-| `@status:doing`        | Status: `todo` · `doing` · `done` (aliases: `@s:wip`, `backlog`, `in-progress`, …) |
-| `@priority:high`       | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`)                        |
-| `@due:2026-09-10`      | A due date (`@due(next friday)` also works)                                        |
-| `@who:alex` / `@@alex` | An assignee                                                                        |
-| `@desc(free text)`     | A hidden single-line description (managed from the board, escaped to round-trip)   |
-| `#label`               | One or more labels                                                                 |
+| Token                                  | Meaning                                                                                                  |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `- [ ]` / `- [x]`                      | An open / done task (plain `- bullets` work too)                                                         |
+| `## Heading`                           | A section — the Sections view groups by these                                                            |
+| `@status:doing`                        | Status: `todo` · `doing` · `done` (aliases: `@s:wip`, `backlog`, `in-progress`, …)                       |
+| `@priority:high`                       | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`)                                              |
+| `@due:2026-09-10`                      | A due date (`@due(next friday)` also works)                                                              |
+| `@who:alex` / `@@alex`                 | An assignee                                                                                              |
+| `@id:key` `@blocks:key,key` `@rel:key` | Task links, managed from the task panel (a blocked task can't leave _To do_ until its blockers are done) |
+| `@desc(free text)`                     | A hidden single-line description (managed from the board, escaped to round-trip)                         |
+| `#label`                               | One or more labels                                                                                       |
 
 A ticked checkbox always resolves to **done**; otherwise an explicit `@status`
 applies, and everything else is **todo**. See

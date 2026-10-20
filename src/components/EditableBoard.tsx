@@ -3,6 +3,12 @@ import {
   addSection,
   addTask,
   applyBulkAction,
+  canLink,
+  canSetStatus,
+  linksOf,
+  linkTasks,
+  openBlockers,
+  unlinkTasks,
   columnsForView,
   countTasks,
   duplicateTask,
@@ -157,6 +163,8 @@ export function EditableBoard(props: EditableBoardProps) {
   const [details, setDetails] = useState<{ id: string; focus: DetailsFocus; nonce: number } | null>(
     null,
   );
+  const [trail, setTrail] = useState<string[]>([]);
+  const [blockedNotice, setBlockedNotice] = useState<string | null>(null);
   const [focusSection, setFocusSection] = useState<string | null>(null);
 
   const draggedId = useRef<string | null>(null);
@@ -201,6 +209,12 @@ export function EditableBoard(props: EditableBoardProps) {
     if (details && !model.tasks.some((t) => t.id === details.id)) setDetails(null);
   }, [details, model]);
 
+  useEffect(() => {
+    if (!blockedNotice) return;
+    const t = setTimeout(() => setBlockedNotice(null), 4000);
+    return () => clearTimeout(t);
+  }, [blockedNotice]);
+
   // Clear the new-task highlight after a moment.
   useEffect(() => {
     if (!highlightId) return;
@@ -216,8 +230,19 @@ export function EditableBoard(props: EditableBoardProps) {
   const patchTask = (id: string, patch: Partial<Omit<BoardTask, 'id' | 'order'>>) =>
     onChange(updateTask(model, id, patch));
 
+  /** True when `task` may take `status`; otherwise explains which tasks stand in the way. */
+  const allowStatus = (task: BoardTask, status: StatusKey) => {
+    if (canSetStatus(model, task, status)) return true;
+    const names = openBlockers(model, task).map((t) => `“${t.title || 'Untitled task'}”`);
+    const message = `Blocked by ${names.join(', ')}. Finish ${names.length === 1 ? 'it' : 'them'} first.`;
+    setBlockedNotice(message);
+    announce(message);
+    return false;
+  };
+
   const toggleDone = (task: BoardTask) => {
     const next = task.status === 'done' ? 'todo' : 'done';
+    if (!allowStatus(task, next)) return;
     onChange(
       setTaskStatus(model, task.id, next),
       task.status === 'done' ? 'Reopened task' : 'Completed task',
@@ -226,7 +251,7 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const setStatus = (task: BoardTask, status: StatusKey) => {
-    if (status === task.status) return;
+    if (status === task.status || !allowStatus(task, status)) return;
     const label = statusColumns.find((c) => c.key === status)?.label ?? status;
     onChange(setTaskStatus(model, task.id, status), `Moved to ${label}`);
     announce(`${task.title || 'Task'} moved to ${label}`);
@@ -329,6 +354,7 @@ export function EditableBoard(props: EditableBoardProps) {
       onChange(reorderColumn(model, ids));
       announce(`${dragged.title || 'Task'} reordered in ${col.label}`);
     } else if (view === 'workflow' && col.status) {
+      if (!allowStatus(dragged, col.status)) return;
       onChange(setTaskStatus(model, id, col.status), `Moved to ${col.label}`);
       announce(`${dragged.title || 'Task'} moved to ${col.label}`);
     } else if (view === 'sections' && col.section) {
@@ -345,6 +371,7 @@ export function EditableBoard(props: EditableBoardProps) {
     if (!id || sortActive) return;
     const dragged = model.tasks.find((t) => t.id === id);
     if (!dragged) return;
+    if (dragged.status !== status && !allowStatus(dragged, status)) return;
     let next = model;
     if (dragged.status !== status) next = setTaskStatus(next, id, status);
     if (dragged.section !== section) next = setTaskSection(next, id, section);
@@ -406,8 +433,19 @@ export function EditableBoard(props: EditableBoardProps) {
     const ids = bulkIds();
     if (ids.length === 0) return;
     const label = bulkActionLabel(action, ids.length);
-    onChange(applyBulkAction(model, ids, action), label);
+    const next = applyBulkAction(model, ids, action);
+    onChange(next, label);
     announce(label);
+    const target =
+      action.kind === 'complete' ? 'done' : action.kind === 'status' ? action.status : null;
+    const skipped = target
+      ? ids.filter((id) => next.tasks.find((t) => t.id === id)?.status !== target).length
+      : 0;
+    if (skipped) {
+      setBlockedNotice(
+        `${skipped} blocked ${skipped === 1 ? 'task was' : 'tasks were'} left as is.`,
+      );
+    }
     if (action.kind === 'delete') {
       setSelected(new Set());
       setSelectionMode(false);
@@ -510,8 +548,23 @@ export function EditableBoard(props: EditableBoardProps) {
     setFocusedCardId(id);
   };
 
-  const openDetails = (id: string, focus: DetailsFocus = 'panel') =>
+  const openDetails = (id: string, focus: DetailsFocus = 'panel') => {
+    setTrail([]);
     setDetails((d) => ({ id, focus, nonce: (d?.nonce ?? 0) + 1 }));
+  };
+
+  /** Follow a link: open the task in the panel, remembering where we came from. */
+  const openLinked = (id: string) => {
+    if (details) setTrail((t) => [...t, details.id]);
+    setDetails((d) => ({ id, focus: 'panel', nonce: (d?.nonce ?? 0) + 1 }));
+  };
+
+  const goBack = () => {
+    const rest = trail.filter((id) => model.tasks.some((t) => t.id === id));
+    const id = rest.pop();
+    setTrail(rest);
+    if (id) setDetails((d) => ({ id, focus: 'panel', nonce: (d?.nonce ?? 0) + 1 }));
+  };
 
   const closeDetails = () => {
     if (details) setFocusTaskId(details.id);
@@ -893,6 +946,20 @@ export function EditableBoard(props: EditableBoardProps) {
         </Dialog>
       )}
 
+      {blockedNotice && (
+        <div className="pdt-banner pdt-banner--info" role="status">
+          <span className="pdt-banner__text">{blockedNotice}</span>
+          <div className="pdt-banner__actions">
+            <button
+              className="pdt-btn pdt-btn-sm pdt-btn-ghost"
+              onClick={() => setBlockedNotice(null)}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {hiddenNotice && (
         <div className="pdt-banner pdt-banner--info" role="status">
           <span className="pdt-banner__text">The new task is hidden by the active filters.</span>
@@ -932,6 +999,18 @@ export function EditableBoard(props: EditableBoardProps) {
             position={positionOf(detailsTask.id)}
             focusTarget={details!.focus}
             focusRequest={details!.nonce}
+            links={linksOf(model, detailsTask)}
+            openBlockers={openBlockers(model, detailsTask).length}
+            linkCandidates={(kind) =>
+              model.tasks.filter((t) => canLink(model, detailsTask.id, t.id, kind))
+            }
+            onBack={trail.length ? goBack : undefined}
+            onOpenLinked={openLinked}
+            onLink={(kind, id) => {
+              onChange(linkTasks(model, detailsTask.id, id, kind), 'Linked tasks');
+              announce('Tasks linked');
+            }}
+            onUnlink={(id) => onChange(unlinkTasks(model, detailsTask.id, id), 'Unlinked tasks')}
             onPatch={(patch) => patchTask(detailsTask.id, patch)}
             onToggleDone={() => toggleDone(detailsTask)}
             onSetStatus={(st) => setStatus(detailsTask, st)}
@@ -1072,6 +1151,8 @@ export function EditableBoard(props: EditableBoardProps) {
         now={now}
         focus={focusTaskId === task.id}
         active={details?.id === task.id}
+        blockedBy={openBlockers(model, task).length}
+        blocking={linksOf(model, task).blocks.filter((t) => t.status !== 'done').length}
         highlight={highlightId === task.id}
         selection={
           selectionMode

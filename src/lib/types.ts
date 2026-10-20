@@ -30,6 +30,12 @@ export interface Task {
   description?: string;
   /** Free-form `#labels`. */
   labels: string[];
+  /** Stable reference other tasks link to, written as `@id:key`. */
+  key?: string;
+  /** Keys of the tasks this one blocks (`@blocks:a,b`). */
+  blocks: string[];
+  /** Keys of loosely related tasks (`@rel:a,b`). */
+  related: string[];
   /** Section heading this task lives under (default "Tasks"). */
   section: string;
   /**
