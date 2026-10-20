@@ -26,7 +26,9 @@ it lives under) are independent. The board shows the same tasks in two layouts:
   card sideways to change its status, up or down to change its section, or
   diagonally to change both.
 - **List** — a simple checklist: every task in one flat list, tick to complete,
-  click to open details. No columns and no drag-and-drop.
+  click to open details. No columns and no drag-and-drop. Mark one section
+  with `@default` (`## Inbox @default`, or the ✓ button in Sections view) to
+  show only that section; with no mark it lists every task.
 
 Switch views from the board header without ever changing your task data. Search
 and filters (status, section, priority, assignee, label, due date, completion)

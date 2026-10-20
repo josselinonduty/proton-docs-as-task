@@ -13,6 +13,7 @@ import {
   countTasks,
   duplicateTask,
   moveSection,
+  toggleDefaultSection,
   removeSection,
   removeSectionMovingTasks,
   removeTask,
@@ -388,7 +389,10 @@ export function EditableBoard(props: EditableBoardProps) {
   const submitColumnQuickAdd = (col: BoardColumn, title: string) => {
     const clean = title.trim();
     if (!clean) return;
-    const section = view === 'sections' ? col.section! : (model.sections[0] ?? 'Tasks');
+    const section =
+      view === 'sections'
+        ? col.section!
+        : (view === 'list' && model.defaultSection) || model.sections[0] || 'Tasks';
     const status: StatusKey = view === 'workflow' ? (col.status as StatusKey) : 'todo';
     const { model: next, taskId } = addTask(model, section, {
       status,
@@ -1268,6 +1272,16 @@ export function EditableBoard(props: EditableBoardProps) {
                       onClick={() => onChange(moveSection(model, col.key, 1))}
                     >
                       <Icon name="chevron-right" />
+                    </button>
+                    <button
+                      type="button"
+                      className="pdt-btn pdt-btn-icon pdt-btn-sm"
+                      aria-label={`Use ${col.label} as the List view`}
+                      aria-pressed={model.defaultSection === col.key}
+                      title="Show in List view"
+                      onClick={() => onChange(toggleDefaultSection(model, col.key))}
+                    >
+                      <Icon name="checkmark-circle" />
                     </button>
                     <button
                       type="button"
