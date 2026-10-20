@@ -23,6 +23,8 @@ interface EditableTaskCardProps {
   selection?: { selected: boolean; onToggle: (e: React.MouseEvent) => void } | null;
   /** Disable drag handles (e.g. while a non-manual sort is active). */
   dragDisabled?: boolean;
+  /** Hide the card while it is being dragged; the drop placeholder stands in for it. */
+  dragging?: boolean;
   /** Briefly highlight this card (after quick-add creation). */
   highlight?: boolean;
   /** Report that this card received DOM focus (keyboard navigation cursor). */
@@ -33,7 +35,7 @@ interface EditableTaskCardProps {
   onOpen: () => void;
   onMoveWithin: (delta: number) => void;
   onDragStartCard: () => void;
-  onDropOnCard: () => void;
+  onDragEndCard: () => void;
 }
 
 /**
@@ -55,6 +57,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     active,
     selection,
     dragDisabled,
+    dragging,
     highlight,
     onFocusCard,
     onFocusHandled,
@@ -62,7 +65,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     onOpen,
     onMoveWithin,
     onDragStartCard,
-    onDropOnCard,
+    onDragEndCard,
   } = props;
 
   const articleRef = useRef<HTMLElement>(null);
@@ -123,10 +126,12 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         selection?.selected ? 'is-selected' : '',
         highlight ? 'is-new' : '',
         active ? 'is-active' : '',
+        dragging ? 'is-dragging' : '',
       ]
         .filter(Boolean)
         .join(' ')}
       role="listitem"
+      data-task-id={task.id}
       tabIndex={0}
       aria-label={ariaLabel}
       aria-selected={selection ? selection.selected : undefined}
@@ -143,12 +148,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         e.dataTransfer.setData('text/plain', task.id);
         onDragStartCard();
       }}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDropOnCard();
-      }}
+      onDragEnd={onDragEndCard}
       onKeyDown={onKeyDown}
     >
       <div className="pdt-card__top">
