@@ -81,7 +81,7 @@ export function withDefaults(
   if (raw.defaultView == null && typeof raw.grouping === 'string') {
     merged.defaultView = raw.grouping === 'section' ? 'sections' : 'workflow';
   }
-  const validViews: BoardView[] = ['workflow', 'sections', 'swimlane'];
+  const validViews: BoardView[] = ['workflow', 'sections', 'swimlane', 'list'];
   if (!validViews.includes(merged.defaultView)) merged.defaultView = 'workflow';
 
   if (!['system', 'light', 'dark'].includes(merged.theme)) merged.theme = 'system';

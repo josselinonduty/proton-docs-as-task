@@ -25,6 +25,8 @@ it lives under) are independent. The board shows the same tasks in two layouts:
 - **Swimlane** — a grid with status columns _and_ section rows at once. Drag a
   card sideways to change its status, up or down to change its section, or
   diagonally to change both.
+- **List** — a simple checklist: every task in one flat list, tick to complete,
+  click to open details. No columns and no drag-and-drop.
 
 Switch views from the board header without ever changing your task data. Search
 and filters (status, section, priority, assignee, label, due date, completion)
@@ -368,7 +370,7 @@ or the "Settings & syntax guide" link in the popup) to:
 
 - enable / disable the extension and choose whether activated boards open
   automatically,
-- pick the default view (Workflow, Sections or Swimlane), theme (System / Light /
+- pick the default view (Workflow, Sections, Swimlane or List), theme (System / Light /
   Dark) and card density (Comfortable / Compact),
 - tune board behavior — new cards at top or bottom, description previews,
   and confirm-before-delete,

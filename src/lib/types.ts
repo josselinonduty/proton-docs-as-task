@@ -70,9 +70,10 @@ export interface ColumnDef {
 
 /**
  * The board layouts. Workflow groups by status, Sections by heading, and
- * Swimlane crosses the two (status columns × section rows).
+ * Swimlane crosses the two (status columns × section rows). List is a single
+ * flat checklist.
  */
-export type BoardView = 'workflow' | 'sections' | 'swimlane';
+export type BoardView = 'workflow' | 'sections' | 'swimlane' | 'list';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type CardDensity = 'comfortable' | 'compact';

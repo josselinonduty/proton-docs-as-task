@@ -129,6 +129,16 @@ export function columnsForView(
   view: BoardView,
   statusColumns: { key: StatusKey; label: string }[],
 ): BoardColumn[] {
+  if (view === 'list') {
+    const rank = (t: BoardTask) => model.sections.indexOf(t.section);
+    return [
+      {
+        key: 'list',
+        label: 'Tasks',
+        tasks: model.tasks.toSorted((a, b) => rank(a) - rank(b)),
+      },
+    ];
+  }
   if (view === 'workflow') {
     return statusColumns.map((col) => ({
       key: col.key,
