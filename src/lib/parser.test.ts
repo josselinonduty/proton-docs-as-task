@@ -133,8 +133,13 @@ describe('parseDocument', () => {
     expect(r.tasks[0]!.checked).toBe(false);
   });
 
-  it('lets explicit @status override the checkbox state', () => {
+  it('resolves a ticked checkbox to done even with a stale @status', () => {
     const r = parseDocument('#!tasks\n- [x] revisit @status:doing', DEFAULT_MARKERS);
+    expect(r.tasks[0]!.status).toBe('done');
+  });
+
+  it('lets explicit @status apply to an unticked checkbox', () => {
+    const r = parseDocument('#!tasks\n- [ ] revisit @status:doing', DEFAULT_MARKERS);
     expect(r.tasks[0]!.status).toBe('doing');
   });
 

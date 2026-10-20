@@ -235,8 +235,8 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
     const meta = extractMeta(body);
     if (meta.title === '' && meta.labels.length === 0 && !meta.description) continue;
 
-    const status: StatusKey = meta.status ?? (checked ? 'done' : 'todo');
-    // Keep `checked` consistent with a resolved done status.
+    // A ticked checkbox always means done; the board writes `doing` as an unticked box.
+    const status: StatusKey = checked ? 'done' : (meta.status ?? 'todo');
     const resolvedChecked = checked || status === 'done';
 
     if (!sections.includes(currentSection)) sections.push(currentSection);
