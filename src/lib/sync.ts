@@ -16,6 +16,7 @@ import {
   type BoardTask,
 } from './model';
 import { parseDocument } from './parser';
+import type { ParseResult } from './types';
 
 /**
  * Reduce arbitrary document text to the canonical serialized form the board
@@ -46,6 +47,20 @@ export function documentsDiverged(
   marker: string,
 ): boolean {
   return canonicalDoc(editorText, markers) !== canonicalModel(model, marker);
+}
+
+const STATUS_TOKEN_RE = /@(?:status|s)[:(]/i;
+
+/**
+ * True when a task line carries a `@status` token the board's own output would
+ * omit (e.g. `- [ ] foo @status:done`), so writing the board back normalizes it.
+ */
+export function hasRedundantStatus(result: ParseResult): boolean {
+  const { tasks } = fromParseResult(result);
+  return tasks.some(
+    (task, i) =>
+      STATUS_TOKEN_RE.test(result.tasks[i]!.raw) && !STATUS_TOKEN_RE.test(serializeTaskLine(task)),
+  );
 }
 
 /** Ways to recognize the same task across a re-parse, strictest first. */
