@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseDocument } from './parser';
 import { DEFAULT_MARKERS } from './defaults';
 import { fromParseResult, setTaskStatus, serializeModel } from './model';
-import { canonicalDoc, documentsDiverged, reconcileIds } from './sync';
+import { canonicalDoc, documentsDiverged, hasRedundantStatus, reconcileIds } from './sync';
 
 const MARKERS = DEFAULT_MARKERS;
 const MARKER = '#!tasks';
@@ -59,5 +59,18 @@ describe('reconcileIds', () => {
     expect(next.tasks[0]!.id).toBe(prev.tasks[0]!.id);
     expect(next.tasks[1]!.id).toBe(prev.tasks[1]!.id);
     expect(prev.tasks.map((t) => t.id)).not.toContain(next.tasks[2]!.id);
+  });
+});
+
+describe('hasRedundantStatus', () => {
+  const parse = (...lines: string[]) => parseDocument(['#!tasks', ...lines].join('\n'), MARKERS);
+
+  it('flags status tokens the board would drop', () => {
+    expect(hasRedundantStatus(parse('- [ ] bar @status:done'))).toBe(true);
+    expect(hasRedundantStatus(parse('- [x] bar @status:doing'))).toBe(true);
+  });
+
+  it('ignores canonical lines', () => {
+    expect(hasRedundantStatus(parse('- [ ] bar @status:doing', '- [x] baz'))).toBe(false);
   });
 });
