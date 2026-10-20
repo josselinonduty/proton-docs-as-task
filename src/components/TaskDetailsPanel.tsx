@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { BoardTask, LinkKind, TaskLinks } from '../lib/model';
 import type { Suggestion } from '../lib/suggestions';
 import type { DateFormat, Priority, StatusKey } from '../lib/types';
@@ -94,6 +94,13 @@ export function TaskDetailsPanel({
     target?.focus();
     if (focusTarget === 'title') titleRef.current?.select();
   }, [focusTarget, focusRequest, task.id]);
+
+  useLayoutEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+  }, [task.title]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {

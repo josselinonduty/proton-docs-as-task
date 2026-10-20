@@ -962,7 +962,6 @@
   line-height: 28px;
   resize: none;
   overflow: hidden;
-  field-sizing: content;
 }
 .pdt-details__title:hover {
   background: var(--pdt-interaction-hover);

@@ -41,7 +41,7 @@
   /* Canvas behind columns, and raised surfaces (cards, popovers). */
   --pdt-background-lowered: #f5f4f2;
   /* Board columns: must stand out from the canvas they sit on. */
-  --pdt-background-column: #ebe9e6;
+  --pdt-background-column: #fbfaf9;
   --pdt-background-elevated: #ffffff;
   --pdt-background-invert: #0c0c14;
   --pdt-border-norm: #d1cfcd;
