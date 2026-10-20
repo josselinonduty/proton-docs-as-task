@@ -103,6 +103,13 @@ describe('independent status and section', () => {
     const sections = columnsForView(model, 'sections', DEFAULT_COLUMNS);
     expect(sections.map((c) => c.key)).toEqual(['Build', 'Launch']);
   });
+
+  it('projects every task into a single flat list column', () => {
+    const model = build(SAMPLE);
+    const [list, ...rest] = columnsForView(model, 'list', DEFAULT_COLUMNS);
+    expect(rest).toEqual([]);
+    expect(list!.tasks).toHaveLength(model.tasks.length);
+  });
 });
 
 describe('workflow moves (status)', () => {

@@ -1530,3 +1530,10 @@
     outline: 2px solid var(--pdt-primary);
   }
 }
+
+.pdt-columns--list {
+  justify-content: center;
+}
+.pdt-columns--list .pdt-column {
+  flex: 0 1 640px;
+}

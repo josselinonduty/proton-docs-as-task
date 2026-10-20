@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react';
 import type { BoardTask } from '../lib/model';
 import { dueBadgeText, dueState, dueStateLabel } from '../lib/dates';
-import type { CardDensity, CardFieldVisibility, DateFormat, StatusKey } from '../lib/types';
+import type {
+  BoardView,
+  CardDensity,
+  CardFieldVisibility,
+  DateFormat,
+  StatusKey,
+} from '../lib/types';
 import { Icon } from './Icon';
 import { PRIORITY_ICON, priorityLabel } from './taskFields';
 
@@ -13,7 +19,7 @@ interface EditableTaskCardProps {
   cardFields: CardFieldVisibility;
   dateFormat: DateFormat;
   /** Which board view the card is shown in (drives section/status chips). */
-  view: 'workflow' | 'sections' | 'swimlane';
+  view: BoardView;
   now: Date;
   /** When true, the card grabs DOM focus once (used after a move). */
   focus: boolean;

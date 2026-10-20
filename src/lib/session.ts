@@ -35,7 +35,7 @@ export const DEFAULT_SESSION: SessionPrefs = {
   lastQuickAddSection: null,
 };
 
-const VALID_VIEWS: BoardView[] = ['workflow', 'sections', 'swimlane'];
+const VALID_VIEWS: BoardView[] = ['workflow', 'sections', 'swimlane', 'list'];
 const VALID_SORT_KEYS = new Set(['manual', 'due', 'priority', 'title', 'assignee', 'created']);
 
 function normalizeSort(raw: unknown): SortState {
