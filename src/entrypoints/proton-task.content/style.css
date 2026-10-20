@@ -680,6 +680,14 @@
 .pdt-taskcard[draggable='true']:active {
   cursor: grabbing;
 }
+.pdt-drop-placeholder {
+  flex: 0 0 auto;
+  min-height: 44px;
+  border: 2px dashed var(--pdt-primary);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-primary-weak);
+  pointer-events: none;
+}
 
 .pdt-card__top {
   display: flex;

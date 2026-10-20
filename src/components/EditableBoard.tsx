@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addSection,
   addTask,
@@ -160,6 +160,9 @@ export function EditableBoard(props: EditableBoardProps) {
   const [focusSection, setFocusSection] = useState<string | null>(null);
 
   const draggedId = useRef<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ key: string; beforeId: string | null } | null>(
+    null,
+  );
   const boardRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
@@ -280,9 +283,11 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   // ---- Drag and drop (disabled while a non-manual sort is active) ----------
-  const handleDrop = (col: BoardColumn, beforeId?: string) => {
+  const handleDrop = (col: BoardColumn) => {
     const id = draggedId.current;
+    const beforeId = dropTarget?.key === col.key ? dropTarget.beforeId : null;
     draggedId.current = null;
+    setDropTarget(null);
     if (!id || sortActive) return;
     const dragged = model.tasks.find((t) => t.id === id);
     if (!dragged) return;
@@ -309,6 +314,7 @@ export function EditableBoard(props: EditableBoardProps) {
   const handleSwimlaneDrop = (section: string, status: StatusKey) => {
     const id = draggedId.current;
     draggedId.current = null;
+    setDropTarget(null);
     if (!id || sortActive) return;
     const dragged = model.tasks.find((t) => t.id === id);
     if (!dragged) return;
@@ -1019,6 +1025,7 @@ export function EditableBoard(props: EditableBoardProps) {
     visibleTasks: BoardTask[],
     dropHandler: () => void,
     dragStart: () => void,
+    dragOver: (after: boolean) => void,
   ) {
     navOrderRef.current.push(task.id);
     cardMetaRef.current.set(task.id, {
@@ -1056,6 +1063,8 @@ export function EditableBoard(props: EditableBoardProps) {
         onOpen={() => openDetails(task.id)}
         onMoveWithin={(delta) => moveWithin(visibleTasks, colLabel, task, delta)}
         onDragStartCard={dragStart}
+        onDragOverCard={dragOver}
+        onDragEndCard={() => setDropTarget(null)}
         onDropOnCard={dropHandler}
       />
     );
@@ -1080,7 +1089,13 @@ export function EditableBoard(props: EditableBoardProps) {
             <div
               className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''}`}
               key={col.key}
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (draggedId.current) setDropTarget({ key: col.key, beforeId: null });
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropTarget(null);
+              }}
               onDrop={(e) => {
                 e.preventDefault();
                 handleDrop(col);
@@ -1163,16 +1178,29 @@ export function EditableBoard(props: EditableBoardProps) {
 
               {!collapsed && (
                 <div className="pdt-column__body" role="list" aria-label={col.label}>
-                  {visibleTasks.map((task) =>
-                    renderCard(
-                      task,
-                      col.key,
-                      col.label,
-                      visibleIds,
-                      visibleTasks,
-                      () => handleDrop(col, task.id),
-                      () => (draggedId.current = task.id),
-                    ),
+                  {visibleTasks.map((task, i) => (
+                    <Fragment key={task.id}>
+                      {dropTarget?.key === col.key && dropTarget.beforeId === task.id && (
+                        <DropPlaceholder />
+                      )}
+                      {renderCard(
+                        task,
+                        col.key,
+                        col.label,
+                        visibleIds,
+                        visibleTasks,
+                        () => handleDrop(col),
+                        () => (draggedId.current = task.id),
+                        (after) =>
+                          setDropTarget({
+                            key: col.key,
+                            beforeId: after ? (visibleTasks[i + 1]?.id ?? null) : task.id,
+                          }),
+                      )}
+                    </Fragment>
+                  ))}
+                  {dropTarget?.key === col.key && dropTarget.beforeId === null && (
+                    <DropPlaceholder />
                   )}
 
                   {visibleTasks.length === 0 && (
@@ -1277,7 +1305,15 @@ export function EditableBoard(props: EditableBoardProps) {
                         key={c.key}
                         className="pdt-swimlane__cell"
                         role="cell"
-                        onDragOver={(e) => e.preventDefault()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (draggedId.current)
+                            setDropTarget({ key: cellCol.key, beforeId: null });
+                        }}
+                        onDragLeave={(e) => {
+                          if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+                            setDropTarget(null);
+                        }}
                         onDrop={(e) => {
                           e.preventDefault();
                           handleSwimlaneDrop(section, c.key);
@@ -1292,8 +1328,10 @@ export function EditableBoard(props: EditableBoardProps) {
                             visibleTasks,
                             () => handleSwimlaneDrop(section, c.key),
                             () => (draggedId.current = task.id),
+                            () => setDropTarget({ key: cellCol.key, beforeId: null }),
                           ),
                         )}
+                        {dropTarget?.key === cellCol.key && <DropPlaceholder />}
                       </div>
                     );
                   })}
@@ -1303,6 +1341,10 @@ export function EditableBoard(props: EditableBoardProps) {
       </div>
     );
   }
+}
+
+function DropPlaceholder() {
+  return <div className="pdt-drop-placeholder" aria-hidden="true" />;
 }
 
 /** Human label for a bulk action, for the undo toast + announcement. */
