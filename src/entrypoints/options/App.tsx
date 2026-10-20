@@ -101,6 +101,7 @@ export function App() {
             <option value="workflow">Workflow (by status)</option>
             <option value="sections">Sections (by heading)</option>
             <option value="swimlane">Swimlane (status × section)</option>
+            <option value="list">List (simple checklist)</option>
           </select>
         </Row>
 

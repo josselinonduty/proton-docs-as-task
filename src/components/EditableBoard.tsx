@@ -94,10 +94,11 @@ const VIEW_LABELS: { key: BoardView; label: string; hint: string }[] = [
   { key: 'workflow', label: 'Workflow', hint: 'Columns by status (V)' },
   { key: 'sections', label: 'Sections', hint: 'Columns by document heading (V)' },
   { key: 'swimlane', label: 'Swimlane', hint: 'Status columns × section rows (V)' },
+  { key: 'list', label: 'List', hint: 'Simple checklist (V)' },
 ];
 
 /** Order in which the V shortcut cycles through views. */
-const VIEW_ORDER: BoardView[] = ['workflow', 'sections', 'swimlane'];
+const VIEW_ORDER: BoardView[] = ['workflow', 'sections', 'swimlane', 'list'];
 
 export function EditableBoard(props: EditableBoardProps) {
   const {
@@ -1162,7 +1163,7 @@ export function EditableBoard(props: EditableBoardProps) {
               }
             : null
         }
-        dragDisabled={sortActive}
+        dragDisabled={sortActive || view === 'list'}
         onFocusCard={() => setFocusedCardId(task.id)}
         onFocusHandled={() => setFocusTaskId(null)}
         onToggleDone={() => toggleDone(task)}
@@ -1184,7 +1185,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   function renderColumns(columns: BoardColumn[]) {
     return (
-      <div className="pdt-columns">
+      <div className={`pdt-columns ${view === 'list' ? 'pdt-columns--list' : ''}`}>
         {columns.map((col) => {
           const isDoneCol = view === 'workflow' && col.status === 'done';
           const collapsed = collapsedColumns.includes(col.key);
@@ -1489,7 +1490,7 @@ function buildCommands(a: BuildCommandsArgs): Command[] {
       id: 'view',
       title: 'Switch view',
       hint: 'V',
-      keywords: 'workflow sections swimlane',
+      keywords: 'workflow sections swimlane list',
       run: a.cycleView,
     },
     {
