@@ -209,8 +209,8 @@ board title after the marker.
 | `@desc(free text)`     | A hidden single-line description (managed from the board, escaped to round-trip)   |
 | `#label`               | One or more labels                                                                 |
 
-An explicit `@status` always wins; otherwise a ticked checkbox resolves to
-**done** and everything else to **todo**. See
+A ticked checkbox always resolves to **done**; otherwise an explicit `@status`
+applies, and everything else is **todo**. See
 [`examples/sample-board.md`](examples/sample-board.md) for a fuller example, and
 the extension's **options page** for an in-app syntax guide.
 
