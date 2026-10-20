@@ -37,6 +37,12 @@ export interface BoardTask {
   assignee?: string;
   description?: string;
   labels: string[];
+  /** Reference other tasks link to; assigned on first link, written as `@id`. */
+  key?: string;
+  /** Keys of the tasks this one blocks. */
+  blocks?: string[];
+  /** Keys of loosely related tasks. */
+  related?: string[];
   /** Ordering rank; kept in sync with the array index by {@link reindex}. */
   order: number;
 }
@@ -106,6 +112,9 @@ function toBoardTask(task: Task, order: number): BoardTask {
     assignee: task.assignee,
     description: task.description,
     labels: [...task.labels],
+    key: task.key,
+    blocks: task.blocks.length ? task.blocks : undefined,
+    related: task.related.length ? task.related : undefined,
     order,
   };
 }
@@ -277,13 +286,22 @@ export function duplicateTask(
   const idx = model.tasks.findIndex((t) => t.id === taskId);
   if (idx < 0) return { model };
   const source = model.tasks[idx]!;
-  const copy: BoardTask = { ...source, id: createId('task'), labels: [...source.labels] };
+  const copy: BoardTask = {
+    ...source,
+    id: createId('task'),
+    labels: [...source.labels],
+    key: undefined,
+    blocks: undefined,
+    related: undefined,
+  };
   const tasks = [...model.tasks.slice(0, idx + 1), copy, ...model.tasks.slice(idx + 1)];
   return { model: reindex({ ...model, tasks }), taskId: copy.id };
 }
 
 /** Change a task's status (Workflow move). Keeps its array position. */
 export function setTaskStatus(model: BoardModel, taskId: string, status: StatusKey): BoardModel {
+  const task = model.tasks.find((t) => t.id === taskId);
+  if (task && !canSetStatus(model, task, status)) return model;
   return {
     ...model,
     tasks: model.tasks.map((t) => (t.id === taskId ? { ...t, status } : t)),
@@ -326,6 +344,133 @@ export function reorderColumn(model: BoardModel, orderedIds: string[]): BoardMod
     if (task) tasks[slot] = task;
   });
   return reindex({ ...model, tasks });
+}
+
+// ---------------------------------------------------------------------------
+// Relationships. Links are stored on one task only (`blocks`, `related`) and
+// referenced by key; the inverse side ("blocked by") is derived.
+// ---------------------------------------------------------------------------
+
+export type LinkKind = 'blockedBy' | 'blocks' | 'related';
+
+export interface TaskLinks {
+  blockedBy: BoardTask[];
+  blocks: BoardTask[];
+  related: BoardTask[];
+}
+
+const hasKey = (task: BoardTask, key?: string) => !!key && task.key === key;
+
+/** Every task linked to `task`, grouped by relationship. */
+export function linksOf(model: BoardModel, task: BoardTask): TaskLinks {
+  const blocks = task.blocks ?? [];
+  const related = task.related ?? [];
+  return {
+    blockedBy: model.tasks.filter((t) => task.key && t.blocks?.includes(task.key)),
+    blocks: model.tasks.filter((t) => t.key && blocks.includes(t.key)),
+    related: model.tasks.filter(
+      (t) =>
+        (t.key && related.includes(t.key)) || (task.key && t.related?.includes(task.key)) || false,
+    ),
+  };
+}
+
+/** Tasks that still have to be completed before `task` may advance. */
+export function openBlockers(model: BoardModel, task: BoardTask): BoardTask[] {
+  return linksOf(model, task).blockedBy.filter((t) => t.status !== 'done');
+}
+
+/** A blocked task may not leave `todo` until every blocker is done. */
+export function canSetStatus(model: BoardModel, task: BoardTask, status: StatusKey): boolean {
+  return status === 'todo' || status === task.status || openBlockers(model, task).length === 0;
+}
+
+/** True when following `blocks` links from `fromKey` reaches `targetKey`. */
+function reaches(model: BoardModel, fromKey: string, targetKey: string): boolean {
+  const seen = new Set<string>();
+  const stack = [fromKey];
+  while (stack.length) {
+    const key = stack.pop()!;
+    if (key === targetKey) return true;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    stack.push(...(model.tasks.find((t) => hasKey(t, key))?.blocks ?? []));
+  }
+  return false;
+}
+
+/** Whether `a` and `b` may be linked: distinct, unlinked, and no blocking cycle. */
+export function canLink(model: BoardModel, aId: string, bId: string, kind: LinkKind): boolean {
+  const a = model.tasks.find((t) => t.id === aId);
+  const b = model.tasks.find((t) => t.id === bId);
+  if (!a || !b || a === b) return false;
+  const links = linksOf(model, a);
+  if ([...links.blockedBy, ...links.blocks, ...links.related].includes(b)) return false;
+  if (kind === 'related') return true;
+  const [blocker, blocked] = kind === 'blocks' ? [a, b] : [b, a];
+  return !(blocked.key && blocker.key && reaches(model, blocked.key, blocker.key));
+}
+
+/** Link `aId` to `bId` ("a blocks b", "a is blocked by b" or "a relates to b"). */
+export function linkTasks(model: BoardModel, aId: string, bId: string, kind: LinkKind): BoardModel {
+  if (!canLink(model, aId, bId, kind)) return model;
+  const [ownerId, targetId] = kind === 'blockedBy' ? [bId, aId] : [aId, bId];
+  const field = kind === 'related' ? 'related' : 'blocks';
+  const taken = new Set(model.tasks.map((t) => t.key));
+  const keyFor = (id: string) => {
+    const existing = model.tasks.find((t) => t.id === id)!.key;
+    if (existing) return existing;
+    let key: string;
+    do key = Math.random().toString(36).slice(2, 6);
+    while (key.length < 4 || taken.has(key));
+    taken.add(key);
+    return key;
+  };
+  const ownerKey = keyFor(ownerId);
+  const targetKey = keyFor(targetId);
+  return {
+    ...model,
+    tasks: model.tasks.map((t) => {
+      if (t.id === ownerId)
+        return { ...t, key: ownerKey, [field]: [...(t[field] ?? []), targetKey] };
+      return t.id === targetId ? { ...t, key: targetKey } : t;
+    }),
+  };
+}
+
+/** Drop links to tasks that no longer exist, and keys nobody references. */
+function pruneLinks(model: BoardModel): BoardModel {
+  const known = new Set(model.tasks.map((t) => t.key));
+  const live = (keys?: string[]) => {
+    const kept = keys?.filter((k) => known.has(k));
+    return kept?.length ? kept : undefined;
+  };
+  const linked = model.tasks.map((t) => ({
+    ...t,
+    blocks: live(t.blocks),
+    related: live(t.related),
+  }));
+  const referenced = new Set(linked.flatMap((t) => [...(t.blocks ?? []), ...(t.related ?? [])]));
+  return {
+    ...model,
+    tasks: linked.map((t) => (t.key && !referenced.has(t.key) ? { ...t, key: undefined } : t)),
+  };
+}
+
+/** Remove every link between two tasks. */
+export function unlinkTasks(model: BoardModel, aId: string, bId: string): BoardModel {
+  const a = model.tasks.find((t) => t.id === aId);
+  const b = model.tasks.find((t) => t.id === bId);
+  if (!a || !b) return model;
+  const strip = (owner: BoardTask, other: BoardTask): BoardTask => ({
+    ...owner,
+    blocks: owner.blocks?.filter((k) => k !== other.key),
+    related: owner.related?.filter((k) => k !== other.key),
+  });
+  return {
+    ...model,
+    tasks: model.tasks.map((t) => (t === a ? strip(a, b) : t === b ? strip(b, a) : t)),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -385,9 +530,13 @@ export function applyBulkAction(
 ): BoardModel {
   switch (action.kind) {
     case 'status':
-      return mapSelected(model, ids, (t) => ({ ...t, status: action.status }));
+      return mapSelected(model, ids, (t) =>
+        canSetStatus(model, t, action.status) ? { ...t, status: action.status } : t,
+      );
     case 'complete':
-      return mapSelected(model, ids, (t) => ({ ...t, status: 'done' }));
+      return mapSelected(model, ids, (t) =>
+        canSetStatus(model, t, 'done') ? { ...t, status: 'done' } : t,
+      );
     case 'section':
       return mapSelected(model, ids, (t) => ({ ...t, section: action.section }), [action.section]);
     case 'priority':
@@ -451,6 +600,9 @@ function serializeTask(task: BoardTask): string {
     const clean = label.trim().replace(/^#/, '');
     if (clean) parts.push(`#${clean}`);
   }
+  if (task.key) parts.push(`@id:${task.key}`);
+  if (task.blocks?.length) parts.push(`@blocks:${task.blocks.join(',')}`);
+  if (task.related?.length) parts.push(`@rel:${task.related.join(',')}`);
   const description = task.description ? encodeDescription(task.description) : '';
   if (description) parts.push(`@desc(${description})`);
 
@@ -461,7 +613,8 @@ function serializeTask(task: BoardTask): string {
  * Serialize a board model into the plain document text the parser understands.
  * `marker` is the activation marker to lead with (e.g. `#!tasks`).
  */
-export function serializeModel(model: BoardModel, marker: string): string {
+export function serializeModel(source: BoardModel, marker: string): string {
+  const model = pruneLinks(source);
   const lines: string[] = [];
   const title = model.title?.trim();
   lines.push(title ? `${marker} ${title}` : marker);

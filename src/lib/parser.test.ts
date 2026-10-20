@@ -156,3 +156,17 @@ describe('parseDocument', () => {
     expect(r.tasks[1]!.id).toBe('task-2');
   });
 });
+
+describe('relationship tokens', () => {
+  it('parses @id, @blocks and @rel', () => {
+    const r = parseDocument('#!tasks\n- [ ] a @id:k1 @blocks:k2,k3 @rel:k4 #x', DEFAULT_MARKERS);
+    const t = r.tasks[0]!;
+    expect([t.title, t.key, t.blocks, t.related, t.labels]).toEqual([
+      'a',
+      'k1',
+      ['k2', 'k3'],
+      ['k4'],
+      ['x'],
+    ]);
+  });
+});

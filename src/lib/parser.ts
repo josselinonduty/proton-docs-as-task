@@ -65,9 +65,14 @@ interface Meta {
   due?: string;
   assignee?: string;
   description?: string;
+  key?: string;
+  blocks: string[];
+  related: string[];
   labels: string[];
   title: string;
 }
+
+const splitKeys = (value?: string): string[] => (value ? value.split(',').filter(Boolean) : []);
 
 /**
  * `@desc(...)` value grammar. The board writes descriptions back into the doc
@@ -138,6 +143,13 @@ export function extractMeta(input: string): Meta {
   ]);
   text = assignee.text;
 
+  const key = extractFirst(text, [/@id:(\S+)/i]);
+  text = key.text;
+  const blocks = extractFirst(text, [/@blocks:(\S+)/i]);
+  text = blocks.text;
+  const related = extractFirst(text, [/@rel:(\S+)/i]);
+  text = related.text;
+
   const priorityValue = prio.value ? PRIORITY_SYNONYMS[prio.value.toLowerCase()] : bangPriority;
 
   return {
@@ -148,6 +160,9 @@ export function extractMeta(input: string): Meta {
     due: due.value || undefined,
     assignee: assignee.value || undefined,
     description,
+    key: key.value,
+    blocks: splitKeys(blocks.value),
+    related: splitKeys(related.value),
     labels,
     title: text.replace(/\s+/g, ' ').trim(),
   };
@@ -250,6 +265,9 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
       due: meta.due,
       assignee: meta.assignee,
       description: meta.description,
+      key: meta.key,
+      blocks: meta.blocks,
+      related: meta.related,
       labels: meta.labels,
       section: currentSection,
       order: tasks.length,

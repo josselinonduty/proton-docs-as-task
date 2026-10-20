@@ -17,6 +17,9 @@ interface EditableTaskCardProps {
   now: Date;
   /** When true, the card grabs DOM focus once (used after a move). */
   focus: boolean;
+  /** Unfinished tasks blocking this one, and tasks it blocks. */
+  blockedBy?: number;
+  blocking?: number;
   /** True while this card's details are open in the side panel. */
   active?: boolean;
   /** Bulk-selection state; when non-null the card shows a selection checkbox. */
@@ -55,6 +58,8 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     now,
     focus,
     active,
+    blockedBy = 0,
+    blocking = 0,
     selection,
     dragDisabled,
     dragging,
@@ -103,6 +108,8 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
   if (done) stateWords.push('Completed');
   if (state !== 'none' && !done) stateWords.push(dueStateLabel(state));
   if (task.priority === 'high' && !done) stateWords.push('High priority');
+  if (blockedBy && !done) stateWords.push(`Blocked by ${blockedBy}`);
+  if (blocking) stateWords.push(`Blocks ${blocking}`);
   const ariaLabel =
     `${task.title || 'Untitled task'}. ${statusLabel}, section ${task.section}.` +
     (selection ? ` ${selection.selected ? 'Selected' : 'Not selected'}.` : '') +
@@ -166,6 +173,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
             type="button"
             className={`pdt-check ${done ? 'pdt-check--on' : ''}`}
             onClick={onToggleDone}
+            aria-disabled={blockedBy > 0 && !done}
             aria-pressed={done}
             aria-label={done ? 'Mark as not done' : 'Mark as done'}
             title={done ? 'Mark as not done (X)' : 'Mark as done (X)'}
@@ -182,6 +190,18 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
 
       {/* Metadata row. Each state carries an icon + text, not color alone. */}
       <div className="pdt-card__tags">
+        {blockedBy > 0 && !done && (
+          <span className="pdt-tag pdt-tag--blocked" title={`Blocked by ${blockedBy} open task(s)`}>
+            <Icon name="lock" size={12} />
+            Blocked
+          </span>
+        )}
+        {blocking > 0 && !done && (
+          <span className="pdt-tag" title={`Blocks ${blocking} task(s)`}>
+            <Icon name="link" size={12} />
+            Blocks {blocking}
+          </span>
+        )}
         {showSection && (
           <span className="pdt-tag" title={`Section: ${task.section}`}>
             <Icon name="list" size={12} />

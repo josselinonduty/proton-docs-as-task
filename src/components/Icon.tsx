@@ -37,7 +37,9 @@ export type IconName =
   | 'filter'
   | 'arrows-up-down'
   | 'circle-half'
-  | 'kanban';
+  | 'kanban'
+  | 'link'
+  | 'lock';
 
 /** Outline icons drawn with a 1.4px stroke on the same 16×16 grid. */
 function Stroke({ children }: { children: ReactNode }) {
@@ -55,6 +57,17 @@ function Stroke({ children }: { children: ReactNode }) {
 }
 
 const ICONS: Record<IconName, ReactNode> = {
+  link: (
+    <Stroke>
+      <path d="M6.5 9.5a2.5 2.5 0 0 0 3.5 0l2.5-2.5a2.5 2.5 0 0 0-3.5-3.5L8 4.5M9.5 6.5a2.5 2.5 0 0 0-3.5 0L3.5 9a2.5 2.5 0 0 0 3.5 3.5l1-1" />
+    </Stroke>
+  ),
+  lock: (
+    <Stroke>
+      <rect x="3.5" y="7" width="9" height="6.5" rx="1.5" />
+      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+    </Stroke>
+  ),
   flag: (
     <Stroke>
       <path d="M3.5 14V2.5M3.5 3h8.25l-1.75 3 1.75 3H3.5" />
