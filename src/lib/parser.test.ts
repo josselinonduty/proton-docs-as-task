@@ -170,3 +170,13 @@ describe('relationship tokens', () => {
     ]);
   });
 });
+
+describe('@default section marker', () => {
+  it('strips @default from the heading and reports the section', () => {
+    const result = parseDocument('#!tasks\n## Inbox @default\n- [ ] a\n## Later\n- [ ] b', [
+      '#!tasks',
+    ]);
+    expect(result.sections).toEqual(['Inbox', 'Later']);
+    expect(result.defaultSection).toBe('Inbox');
+  });
+});

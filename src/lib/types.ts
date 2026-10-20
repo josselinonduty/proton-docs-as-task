@@ -60,6 +60,8 @@ export interface ParseResult {
   tasks: Task[];
   /** Distinct section names in first-seen order. */
   sections: string[];
+  /** Section whose heading carries `@default`; the only one the List view shows. */
+  defaultSection?: string;
 }
 
 /** A board column definition. */

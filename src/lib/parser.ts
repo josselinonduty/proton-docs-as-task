@@ -3,6 +3,8 @@ import type { ParseResult, Priority, StatusKey, Task } from './types';
 const DEFAULT_SECTION = 'Tasks';
 
 /** Matches a markdown-style heading line: `#`..`######` + space + text. */
+const DEFAULT_TOKEN_RE = /\s+@default$/;
+
 const HEADING_RE = /^(#{1,6})\s+(.*\S)\s*$/;
 
 /**
@@ -220,6 +222,7 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
   const tasks: Task[] = [];
   const sections: string[] = [];
   let currentSection = DEFAULT_SECTION;
+  let defaultSection: string | undefined;
 
   for (let i = markerIndex + 1; i < lines.length; i++) {
     const rawLine = lines[i] ?? '';
@@ -228,7 +231,9 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
 
     const heading = HEADING_RE.exec(line);
     if (heading) {
-      currentSection = (heading[2] ?? '').trim();
+      const text = (heading[2] ?? '').trim();
+      currentSection = text.replace(DEFAULT_TOKEN_RE, '');
+      if (currentSection !== text) defaultSection ??= currentSection;
       if (!sections.includes(currentSection)) sections.push(currentSection);
       continue;
     }
@@ -282,5 +287,6 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
     boardTitle: marker.title,
     tasks,
     sections: sections.length > 0 ? sections : [DEFAULT_SECTION],
+    defaultSection,
   };
 }
