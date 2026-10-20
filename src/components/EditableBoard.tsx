@@ -160,6 +160,7 @@ export function EditableBoard(props: EditableBoardProps) {
   const [focusSection, setFocusSection] = useState<string | null>(null);
 
   const draggedId = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ key: string; beforeId: string | null } | null>(
     null,
   );
@@ -283,11 +284,22 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   // ---- Drag and drop (disabled while a non-manual sort is active) ----------
+  const endDrag = () => {
+    draggedId.current = null;
+    setDraggingId(null);
+    setDropTarget(null);
+  };
+
+  // Hiding the source synchronously in dragstart makes browsers cancel the drag.
+  const startDrag = (id: string) => {
+    draggedId.current = id;
+    setTimeout(() => draggedId.current === id && setDraggingId(id));
+  };
+
   const handleDrop = (col: BoardColumn) => {
     const id = draggedId.current;
     const beforeId = dropTarget?.key === col.key ? dropTarget.beforeId : null;
-    draggedId.current = null;
-    setDropTarget(null);
+    endDrag();
     if (!id || sortActive) return;
     const dragged = model.tasks.find((t) => t.id === id);
     if (!dragged) return;
@@ -313,8 +325,7 @@ export function EditableBoard(props: EditableBoardProps) {
   /** Swimlane drop: a cell fixes both status and section at once. */
   const handleSwimlaneDrop = (section: string, status: StatusKey) => {
     const id = draggedId.current;
-    draggedId.current = null;
-    setDropTarget(null);
+    endDrag();
     if (!id || sortActive) return;
     const dragged = model.tasks.find((t) => t.id === id);
     if (!dragged) return;
@@ -1064,7 +1075,8 @@ export function EditableBoard(props: EditableBoardProps) {
         onMoveWithin={(delta) => moveWithin(visibleTasks, colLabel, task, delta)}
         onDragStartCard={dragStart}
         onDragOverCard={dragOver}
-        onDragEndCard={() => setDropTarget(null)}
+        dragging={draggingId === task.id}
+        onDragEndCard={endDrag}
         onDropOnCard={dropHandler}
       />
     );
@@ -1190,11 +1202,15 @@ export function EditableBoard(props: EditableBoardProps) {
                         visibleIds,
                         visibleTasks,
                         () => handleDrop(col),
-                        () => (draggedId.current = task.id),
+                        () => startDrag(task.id),
                         (after) =>
                           setDropTarget({
                             key: col.key,
-                            beforeId: after ? (visibleTasks[i + 1]?.id ?? null) : task.id,
+                            beforeId:
+                              after || task.id === draggedId.current
+                                ? (visibleTasks.slice(i + 1).find((t) => t.id !== draggedId.current)
+                                    ?.id ?? null)
+                                : task.id,
                           }),
                       )}
                     </Fragment>
@@ -1327,7 +1343,7 @@ export function EditableBoard(props: EditableBoardProps) {
                             visibleIds,
                             visibleTasks,
                             () => handleSwimlaneDrop(section, c.key),
-                            () => (draggedId.current = task.id),
+                            () => startDrag(task.id),
                             () => setDropTarget({ key: cellCol.key, beforeId: null }),
                           ),
                         )}

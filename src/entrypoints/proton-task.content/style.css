@@ -680,6 +680,9 @@
 .pdt-taskcard[draggable='true']:active {
   cursor: grabbing;
 }
+.pdt-taskcard.is-dragging {
+  display: none;
+}
 .pdt-drop-placeholder {
   flex: 0 0 auto;
   min-height: 44px;

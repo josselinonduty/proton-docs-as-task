@@ -23,6 +23,8 @@ interface EditableTaskCardProps {
   selection?: { selected: boolean; onToggle: (e: React.MouseEvent) => void } | null;
   /** Disable drag handles (e.g. while a non-manual sort is active). */
   dragDisabled?: boolean;
+  /** Hide the card while it is being dragged; the drop placeholder stands in for it. */
+  dragging?: boolean;
   /** Briefly highlight this card (after quick-add creation). */
   highlight?: boolean;
   /** Report that this card received DOM focus (keyboard navigation cursor). */
@@ -57,6 +59,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     active,
     selection,
     dragDisabled,
+    dragging,
     highlight,
     onFocusCard,
     onFocusHandled,
@@ -127,6 +130,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         selection?.selected ? 'is-selected' : '',
         highlight ? 'is-new' : '',
         active ? 'is-active' : '',
+        dragging ? 'is-dragging' : '',
       ]
         .filter(Boolean)
         .join(' ')}
