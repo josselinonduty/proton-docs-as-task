@@ -948,6 +948,7 @@
   overflow-y: auto;
 }
 .pdt-details__title {
+  flex-shrink: 0;
   width: 100%;
   min-height: 40px;
   margin: 0 -8px;
