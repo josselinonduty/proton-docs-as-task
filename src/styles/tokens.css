@@ -40,6 +40,8 @@
   --pdt-background-strong: #e5e4e1;
   /* Canvas behind columns, and raised surfaces (cards, popovers). */
   --pdt-background-lowered: #f5f4f2;
+  /* Board columns: must stand out from the canvas they sit on. */
+  --pdt-background-column: #ebe9e6;
   --pdt-background-elevated: #ffffff;
   --pdt-background-invert: #0c0c14;
   --pdt-border-norm: #d1cfcd;
@@ -154,6 +156,7 @@
     --pdt-background-weak: #292733;
     --pdt-background-strong: #3f3b4c;
     --pdt-background-lowered: #0e0d12;
+    --pdt-background-column: #292733;
     --pdt-background-elevated: #1e1c26;
     --pdt-background-invert: #ffffff;
     --pdt-border-norm: #4a4658;
@@ -208,6 +211,7 @@
   --pdt-background-weak: #292733;
   --pdt-background-strong: #3f3b4c;
   --pdt-background-lowered: #0e0d12;
+  --pdt-background-column: #292733;
   --pdt-background-elevated: #1e1c26;
   --pdt-background-invert: #ffffff;
   --pdt-border-norm: #4a4658;

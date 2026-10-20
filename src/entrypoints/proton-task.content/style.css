@@ -506,7 +506,7 @@
   max-height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--pdt-background-weak);
+  background: var(--pdt-background-column);
   border: 1px solid var(--pdt-border-weak);
   border-radius: var(--pdt-radius-lg);
   overflow: hidden;
@@ -961,6 +961,7 @@
   font-weight: var(--pdt-font-weight-bold);
   line-height: 28px;
   resize: none;
+  overflow: hidden;
   field-sizing: content;
 }
 .pdt-details__title:hover {
