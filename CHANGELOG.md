@@ -27,6 +27,28 @@ A rebuilt saving system that works through Proton's own editor.
   tab is hidden or closed, which matters on mobile.
 - Requires Chrome 111+ or Firefox 128+.
 
+## [1.1.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.0.0...v1.1.0) (2026-10-20)
+
+
+### Features
+
+* **board:** [@default](https://github.com/default) section marker for the list view ([41bcca8](https://github.com/josselinonduty/proton-docs-as-task/commit/41bcca8de167953241760f49283a760a48a22ea4)), closes [#37](https://github.com/josselinonduty/proton-docs-as-task/issues/37)
+* **board:** add simple list view for basic task checklists ([0529768](https://github.com/josselinonduty/proton-docs-as-task/commit/05297682008063106ff7d34e22fa284666169d6c)), closes [#37](https://github.com/josselinonduty/proton-docs-as-task/issues/37)
+* **board:** link tasks as blocking, blocked by or related ([596d2b0](https://github.com/josselinonduty/proton-docs-as-task/commit/596d2b0da03276dcbbe498d1aa3a4fe239f09526))
+
+
+### Bug fixes
+
+* **board:** minor UI issues ([#52](https://github.com/josselinonduty/proton-docs-as-task/issues/52)) ([950f4d1](https://github.com/josselinonduty/proton-docs-as-task/commit/950f4d130f48692bb8c8f9b6510fb5fae02b58dd))
+* **board:** normalize redundant [@status](https://github.com/status) tokens when opening the board ([22e6a1c](https://github.com/josselinonduty/proton-docs-as-task/commit/22e6a1c6b611066b2ab63de61af95422c1c54531))
+* **board:** show drop placeholder while dragging cards ([9b69577](https://github.com/josselinonduty/proton-docs-as-task/commit/9b69577d61eed650fbbdc0592bf102dda157dc63))
+* **parser:** let a ticked checkbox resolve to done over a stale [@status](https://github.com/status) ([7414531](https://github.com/josselinonduty/proton-docs-as-task/commit/7414531c7ddef0e556d0e80ced886a6b97587627))
+
+
+### Documentation
+
+* add app screenshots ([492c057](https://github.com/josselinonduty/proton-docs-as-task/commit/492c05744077471e4115620d86ed42e1e805c6a0))
+
 ## [1.0.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v0.7.1...v1.0.0) (2026-10-19)
 
 
