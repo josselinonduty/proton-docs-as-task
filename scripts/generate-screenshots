@@ -137,7 +137,9 @@ async function main() {
     await capture(page, '03-swimlane');
     await selectView(page, 'Workflow');
 
-    await page.locator('article.pdt-taskcard:has-text("Synthesize findings") .pdt-card__title').click();
+    await page
+      .locator('article.pdt-taskcard:has-text("Synthesize findings") .pdt-card__title')
+      .click();
     await capture(page, '04-task-details');
     await page.keyboard.press('Escape');
 
