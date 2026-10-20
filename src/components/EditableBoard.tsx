@@ -290,6 +290,22 @@ export function EditableBoard(props: EditableBoardProps) {
     setDropTarget(null);
   };
 
+  /** Only update on change so hovering does not re-render on every dragover. */
+  const hoverTarget = (key: string, beforeId: string | null) =>
+    setDropTarget((prev) =>
+      prev?.key === key && prev.beforeId === beforeId ? prev : { key, beforeId },
+    );
+
+  /** Pointer position alone decides the slot: first remaining card whose midpoint is below it. */
+  const cardBefore = (container: HTMLElement, y: number): string | null => {
+    for (const card of container.querySelectorAll<HTMLElement>('[data-task-id]')) {
+      if (card.dataset.taskId === draggedId.current) continue;
+      const { top, height } = card.getBoundingClientRect();
+      if (y < top + height / 2) return card.dataset.taskId ?? null;
+    }
+    return null;
+  };
+
   // Hiding the source synchronously in dragstart makes browsers cancel the drag.
   const startDrag = (id: string) => {
     draggedId.current = id;
@@ -1034,9 +1050,7 @@ export function EditableBoard(props: EditableBoardProps) {
     colLabel: string,
     colVisibleIds: string[],
     visibleTasks: BoardTask[],
-    dropHandler: () => void,
     dragStart: () => void,
-    dragOver: (after: boolean) => void,
   ) {
     navOrderRef.current.push(task.id);
     cardMetaRef.current.set(task.id, {
@@ -1074,10 +1088,8 @@ export function EditableBoard(props: EditableBoardProps) {
         onOpen={() => openDetails(task.id)}
         onMoveWithin={(delta) => moveWithin(visibleTasks, colLabel, task, delta)}
         onDragStartCard={dragStart}
-        onDragOverCard={dragOver}
         dragging={draggingId === task.id}
         onDragEndCard={endDrag}
-        onDropOnCard={dropHandler}
       />
     );
   }
@@ -1103,7 +1115,7 @@ export function EditableBoard(props: EditableBoardProps) {
               key={col.key}
               onDragOver={(e) => {
                 e.preventDefault();
-                if (draggedId.current) setDropTarget({ key: col.key, beforeId: null });
+                if (draggedId.current) hoverTarget(col.key, cardBefore(e.currentTarget, e.clientY));
               }}
               onDragLeave={(e) => {
                 if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropTarget(null);
@@ -1190,28 +1202,13 @@ export function EditableBoard(props: EditableBoardProps) {
 
               {!collapsed && (
                 <div className="pdt-column__body" role="list" aria-label={col.label}>
-                  {visibleTasks.map((task, i) => (
+                  {visibleTasks.map((task) => (
                     <Fragment key={task.id}>
                       {dropTarget?.key === col.key && dropTarget.beforeId === task.id && (
                         <DropPlaceholder />
                       )}
-                      {renderCard(
-                        task,
-                        col.key,
-                        col.label,
-                        visibleIds,
-                        visibleTasks,
-                        () => handleDrop(col),
-                        () => startDrag(task.id),
-                        (after) =>
-                          setDropTarget({
-                            key: col.key,
-                            beforeId:
-                              after || task.id === draggedId.current
-                                ? (visibleTasks.slice(i + 1).find((t) => t.id !== draggedId.current)
-                                    ?.id ?? null)
-                                : task.id,
-                          }),
+                      {renderCard(task, col.key, col.label, visibleIds, visibleTasks, () =>
+                        startDrag(task.id),
                       )}
                     </Fragment>
                   ))}
@@ -1323,8 +1320,7 @@ export function EditableBoard(props: EditableBoardProps) {
                         role="cell"
                         onDragOver={(e) => {
                           e.preventDefault();
-                          if (draggedId.current)
-                            setDropTarget({ key: cellCol.key, beforeId: null });
+                          if (draggedId.current) hoverTarget(cellCol.key, null);
                         }}
                         onDragLeave={(e) => {
                           if (!e.currentTarget.contains(e.relatedTarget as Node | null))
@@ -1342,9 +1338,7 @@ export function EditableBoard(props: EditableBoardProps) {
                             cellCol.label,
                             visibleIds,
                             visibleTasks,
-                            () => handleSwimlaneDrop(section, c.key),
                             () => startDrag(task.id),
-                            () => setDropTarget({ key: cellCol.key, beforeId: null }),
                           ),
                         )}
                         {dropTarget?.key === cellCol.key && <DropPlaceholder />}

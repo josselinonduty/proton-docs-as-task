@@ -35,9 +35,7 @@ interface EditableTaskCardProps {
   onOpen: () => void;
   onMoveWithin: (delta: number) => void;
   onDragStartCard: () => void;
-  onDragOverCard: (after: boolean) => void;
   onDragEndCard: () => void;
-  onDropOnCard: () => void;
 }
 
 /**
@@ -67,9 +65,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     onOpen,
     onMoveWithin,
     onDragStartCard,
-    onDragOverCard,
     onDragEndCard,
-    onDropOnCard,
   } = props;
 
   const articleRef = useRef<HTMLElement>(null);
@@ -135,6 +131,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         .filter(Boolean)
         .join(' ')}
       role="listitem"
+      data-task-id={task.id}
       tabIndex={0}
       aria-label={ariaLabel}
       aria-selected={selection ? selection.selected : undefined}
@@ -152,17 +149,6 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         onDragStartCard();
       }}
       onDragEnd={onDragEndCard}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const rect = e.currentTarget.getBoundingClientRect();
-        onDragOverCard(e.clientY > rect.top + rect.height / 2);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDropOnCard();
-      }}
       onKeyDown={onKeyDown}
     >
       <div className="pdt-card__top">
