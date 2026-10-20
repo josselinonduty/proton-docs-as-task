@@ -12,7 +12,7 @@ import {
   updateTask as updateTaskInModel,
   type BoardModel,
 } from '../lib/model';
-import { canonicalDoc, canonicalModel, reconcileIds } from '../lib/sync';
+import { canonicalDoc, canonicalModel, hasRedundantStatus, reconcileIds } from '../lib/sync';
 import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
 import { MANUAL_SORT, type SortState } from '../lib/sorting';
 import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '../lib/session';
@@ -318,14 +318,15 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   const openBoard = useCallback(() => {
     if (!modelRef.current) {
       // An edit still waiting for Proton to unlock is newer than the document.
-      const next =
-        pending.current ??
-        fromParseResult(parseDocument(docLines.current.join('\n'), markersRef.current));
+      const parsed = parseDocument(docLines.current.join('\n'), markersRef.current);
+      const next = pending.current ?? fromParseResult(parsed);
       if (!pending.current) baseLines.current = docLines.current;
       showModel(next);
+      // Normalize hand-written status tokens into the checkbox right away.
+      if (!pending.current && hasRedundantStatus(parsed)) commit(next, true);
     }
     setVisible(true);
-  }, [showModel]);
+  }, [showModel, commit]);
 
   const closeBoard = useCallback(() => {
     flush();
