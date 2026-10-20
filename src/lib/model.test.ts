@@ -24,6 +24,7 @@ import {
   setTaskSection,
   setTaskStatus,
   setTitle,
+  toggleDefaultSection,
   updateTask,
   type BoardModel,
 } from './model';
@@ -109,6 +110,16 @@ describe('independent status and section', () => {
     const [list, ...rest] = columnsForView(model, 'list', DEFAULT_COLUMNS);
     expect(rest).toEqual([]);
     expect(list!.tasks).toHaveLength(model.tasks.length);
+  });
+
+  it('limits the list to the @default section and round-trips the marker', () => {
+    let model = toggleDefaultSection(build(SAMPLE), 'Launch');
+    const [list] = columnsForView(model, 'list', DEFAULT_COLUMNS);
+    expect(list!.tasks.every((t) => t.section === 'Launch')).toBe(true);
+    model = renameSection(model, 'Launch', 'Ship');
+    expect(model.defaultSection).toBe('Ship');
+    expect(serializeModel(model, '#!tasks')).toContain('## Ship @default');
+    expect(removeSection(model, 'Ship').defaultSection).toBeUndefined();
   });
 });
 

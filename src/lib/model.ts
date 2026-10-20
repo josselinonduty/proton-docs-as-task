@@ -51,6 +51,8 @@ export interface BoardModel {
   title?: string;
   /** Section headings in display / document order. */
   sections: string[];
+  /** Section marked `@default`; the List view shows only its tasks. */
+  defaultSection?: string;
   /** Flat task collection; array order is canonical. */
   tasks: BoardTask[];
 }
@@ -98,7 +100,7 @@ export function fromParseResult(result: ParseResult): BoardModel {
   for (const task of tasks) {
     if (!sections.includes(task.section)) sections.push(task.section);
   }
-  return { title: result.boardTitle, sections, tasks };
+  return { title: result.boardTitle, sections, defaultSection: result.defaultSection, tasks };
 }
 
 function toBoardTask(task: Task, order: number): BoardTask {
@@ -131,11 +133,15 @@ export function columnsForView(
 ): BoardColumn[] {
   if (view === 'list') {
     const rank = (t: BoardTask) => model.sections.indexOf(t.section);
+    const { defaultSection } = model;
+    const tasks = defaultSection
+      ? model.tasks.filter((t) => t.section === defaultSection)
+      : model.tasks;
     return [
       {
         key: 'list',
-        label: 'Tasks',
-        tasks: model.tasks.toSorted((a, b) => rank(a) - rank(b)),
+        label: defaultSection ?? 'Tasks',
+        tasks: tasks.toSorted((a, b) => rank(a) - rank(b)),
       },
     ];
   }
@@ -181,19 +187,30 @@ export function renameSection(model: BoardModel, from: string, to: string): Boar
   if (!clean || from === clean) {
     // Keep the (possibly whitespace-only) edit locally so the input reflects it,
     // but never collapse two sections into one silently.
-    return { ...model, sections: model.sections.map((s) => (s === from ? to : s)) };
+    return {
+      ...model,
+      sections: model.sections.map((s) => (s === from ? to : s)),
+      defaultSection: model.defaultSection === from ? to : model.defaultSection,
+    };
   }
   return {
     ...model,
+    defaultSection: model.defaultSection === from ? clean : model.defaultSection,
     sections: model.sections.map((s) => (s === from ? clean : s)),
     tasks: model.tasks.map((t) => (t.section === from ? { ...t, section: clean } : t)),
   };
+}
+
+/** Mark `name` as the List view's section, or clear the mark when it already is. */
+export function toggleDefaultSection(model: BoardModel, name: string): BoardModel {
+  return { ...model, defaultSection: model.defaultSection === name ? undefined : name };
 }
 
 /** Delete a section and every task under it. */
 export function removeSection(model: BoardModel, name: string): BoardModel {
   return reindex({
     ...model,
+    defaultSection: model.defaultSection === name ? undefined : model.defaultSection,
     sections: model.sections.filter((s) => s !== name),
     tasks: model.tasks.filter((t) => t.section !== name),
   });
@@ -221,6 +238,7 @@ export function removeSectionMovingTasks(
   const tasks = [...kept.slice(0, insertAt), ...moved, ...kept.slice(insertAt)];
   return reindex({
     ...model,
+    defaultSection: model.defaultSection === name ? undefined : model.defaultSection,
     sections: model.sections.filter((s) => s !== name),
     tasks,
   });
@@ -637,7 +655,9 @@ export function serializeModel(source: BoardModel, marker: string): string {
 
   for (const section of sections) {
     lines.push('');
-    lines.push(`## ${section.trim() || 'Untitled'}`);
+    lines.push(
+      `## ${section.trim() || 'Untitled'}${section === model.defaultSection ? ' @default' : ''}`,
+    );
     const inSection = model.tasks
       .filter((t) => t.section === section)
       .sort((a, b) => a.order - b.order);
