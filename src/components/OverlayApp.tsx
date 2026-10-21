@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
+import { t } from '../i18n';
 import { parseDocument } from '../lib/parser';
 import { defaultStatus, isDoneStatus } from '../lib/statuses';
 import type { EditorClient } from '../lib/editorClient';
@@ -56,6 +58,8 @@ interface UndoEntry {
  *   soon as it unlocks.
  */
 export function OverlayApp({ client, initialState, host, initialSettings }: OverlayAppProps) {
+  // Re-render on language changes; strings come from the shared `t`, which callbacks can use without deps.
+  useTranslation();
   const [settings, setSettings] = useState(initialSettings);
   const [docState, setDocState] = useState(initialState);
   const [visible, setVisible] = useState(false);
@@ -205,7 +209,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     setSaveState('saved');
     // The merge may have folded in changes made elsewhere; show them.
     if (modelRef.current === next) {
-      if (followDocument(res.lines)) announce('Board updated with changes from the document');
+      if (followDocument(res.lines)) announce(t('overlay.updated'));
     } else {
       baseLines.current = res.lines;
     }
@@ -240,7 +244,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
         if (state.editable && !writeTimer.current) flush();
         return;
       }
-      if (followDocument(lines)) announce('Board updated with changes from the document');
+      if (followDocument(lines)) announce(t('overlay.updated'));
     };
     const unsubscribe = client.subscribe(onState);
     // Catch up on anything reported before we subscribed (e.g. Proton still
@@ -283,7 +287,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     showModel(entry.model);
     commit(entry.model);
     setUndo(null);
-    announce('Change undone');
+    announce(t('overlay.undone'));
   }, [commit, showModel, announce]);
 
   // Auto-dismiss the undo toast.
@@ -353,7 +357,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     showModel(fromParseResult(parseDocument(docLines.current.join('\n'), markersRef.current)));
     setUndo(null);
     setSaveState('saved');
-    announce('Board reloaded from the document');
+    announce(t('overlay.reloaded'));
   }, [showModel, announce]);
 
   const retryWrite = useCallback(() => {
@@ -529,11 +533,11 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
       <button
         className="pdt-btn pdt-btn-pill pdt-fab"
         onClick={openBoard}
-        title="Open the task board"
-        aria-label={`Open task board, ${pendingCount} open ${pendingCount === 1 ? 'task' : 'tasks'}`}
+        title={t('overlay.openTitle')}
+        aria-label={t('overlay.openAria', { count: pendingCount })}
       >
         <Icon name="kanban" size={16} />
-        <span>Open board</span>
+        <span>{t('overlay.open')}</span>
         {pendingCount > 0 && (
           <span className="pdt-fab__badge" aria-hidden="true">
             {pendingCount}
@@ -546,18 +550,15 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   // Empty document Proton lets us edit → offer to convert it into a task board.
   if (text.trim() === '' && docState.editable) {
     return (
-      <div className="pdt-convert" role="region" aria-label="Convert to task board">
+      <div className="pdt-convert" role="region" aria-label={t('overlay.convert')}>
         <span className="pdt-convert__icon" aria-hidden="true">
           <Icon name="kanban" size={24} />
         </span>
-        <p className="pdt-convert__title">Turn this document into a task board</p>
-        <p className="pdt-convert__hint">
-          Your tasks are saved in this document as a checklist, so they sync and share like any
-          other Proton doc.
-        </p>
+        <p className="pdt-convert__title">{t('overlay.convertTitle')}</p>
+        <p className="pdt-convert__hint">{t('overlay.convertHint')}</p>
         <button type="button" className="pdt-btn pdt-btn-primary" onClick={convertToTaskDoc}>
           <Icon name="plus" size={16} />
-          <span>Create task board</span>
+          <span>{t('overlay.create')}</span>
         </button>
       </div>
     );

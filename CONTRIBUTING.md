@@ -43,6 +43,13 @@ npm run build:firefox # Firefox production build
 - **The document is the single source of truth.** Every write goes through
   Proton's editor via the bridge — never by faking input events — and is
   merged with concurrent changes rather than overwriting them.
+- **Every user-facing string is translated.** Add it to `src/i18n/locales/en.json`
+  and read it with `t()` / `<Trans>` (`useTranslation()`) — never hard-code UI text.
+  To add a language, create `locales/<code>.json` with the same keys (plurals use
+  i18next's `_one` / `_other` suffixes; languages with a single form only need
+  `_other`), register it in `src/i18n/index.ts`, and the locale test checks that
+  keys and `{{placeholders}}` match English. Text written into the document
+  (default section and status names) stays untranslated on purpose.
 - **Least privilege.** Don't add manifest permissions or host origins unless a
   feature genuinely needs them, and explain why in the PR.
 - **Pin dependencies.** npm packages use exact versions (`.npmrc` sets

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BoardTask } from '../lib/model';
 import { dueBadgeText, dueState, dueStateLabel } from '../lib/dates';
 import type {
@@ -80,6 +81,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     onDragEndCard,
   } = props;
 
+  const { t } = useTranslation();
   const articleRef = useRef<HTMLElement>(null);
   const status = findStatus(statuses, task.status);
   const done = status?.category === 'done';
@@ -113,15 +115,22 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
   };
 
   const stateWords: string[] = [];
-  if (done) stateWords.push('Completed');
+  if (done) stateWords.push(t('due.completed'));
   if (state !== 'none' && !done) stateWords.push(dueStateLabel(state));
-  if (task.priority === 'high' && !done) stateWords.push('High priority');
-  if (blockedBy && !done) stateWords.push(`Blocked by ${blockedBy}`);
-  if (blocking) stateWords.push(`Blocks ${blocking}`);
-  const ariaLabel =
-    `${task.title || 'Untitled task'}. ${statusLabel}, section ${task.section}.` +
-    (selection ? ` ${selection.selected ? 'Selected' : 'Not selected'}.` : '') +
-    (stateWords.length ? ` ${stateWords.join(', ')}.` : '');
+  if (task.priority === 'high' && !done) stateWords.push(t('card.highPriority'));
+  if (blockedBy && !done) stateWords.push(t('card.blockedByCount', { count: blockedBy }));
+  if (blocking) stateWords.push(t('card.blocksCount', { count: blocking }));
+  const ariaLabel = [
+    t('card.aria', {
+      title: task.title || t('card.untitled'),
+      status: statusLabel,
+      section: task.section,
+    }),
+    selection && t(selection.selected ? 'card.selected' : 'card.notSelected'),
+    stateWords.length && `${stateWords.join(', ')}.`,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const showSection = view === 'workflow' && cardFields.sectionInWorkflow;
   const showStatus = view === 'sections' && cardFields.statusInSections;
@@ -172,7 +181,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
             type="checkbox"
             className="pdt-native-check pdt-card__select"
             checked={selection.selected}
-            aria-label={selection.selected ? 'Deselect task' : 'Select task'}
+            aria-label={selection.selected ? t('card.deselect') : t('card.select')}
             onChange={() => {}}
             onClick={(e) => selection.onToggle(e)}
           />
@@ -183,14 +192,14 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
             onClick={onToggleDone}
             aria-disabled={blockedBy > 0 && !done}
             aria-pressed={done}
-            aria-label={done ? 'Mark as not done' : 'Mark as done'}
-            title={done ? 'Mark as not done (X)' : 'Mark as done (X)'}
+            aria-label={done ? t('card.markNotDone') : t('card.markDone')}
+            title={done ? t('card.markNotDoneKey') : t('card.markDoneKey')}
           >
             {done && <Icon name="checkmark" size={12} />}
           </button>
         )}
         <span className={`pdt-card__title ${done ? 'pdt-card__title--done' : ''}`}>
-          {task.title || <span className="pdt-card__untitled">Untitled task</span>}
+          {task.title || <span className="pdt-card__untitled">{t('card.untitled')}</span>}
         </span>
       </div>
 
@@ -199,32 +208,35 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
       {/* Metadata row. Each state carries an icon + text, not color alone. */}
       <div className="pdt-card__tags">
         {blockedBy > 0 && !done && (
-          <span className="pdt-tag pdt-tag--blocked" title={`Blocked by ${blockedBy} open task(s)`}>
+          <span
+            className="pdt-tag pdt-tag--blocked"
+            title={t('card.blockedByOpen', { count: blockedBy })}
+          >
             <Icon name="lock" size={12} />
-            Blocked
+            {t('card.blocked')}
           </span>
         )}
         {blocking > 0 && !done && (
-          <span className="pdt-tag" title={`Blocks ${blocking} task(s)`}>
+          <span className="pdt-tag" title={t('card.blocksTasks', { count: blocking })}>
             <Icon name="link" size={12} />
-            Blocks {blocking}
+            {t('card.blocksCount', { count: blocking })}
           </span>
         )}
         {showSection && (
-          <span className="pdt-tag" title={`Section: ${task.section}`}>
+          <span className="pdt-tag" title={t('card.sectionTitle', { section: task.section })}>
             <Icon name="list" size={12} />
             {task.section}
           </span>
         )}
         {showStatus && (
-          <span className="pdt-tag" title={`Status: ${statusLabel}`}>
+          <span className="pdt-tag" title={t('card.statusTitle', { status: statusLabel })}>
             {statusLabel}
           </span>
         )}
         {cardFields.priority && task.priority && (
           <span
             className={`pdt-tag pdt-prio--${task.priority}`}
-            title={`${priorityLabel(task.priority)} priority`}
+            title={t('filters.priorityChip', { priority: priorityLabel(task.priority) })}
           >
             <Icon name={PRIORITY_ICON} size={12} />
             {priorityLabel(task.priority)}
@@ -233,7 +245,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         {cardFields.due && task.due && (
           <span
             className={`pdt-tag pdt-due--${state}`}
-            title={`${dueStateLabel(state)}: ${task.due}`}
+            title={t('card.dueTitle', { state: dueStateLabel(state), date: task.due })}
           >
             <Icon name="calendar" size={12} />
             {dueBadgeText(task.due, state, dateFormat)}
@@ -241,18 +253,25 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
         )}
         {cardFields.labels &&
           task.labels.map((label) => (
-            <span key={label} className="pdt-tag pdt-tag--label" title={`Label: ${label}`}>
+            <span
+              key={label}
+              className="pdt-tag pdt-tag--label"
+              title={t('card.labelTitle', { label })}
+            >
               #{label}
             </span>
           ))}
         {cardFields.description && task.description && !showDescriptionPreview && (
           <span className="pdt-tag" title={task.description}>
             <Icon name="note" size={12} />
-            Note
+            {t('card.note')}
           </span>
         )}
         {cardFields.assignee && task.assignee && (
-          <span className="pdt-tag pdt-tag--who" title={`Assignee: ${task.assignee}`}>
+          <span
+            className="pdt-tag pdt-tag--who"
+            title={t('card.assigneeTitle', { assignee: task.assignee })}
+          >
             <span className="pdt-avatar" aria-hidden="true">
               {initials(task.assignee)}
             </span>

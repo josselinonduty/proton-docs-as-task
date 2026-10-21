@@ -1,10 +1,9 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { OrphanStatus } from '../lib/model';
 import { defaultStatus } from '../lib/statuses';
 import type { StatusDef, StatusKey } from '../lib/types';
 import { Dialog } from './Dialog';
-
-const tasksWord = (n: number) => `${n} ${n === 1 ? 'task' : 'tasks'}`;
 
 function StatusSelect({
   label,
@@ -50,20 +49,20 @@ export function StatusDeleteDialog({
   onCancel,
   onConfirm,
 }: StatusDeleteDialogProps) {
+  const { t } = useTranslation();
   const [target, setTarget] = useState(
     () => (targets.find((s) => s.category === status.category) ?? targets[0])?.key ?? '',
   );
   return (
-    <Dialog title={`Delete status “${status.label}”`} onClose={onCancel}>
+    <Dialog title={t('statusDialog.deleteTitle', { label: status.label })} onClose={onCancel}>
       <p className="pdt-modal__text">
-        “{status.label}” has {tasksWord(count)}. Choose where {count === 1 ? 'it goes' : 'they go'}{' '}
-        before the status is deleted. You can undo this right after.
+        {t('statusDialog.deleteText', { label: status.label, count })}
       </p>
       <div className="pdt-modal__choice">
         <label className="pdt-field pdt-field--grow">
-          <span className="pdt-field-label">Move tasks to</span>
+          <span className="pdt-field-label">{t('statusDialog.moveTo')}</span>
           <StatusSelect
-            label="Move tasks to"
+            label={t('statusDialog.moveTo')}
             statuses={targets}
             value={target}
             onChange={setTarget}
@@ -72,10 +71,10 @@ export function StatusDeleteDialog({
       </div>
       <div className="pdt-modal__actions">
         <button className="pdt-btn" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </button>
         <button className="pdt-btn pdt-btn-danger-solid" onClick={() => onConfirm(target)}>
-          Move tasks &amp; delete status
+          {t('statusDialog.moveAndDelete')}
         </button>
       </div>
     </Dialog>
@@ -102,6 +101,7 @@ export function MissingStatusDialog({
   onMove,
   onOpenSettings,
 }: MissingStatusDialogProps) {
+  const { t } = useTranslation();
   const fallback = defaultStatus(statuses, false);
   const [targets, setTargets] = useState<Record<StatusKey, StatusKey>>({});
   const targetOf = (key: StatusKey) => {
@@ -111,37 +111,35 @@ export function MissingStatusDialog({
   const total = orphans.reduce((n, o) => n + o.count, 0);
 
   return (
-    <Dialog title="Some tasks have a missing status" dismissible={false} onClose={() => {}}>
+    <Dialog title={t('statusDialog.missingTitle')} dismissible={false} onClose={() => {}}>
       <p className="pdt-modal__text">
-        {tasksWord(total)} {total === 1 ? 'uses a status' : 'use statuses'} this board doesn’t
-        define. Move {total === 1 ? 'it' : 'them'} to an existing status, or create the missing{' '}
-        {orphans.length === 1 ? 'status' : 'statuses'} in Board settings.
+        {t('statusDialog.missingText', { count: total, statuses: orphans.length })}
       </p>
       <ul className="pdt-orphans">
         {orphans.map((o) => (
           <li key={o.key} className="pdt-orphans__row">
             <span className="pdt-orphans__key">
               <code>@status:{o.key}</code>
-              <span className="pdt-text-weak">{tasksWord(o.count)}</span>
+              <span className="pdt-text-weak">{t('count.tasks', { count: o.count })}</span>
             </span>
             <StatusSelect
-              label={`Move tasks with status ${o.key} to`}
+              label={t('statusDialog.moveOrphans', { key: o.key })}
               statuses={statuses}
               value={targetOf(o.key)}
-              onChange={(key) => setTargets((t) => ({ ...t, [o.key]: key }))}
+              onChange={(key) => setTargets((prev) => ({ ...prev, [o.key]: key }))}
             />
           </li>
         ))}
       </ul>
       <div className="pdt-modal__actions">
         <button className="pdt-btn" onClick={onOpenSettings}>
-          Open board settings
+          {t('statusDialog.openSettings')}
         </button>
         <button
           className="pdt-btn pdt-btn-primary"
           onClick={() => onMove(Object.fromEntries(orphans.map((o) => [o.key, targetOf(o.key)])))}
         >
-          Move tasks
+          {t('statusDialog.move')}
         </button>
       </div>
     </Dialog>

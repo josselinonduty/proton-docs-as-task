@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { colorCss, isSwatch, normalizeColor, STATUS_SWATCHES } from '../lib/statuses';
 import type { StatusDef } from '../lib/types';
 import { Icon } from './Icon';
@@ -22,21 +23,13 @@ interface ColorSwatchesProps {
   onChange: (value: string | undefined) => void;
 }
 
-const SWATCH_NAMES: Record<string, string> = {
-  grey: 'Grey',
-  purple: 'Purple',
-  blue: 'Blue',
-  green: 'Green',
-  orange: 'Orange',
-  red: 'Red',
-};
-
 /**
  * Pick a status colour: none, one of the theme-aware swatches, or a custom
  * hex colour. Swatches adapt to light and dark mode with readable text; a
  * custom colour is used as is in both.
  */
 export function ColorSwatches({ label, role, value, onChange }: ColorSwatchesProps) {
+  const { t } = useTranslation();
   const custom = value && !isSwatch(value) ? value : undefined;
   const [hex, setHex] = useState(custom ?? '');
   const hexId = useId();
@@ -56,8 +49,8 @@ export function ColorSwatches({ label, role, value, onChange }: ColorSwatchesPro
           type="button"
           role="radio"
           aria-checked={!value}
-          aria-label="No colour"
-          title="No colour"
+          aria-label={t('color.none')}
+          title={t('color.none')}
           className="pdt-swatch pdt-swatch--none pdt-focusable"
           onClick={() => onChange(undefined)}
         />
@@ -67,8 +60,8 @@ export function ColorSwatches({ label, role, value, onChange }: ColorSwatchesPro
             type="button"
             role="radio"
             aria-checked={value === name}
-            aria-label={SWATCH_NAMES[name]}
-            title={SWATCH_NAMES[name]}
+            aria-label={t(`color.${name}`)}
+            title={t(`color.${name}`)}
             className="pdt-swatch pdt-focusable"
             style={{ background: colorCss(name, role) }}
             onClick={() => onChange(name)}
@@ -79,12 +72,12 @@ export function ColorSwatches({ label, role, value, onChange }: ColorSwatchesPro
         <input
           type="color"
           className="pdt-swatches__native"
-          aria-label={`${label}: custom colour`}
+          aria-label={t('color.custom', { label })}
           value={custom ?? '#6d4aff'}
           onChange={(e) => onChange(normalizeColor(e.target.value))}
         />
         <label className="pdt-sr-only" htmlFor={hexId}>
-          {label}: hex value
+          {t('color.hex', { label })}
         </label>
         <input
           id={hexId}

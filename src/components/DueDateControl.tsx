@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   dueBadgeText,
   dueState,
@@ -22,12 +23,7 @@ interface DueDateControlProps {
   ariaLabel?: string;
 }
 
-const QUICK: { option: QuickDateOption; label: string }[] = [
-  { option: 'today', label: 'Today' },
-  { option: 'tomorrow', label: 'Tomorrow' },
-  { option: 'weekend', label: 'This weekend' },
-  { option: 'next-week', label: 'Next week' },
-];
+const QUICK: QuickDateOption[] = ['today', 'tomorrow', 'weekend', 'next-week'];
 
 /** Width of the popover, kept in sync with `.pdt-duedate__panel` in CSS. */
 const PANEL_WIDTH = 240;
@@ -47,6 +43,7 @@ export function DueDateControl({
   completed,
   ariaLabel,
 }: DueDateControlProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -106,7 +103,7 @@ export function DueDateControl({
     setOpen(false);
   };
 
-  const triggerText = value ? dueBadgeText(value, state, format) : 'Set due date';
+  const triggerText = value ? dueBadgeText(value, state, format) : t('due.set');
   const fullDate = value ? formatDate(value, format) : '';
 
   return (
@@ -119,10 +116,14 @@ export function DueDateControl({
         aria-expanded={open}
         aria-label={
           value
-            ? `${ariaLabel ?? 'Due date'}: ${dueStateLabel(state)}, ${fullDate}`
-            : (ariaLabel ?? 'Set due date')
+            ? t('due.ariaLabel', {
+                label: ariaLabel ?? t('due.label'),
+                state: dueStateLabel(state),
+                date: fullDate,
+              })
+            : (ariaLabel ?? t('due.set'))
         }
-        title={value ? `${dueStateLabel(state)} · ${fullDate}` : 'Set a due date'}
+        title={value ? `${dueStateLabel(state)} · ${fullDate}` : t('due.setLong')}
         onClick={() => setOpen((v) => !v)}
       >
         <span className="pdt-duedate__value">{triggerText}</span>
@@ -134,23 +135,23 @@ export function DueDateControl({
           ref={panelRef}
           className="pdt-duedate__panel"
           role="dialog"
-          aria-label="Choose a due date"
+          aria-label={t('due.choose')}
           style={{ position: 'fixed', top: pos.top, left: pos.left }}
         >
           <div className="pdt-duedate__quick">
-            {QUICK.map((q) => (
+            {QUICK.map((option) => (
               <button
-                key={q.option}
+                key={option}
                 type="button"
                 className="pdt-btn pdt-btn-sm"
-                onClick={() => pick(q.option)}
+                onClick={() => pick(option)}
               >
-                {q.label}
+                {t(`due.quick.${option}`)}
               </button>
             ))}
           </div>
           <label className="pdt-field">
-            <span className="pdt-field-label">Choose date</span>
+            <span className="pdt-field-label">{t('due.chooseDate')}</span>
             <input
               type="date"
               className="pdt-input"
@@ -168,7 +169,7 @@ export function DueDateControl({
                 setOpen(false);
               }}
             >
-              Clear date
+              {t('due.clear')}
             </button>
           </div>
         </div>

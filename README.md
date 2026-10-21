@@ -413,6 +413,10 @@ or the "Settings & syntax guide" link in the popup) to:
   automatically,
 - pick the default view (Workflow, Sections, Swimlane or List), theme (System / Light /
   Dark) and card density (Comfortable / Compact),
+- choose the **language** — English, French, German, Spanish, Italian, Japanese,
+  Portuguese, Dutch or Chinese — or follow the browser's (the default). Only the
+  extension's own UI is translated; what the document stores (the `Tasks` section,
+  the default `To Do` / `In Progress` / `Done` statuses) stays as written,
 - tune board behavior — new cards at top or bottom, description previews,
   and confirm-before-delete,
 - set **display preferences** — which fields cards show, how completed tasks are
@@ -434,6 +438,7 @@ src/
 │  ├─ proton-task.content/       # content script + board overlay + styles
 │  ├─ popup/                      # toolbar popup (status + quick toggles)
 │  └─ options/                    # settings & syntax guide
+├─ i18n/                          # i18next setup + locales/*.json (en is the source)
 ├─ components/                    # React board UI (OverlayApp, EditableBoard,
 │                                 #   EditableTaskCard, QuickAddForm, SortMenu,
 │                                 #   FilterBar/FilterPanel, BulkBar, Combobox,

@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   markers: DEFAULT_MARKERS,
   defaultView: 'workflow',
   autoShow: true,
+  language: 'auto',
   theme: 'system',
   density: 'comfortable',
   newCardsAtTop: false,
