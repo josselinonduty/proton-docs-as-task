@@ -18,7 +18,7 @@ function StatusSelect({
 }) {
   return (
     <select
-      className="pdt-input"
+      className="pdt-select"
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -111,7 +111,7 @@ export function MissingStatusDialog({
   const total = orphans.reduce((n, o) => n + o.count, 0);
 
   return (
-    <Dialog title={t('statusDialog.missingTitle')} dismissible={false} onClose={() => {}}>
+    <Dialog title={t('statusDialog.missingTitle')}>
       <p className="pdt-modal__text">
         {t('statusDialog.missingText', { count: total, statuses: orphans.length })}
       </p>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { getSettings, setSettings, syncLanguage } from '../../lib/settings';
+import { getSettings, setSettings } from '../../lib/settings';
 import type { Settings } from '../../lib/types';
-import type { AddTaskResponse, ContentMessage, StatusResponse } from '../../lib/messaging';
+import type { ContentMessage, ResponseTo, StatusResponse } from '../../lib/messaging';
 
 type TabStatus =
   | { state: 'loading' }
@@ -18,24 +18,15 @@ async function queryActiveTab(): Promise<{ id?: number; url?: string }> {
   return { id: tab?.id, url: tab?.url };
 }
 
-async function sendToTab(tabId: number, message: ContentMessage): Promise<StatusResponse | null> {
+async function sendToTab<M extends ContentMessage>(
+  tabId: number,
+  message: M,
+): Promise<ResponseTo<M> | null> {
   try {
-    const res = (await browser.tabs.sendMessage(tabId, message)) as StatusResponse;
+    const res: ResponseTo<M> | undefined = await browser.tabs.sendMessage(tabId, message);
     return res?.ok ? res : null;
   } catch {
     return null; // no content script / editor frame in this tab
-  }
-}
-
-async function sendAddTask(
-  tabId: number,
-  message: ContentMessage,
-): Promise<AddTaskResponse | null> {
-  try {
-    const res = (await browser.tabs.sendMessage(tabId, message)) as AddTaskResponse;
-    return res?.ok ? res : null;
-  } catch {
-    return null;
   }
 }
 
@@ -50,7 +41,6 @@ export function App() {
   const [feedback, setFeedback] = useState<SaveFeedback>({ kind: 'idle' });
 
   useEffect(() => {
-    const unwatch = syncLanguage();
     void (async () => {
       setLocalSettings(await getSettings());
       const active = await queryActiveTab();
@@ -64,9 +54,8 @@ export function App() {
         return;
       }
       const status = await sendToTab(active.id, { type: 'get-status' });
-      setTab(status && status.activated ? { state: 'active', status } : { state: 'inactive' });
+      setTab(status?.activated ? { state: 'active', status } : { state: 'inactive' });
     })();
-    return () => void unwatch.then((stop) => stop());
   }, []);
 
   async function toggleEnabled() {
@@ -87,7 +76,7 @@ export function App() {
     const title = qaTitle.trim();
     if (!title) return;
     setFeedback({ kind: 'saving' });
-    const res = await sendAddTask(tabId, {
+    const res = await sendToTab(tabId, {
       type: 'add-task',
       title,
       section: qaSection || undefined,
@@ -97,14 +86,10 @@ export function App() {
       setFeedback({ kind: 'saved', message: t('popup.added', { section: res.section }) });
       setQaTitle('');
       setQaDue('');
-      // Refresh counts.
       const status = await sendToTab(tabId, { type: 'get-status' });
-      if (status && status.activated) setTab({ state: 'active', status });
+      if (status?.activated) setTab({ state: 'active', status });
     } else if (res?.error === 'read-only') {
-      setFeedback({
-        kind: 'warning',
-        message: t('popup.readOnly'),
-      });
+      setFeedback({ kind: 'warning', message: t('popup.readOnly') });
     } else {
       setFeedback({ kind: 'error', message: t('popup.saveFailed') });
     }
@@ -179,7 +164,7 @@ export function App() {
                 <label className="pdt-field pp-quickadd__grow">
                   <span className="pdt-field-label">{t('quickAdd.section')}</span>
                   <select
-                    className="pdt-input"
+                    className="pdt-select"
                     value={qaSection}
                     aria-label={t('quickAdd.section')}
                     onChange={(e) => setQaSection(e.target.value)}
