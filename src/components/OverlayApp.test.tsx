@@ -240,7 +240,7 @@ describe('OverlayApp per-document statuses', () => {
     ]);
   });
 
-  it('renames a status from its column header without rewriting task lines', () => {
+  it('renames a status from its column header and its key', () => {
     vi.useFakeTimers();
     const editor = setup(FLOW);
     const input = screen.getByRole('textbox', { name: 'Status name: In review' });
@@ -248,8 +248,8 @@ describe('OverlayApp per-document statuses', () => {
     fireEvent.change(input, { target: { value: 'QA' } });
     fireEvent.blur(input);
     act(() => void vi.advanceTimersByTime(400));
-    expect(editor.lines).toContain('@settings status review "QA" @category:doing @color:purple');
-    expect(editor.lines).toContain('- [ ] Write the spec @status:review');
+    expect(editor.lines).toContain('@settings status qa "QA" @category:doing @color:purple');
+    expect(editor.lines).toContain('- [ ] Write the spec @status:qa');
   });
 
   it('adds a status from board settings', () => {

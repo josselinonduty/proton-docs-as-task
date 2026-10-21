@@ -479,9 +479,21 @@ describe('status management', () => {
     const base = build(STATUS_DOC);
     const renamed = updateStatus(base, 'review', { label: 'QA' });
     expect(renamed.statuses[1]!.label).toBe('QA');
-    expect(serializeModel(renamed, MARKER)).toContain('Patch @status:review');
+    expect(renamed.statuses[1]!.key).toBe('qa');
+    expect(serializeModel(renamed, MARKER)).toContain('Patch @status:qa');
     expect(updateStatus(base, 'review', { label: 'backlog' })).toBe(base);
     expect(updateStatus(base, 'review', { label: '  ' })).toBe(base);
+  });
+
+  it('keeps renamed status keys unique and file-safe', () => {
+    const base = build(STATUS_DOC);
+    const keys = (m: typeof base) => m.statuses.map((s) => s.key);
+    const a = updateStatus(base, 'review', { label: 'Ready / Ünit #1' });
+    expect(a.statuses[1]!.key).toBe('ready-unit-1');
+    const taken = base.statuses[0]!.key;
+    const b = updateStatus(base, 'review', { label: `${taken}!` });
+    expect(b.statuses[1]!.key).toBe(`${taken}-2`);
+    expect(new Set(keys(b)).size).toBe(keys(b).length);
   });
 
   it('clears a colour', () => {

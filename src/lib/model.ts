@@ -675,10 +675,10 @@ export function canChangeStatusCategory(
 }
 
 /**
- * Change a status's label, category or colours. Its key — and so every task
- * line referencing it — never changes. An empty or duplicate label, or a
- * category change that would leave the board without a Not started or Done
- * status, is refused.
+ * Change a status's label, category or colours. Renaming also re-derives its
+ * key from the new label (slugified, suffixed to stay unique) and moves the
+ * tasks using it along. An empty or duplicate label, or a category change
+ * that would leave the board without a Not started or Done status, is refused.
  */
 export function updateStatus(
   model: BoardModel,
@@ -691,11 +691,20 @@ export function updateStatus(
     patch = { ...patch, label };
   }
   if (patch.category && !canChangeStatusCategory(model, key, patch.category)) return model;
+  let newKey = key;
+  if (patch.label !== undefined) {
+    const others = model.statuses.filter((s) => s.key !== key);
+    newKey = uniqueStatusKey(others, patch.label);
+  }
   return {
     ...model,
+    tasks:
+      newKey === key
+        ? model.tasks
+        : model.tasks.map((t) => (t.status === key ? { ...t, status: newKey } : t)),
     statuses: model.statuses.map((s) => {
       if (s.key !== key) return s;
-      const next: StatusDef = { ...s, ...patch };
+      const next: StatusDef = { ...s, ...patch, key: newKey };
       // `undefined` in the patch clears a colour.
       if (!next.color) delete next.color;
       if (!next.bg) delete next.bg;

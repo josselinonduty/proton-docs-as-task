@@ -18,9 +18,9 @@ export type StatusCategory = 'todo' | 'doing' | 'done';
 
 /** A workflow status defined by the document (`@settings status …`). */
 export interface StatusDef {
-  /** Stable reference written on task lines; never changes once created. */
+  /** Stable reference written on task lines; follows the label (slugified, unique) when renamed. */
   key: StatusKey;
-  /** Display name; renaming never touches task lines. */
+  /** Display name; renaming also updates the key and task lines. */
   label: string;
   category: StatusCategory;
   /** Text colour: a swatch name (`blue`) or `#rrggbb`. */
