@@ -1,15 +1,7 @@
 import { storage } from '#imports';
 import { setLanguage } from '../i18n';
+import { DEFAULT_SETTINGS, migrateLegacySettings, withDefaults } from './defaults';
 import type { Settings } from './types';
-import { DEFAULT_SETTINGS, withDefaults } from './defaults';
-
-export {
-  DEFAULT_CARD_FIELDS,
-  DEFAULT_MARKERS,
-  DEFAULT_SETTINGS,
-  markersAreValid,
-  withDefaults,
-} from './defaults';
 
 /**
  * Single source of truth for persisted settings. Uses WXT's typed storage
@@ -17,7 +9,8 @@ export {
  */
 export const settingsItem = storage.defineItem<Settings>('sync:settings', {
   fallback: DEFAULT_SETTINGS,
-  version: 1,
+  version: 2,
+  migrations: { 2: migrateLegacySettings },
 });
 
 export async function getSettings(): Promise<Settings> {

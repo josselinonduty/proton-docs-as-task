@@ -20,7 +20,8 @@ export type DueState =
   'none' | 'overdue' | 'today' | 'tomorrow' | 'this-week' | 'future' | 'completed';
 
 /** Supported display formats for a stored ISO date. */
-export type DateFormat = 'iso' | 'medium' | 'us' | 'euro';
+export const DATE_FORMATS = ['iso', 'medium', 'us', 'euro'] as const;
+export type DateFormat = (typeof DATE_FORMATS)[number];
 
 /** Strict `YYYY-MM-DD` shape. */
 const ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/;

@@ -13,15 +13,7 @@
  * board's first write, so the document stays the only source of truth.
  */
 
-import type { StatusCategory, StatusDef, StatusKey } from './types';
-
-export type { StatusCategory, StatusDef, StatusKey };
-
-export const STATUS_CATEGORIES: { key: StatusCategory; label: string }[] = [
-  { key: 'todo', label: 'Not started' },
-  { key: 'doing', label: 'In progress' },
-  { key: 'done', label: 'Done' },
-];
+import { STATUS_CATEGORIES, type StatusCategory, type StatusDef, type StatusKey } from './types';
 
 export const DEFAULT_STATUSES: readonly StatusDef[] = [
   { key: 'todo', label: 'To Do', category: 'todo' },
@@ -38,6 +30,9 @@ const REQUIRED_CATEGORIES: StatusCategory[] = ['todo', 'done'];
  */
 export const STATUS_SWATCHES = ['grey', 'purple', 'blue', 'green', 'orange', 'red'] as const;
 export type StatusSwatch = (typeof STATUS_SWATCHES)[number];
+
+/** Which side of a status chip a colour paints. */
+export type ColorRole = 'text' | 'bg';
 
 const HEX_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 const KEY_RE = /^[a-z0-9][a-z0-9_-]*$/;
@@ -56,8 +51,8 @@ export function normalizeColor(value: string | undefined): string | undefined {
   return v.length === 4 ? `#${[...v.slice(1)].map((c) => c + c).join('')}` : v;
 }
 
-/** The CSS value for a stored colour, for the text (`text`) or background (`bg`) role. */
-export function colorCss(value: string | undefined, role: 'text' | 'bg'): string | undefined {
+/** The CSS value for a stored colour in the given role. */
+export function colorCss(value: string | undefined, role: ColorRole): string | undefined {
   if (!value) return undefined;
   return isSwatch(value) ? `var(--pdt-swatch-${value}-${role})` : value;
 }
@@ -178,13 +173,11 @@ export function parseStatusSetting(line: string): StatusDef | undefined {
   const key = body?.[1]?.toLowerCase();
   if (!body || !key || !KEY_RE.test(key)) return undefined;
   const rest = body[3] ?? '';
-  const category = attr(rest, 'category')?.toLowerCase();
+  const category = attr(rest, 'category')?.toLowerCase() as StatusCategory | undefined;
   const def: StatusDef = {
     key,
     label: unescapeLabel(body[2] ?? '').trim() || key,
-    category: STATUS_CATEGORIES.some((c) => c.key === category)
-      ? (category as StatusCategory)
-      : 'todo',
+    category: category && STATUS_CATEGORIES.includes(category) ? category : 'todo',
   };
   const color = normalizeColor(attr(rest, 'color'));
   const bg = normalizeColor(attr(rest, 'bg'));

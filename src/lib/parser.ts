@@ -264,9 +264,9 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
 
     const heading = HEADING_RE.exec(line);
     if (heading) {
-      const text = (heading[2] ?? '').trim();
-      currentSection = text.replace(DEFAULT_TOKEN_RE, '');
-      if (currentSection !== text) defaultSection ??= currentSection;
+      const headingText = (heading[2] ?? '').trim();
+      currentSection = headingText.replace(DEFAULT_TOKEN_RE, '');
+      if (currentSection !== headingText) defaultSection ??= currentSection;
       if (!sections.includes(currentSection)) sections.push(currentSection);
       continue;
     }
