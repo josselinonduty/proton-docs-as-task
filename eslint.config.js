@@ -29,6 +29,8 @@ export default tseslint.config(
       // `recommended` set adds opinionated compiler-style rules we don't opt in to.)
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      // `t` is the translation function almost everywhere; don't let a local hide it.
+      '@typescript-eslint/no-shadow': 'error',
     },
   },
   {
