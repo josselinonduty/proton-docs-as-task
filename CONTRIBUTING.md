@@ -45,6 +45,11 @@ npm run build:firefox # Firefox production build
   merged with concurrent changes rather than overwriting them.
 - **Least privilege.** Don't add manifest permissions or host origins unless a
   feature genuinely needs them, and explain why in the PR.
+- **Pin dependencies.** npm packages use exact versions (`.npmrc` sets
+  `save-exact`), GitHub Actions are pinned to a full commit SHA with the
+  version in a trailing comment, and remote resources (schemas, scripts) are
+  referenced by commit, never by a branch or `latest`. Run tools through
+  `npx --no` so a missing package fails instead of being fetched.
 - **Formatting is enforced by Prettier**, so don't hand-format — just run
   `npm run format`.
 

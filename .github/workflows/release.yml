@@ -106,9 +106,11 @@ jobs:
       # Uses the Chrome Web Store API v2 (service account auth). The v1.1
       # OAuth flow (client id/secret/refresh token) is deprecated and stops
       # working October 15th, 2026.
+      # `npx --no` runs the wxt pinned in the lockfile and fails rather than
+      # fetching an unpinned copy from the registry.
       - name: Submit to Chrome Web Store
         if: steps.chrome-creds.outputs.present == 'true'
-        run: npx wxt submit --chrome-zip .output/*-chrome.zip
+        run: npx --no wxt submit --chrome-zip .output/*-chrome.zip
         env:
           CHROME_API_VERSION: v2
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
@@ -120,7 +122,7 @@ jobs:
 
       - name: Submit to Firefox Add-ons
         if: steps.firefox-creds.outputs.present == 'true'
-        run: npx wxt submit --firefox-zip .output/*-firefox.zip --firefox-sources-zip .output/*-sources.zip
+        run: npx --no wxt submit --firefox-zip .output/*-firefox.zip --firefox-sources-zip .output/*-sources.zip
         env:
           FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
           FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
