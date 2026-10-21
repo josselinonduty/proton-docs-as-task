@@ -503,7 +503,7 @@
     "autoShowHint": "Das Board öffnen, sobald ein Dokument aktiviert wird.",
     "defaultView": "Standardansicht",
     "defaultViewHint": "In welchem Layout sich das Board öffnet.",
-    "view": {
+    "views": {
       "workflow": "Workflow (nach Status)",
       "sections": "Abschnitte (nach Überschrift)",
       "swimlane": "Swimlane (Status × Abschnitt)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automatisch (Browsersprache)",
     "theme": "Design",
     "themeHint": "Dem System folgen oder Hell / Dunkel erzwingen.",
-    "themeSystem": "System",
-    "themeLight": "Hell",
-    "themeDark": "Dunkel",
+    "themes": {
+      "system": "System",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
     "density": "Kartendichte",
     "densityHint": "Wie eng die Karten angeordnet sind.",
-    "comfortable": "Komfortabel",
-    "compact": "Kompakt",
+    "densities": {
+      "comfortable": "Komfortabel",
+      "compact": "Kompakt"
+    },
     "behavior": "Board-Verhalten",
     "newCards": "Neue Karten",
     "newCardsHint": "Wo eine schnell hinzugefügte Karte in ihrer Spalte landet.",
-    "bottom": "Unten",
-    "top": "Oben",
+    "newCardPositions": {
+      "bottom": "Unten",
+      "top": "Oben"
+    },
     "descPreview": "Beschreibungsvorschau anzeigen",
     "descPreviewHint": "Zeigt auf eingeklappten Karten einen kurzen Ausschnitt der Beschreibung.",
     "completed": "Erledigte Aufgaben",
     "completedHint": "Wie erledigte Aufgaben angezeigt werden (sie werden nie aus dem Dokument entfernt).",
-    "completedShow": "Normal anzeigen",
-    "completedCollapse": "Erledigt-Spalte zuklappen",
-    "completedHide": "Erledigte Karten ausblenden",
+    "completedDisplays": {
+      "show": "Normal anzeigen",
+      "collapse": "Erledigt-Spalte zuklappen",
+      "hide": "Erledigte Karten ausblenden"
+    },
     "confirmDelete": "Löschen von Karten bestätigen",
     "confirmDeleteHint": "Vor dem Löschen einer Karte nachfragen (Sie können es immer rückgängig machen).",
     "display": "Anzeigeeinstellungen",
     "dateFormat": "Datumsformat",
     "dateFormatHint": "Wie Fälligkeitsdaten auf Karten geschrieben werden.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Mittel (10.09.2026)",
-    "dateUs": "US (9/10/2026)",
-    "dateEuro": "Europäisch (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Mittel (10.09.2026)",
+      "us": "US (9/10/2026)",
+      "euro": "Europäisch (10/9/2026)"
+    },
     "name": "Ihr Name",
     "nameHint": "Aktiviert den Filter „Meine offenen Aufgaben“. Wird mit den Zuständigen abgeglichen; es findet keine Suche statt.",
     "namePlaceholder": "z. B. Sam Rivera",

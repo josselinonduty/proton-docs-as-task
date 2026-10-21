@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import i18n, { LANGUAGES, resolveLanguage, setLanguage, type Language } from './index';
+import i18n, { setLanguage } from './index';
+import { LANGUAGES, resolveLanguage, type Language } from './languages';
 import en from './locales/en.json';
 
 const locales = import.meta.glob<typeof en>('./locales/*.json', {

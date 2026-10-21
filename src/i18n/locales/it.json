@@ -503,7 +503,7 @@
     "autoShowHint": "Apre la bacheca non appena un documento si attiva.",
     "defaultView": "Vista predefinita",
     "defaultViewHint": "Con quale layout si apre la bacheca.",
-    "view": {
+    "views": {
       "workflow": "Flusso (per stato)",
       "sections": "Sezioni (per titolo)",
       "swimlane": "Corsie (stato × sezione)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automatica (lingua del browser)",
     "theme": "Tema",
     "themeHint": "Segui il sistema oppure forza chiaro / scuro.",
-    "themeSystem": "Sistema",
-    "themeLight": "Chiaro",
-    "themeDark": "Scuro",
+    "themes": {
+      "system": "Sistema",
+      "light": "Chiaro",
+      "dark": "Scuro"
+    },
     "density": "Densità delle schede",
     "densityHint": "Quanto sono ravvicinate le schede.",
-    "comfortable": "Comoda",
-    "compact": "Compatta",
+    "densities": {
+      "comfortable": "Comoda",
+      "compact": "Compatta"
+    },
     "behavior": "Comportamento della bacheca",
     "newCards": "Nuove schede",
     "newCardsHint": "Dove finisce nella sua colonna una scheda aggiunta rapidamente.",
-    "bottom": "In fondo",
-    "top": "In cima",
+    "newCardPositions": {
+      "bottom": "In fondo",
+      "top": "In cima"
+    },
     "descPreview": "Mostra l’anteprima della descrizione",
     "descPreviewHint": "Mostra un breve estratto della descrizione sulle schede compresse.",
     "completed": "Attività completate",
     "completedHint": "Come vengono mostrate le attività fatte (mai rimosse dal documento).",
-    "completedShow": "Mostra normalmente",
-    "completedCollapse": "Comprimi la colonna Completato",
-    "completedHide": "Nascondi le schede completate",
+    "completedDisplays": {
+      "show": "Mostra normalmente",
+      "collapse": "Comprimi la colonna Completato",
+      "hide": "Nascondi le schede completate"
+    },
     "confirmDelete": "Conferma l’eliminazione delle schede",
     "confirmDeleteHint": "Chiede conferma prima di eliminare una scheda (puoi sempre annullare).",
     "display": "Preferenze di visualizzazione",
     "dateFormat": "Formato della data",
     "dateFormatHint": "Come vengono scritte le scadenze sulle schede.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Medio (10 set 2026)",
-    "dateUs": "USA (9/10/2026)",
-    "dateEuro": "Europeo (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Medio (10 set 2026)",
+      "us": "USA (9/10/2026)",
+      "euro": "Europeo (10/9/2026)"
+    },
     "name": "Il tuo nome",
     "nameHint": "Abilita il filtro «Le mie attività aperte». Confrontato con gli assegnatari; non viene eseguita alcuna ricerca.",
     "namePlaceholder": "es. Sam Rivera",

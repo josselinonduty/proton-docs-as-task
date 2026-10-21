@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { resolveLanguage, type Language, type LanguageSetting } from './languages';
 import de from './locales/de.json';
 import en from './locales/en.json';
 import es from './locales/es.json';
@@ -12,53 +13,22 @@ import zh from './locales/zh.json';
 
 export type Translation = typeof en;
 
-/** Native names, so each stays recognisable whatever the current language. */
-export const LANGUAGES = {
-  en: 'English',
-  fr: 'Français',
-  de: 'Deutsch',
-  es: 'Español',
-  it: 'Italiano',
-  ja: '日本語',
-  pt: 'Português',
-  nl: 'Nederlands',
-  zh: '中文',
-} as const;
+const translations = { en, fr, de, es, it, ja, pt, nl, zh } satisfies Record<Language, object>;
 
-export type Language = keyof typeof LANGUAGES;
-export type LanguageSetting = Language | 'auto';
-
-const resources = { en, fr, de, es, it, ja, pt, nl, zh };
-
-function isLanguage(code: string): code is Language {
-  return code in LANGUAGES;
-}
-
-/** Turns the stored setting into a supported language, following the browser for `auto`. */
-export function resolveLanguage(setting: LanguageSetting): Language {
-  if (setting !== 'auto') return setting;
-  const preferred = typeof navigator === 'undefined' ? [] : navigator.languages;
-  for (const tag of preferred) {
-    const base = tag.split('-')[0]!.toLowerCase();
-    if (isLanguage(base)) return base;
-  }
-  return 'en';
-}
-
-export function setLanguage(setting: LanguageSetting): Promise<unknown> {
+export function setLanguage(setting: LanguageSetting) {
   return i18n.changeLanguage(resolveLanguage(setting));
 }
 
 void i18n.use(initReactI18next).init({
   resources: Object.fromEntries(
-    Object.entries(resources).map(([code, translation]) => [code, { translation }]),
+    Object.entries(translations).map(([code, translation]) => [code, { translation }]),
   ),
   lng: 'en',
   fallbackLng: 'en',
   initAsync: false,
   interpolation: { escapeValue: false },
-  returnNull: false,
 });
 
+/** For non-component code; components use `useTranslation` so they re-render on language changes. */
 export const t = i18n.t.bind(i18n);
 export default i18n;

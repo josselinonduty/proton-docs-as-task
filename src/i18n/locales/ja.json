@@ -491,7 +491,7 @@
     "autoShowHint": "ドキュメントが有効になったらすぐにボードを開きます。",
     "defaultView": "既定のビュー",
     "defaultViewHint": "ボードを開いたときのレイアウトです。",
-    "view": {
+    "views": {
       "workflow": "ワークフロー（ステータス別）",
       "sections": "セクション（見出し別）",
       "swimlane": "スイムレーン（ステータス × セクション）",
@@ -502,34 +502,44 @@
     "languageAuto": "自動（ブラウザーの言語）",
     "theme": "テーマ",
     "themeHint": "システムに合わせるか、ライト / ダークを固定します。",
-    "themeSystem": "システム",
-    "themeLight": "ライト",
-    "themeDark": "ダーク",
+    "themes": {
+      "system": "システム",
+      "light": "ライト",
+      "dark": "ダーク"
+    },
     "density": "カードの密度",
     "densityHint": "カードをどれだけ詰めて表示するか。",
-    "comfortable": "ゆったり",
-    "compact": "コンパクト",
+    "densities": {
+      "comfortable": "ゆったり",
+      "compact": "コンパクト"
+    },
     "behavior": "ボードの動作",
     "newCards": "新しいカード",
     "newCardsHint": "クイック追加したカードが列のどこに入るか。",
-    "bottom": "末尾",
-    "top": "先頭",
+    "newCardPositions": {
+      "bottom": "末尾",
+      "top": "先頭"
+    },
     "descPreview": "説明のプレビューを表示",
     "descPreviewHint": "折りたたんだカードに説明の一部を表示します。",
     "completed": "完了したタスク",
     "completedHint": "完了したタスクの表示方法です（ドキュメントからは削除されません）。",
-    "completedShow": "通常どおり表示",
-    "completedCollapse": "完了列を折りたたむ",
-    "completedHide": "完了したカードを非表示",
+    "completedDisplays": {
+      "show": "通常どおり表示",
+      "collapse": "完了列を折りたたむ",
+      "hide": "完了したカードを非表示"
+    },
     "confirmDelete": "カード削除の確認",
     "confirmDeleteHint": "カードを削除する前に確認します（いつでも元に戻せます）。",
     "display": "表示設定",
     "dateFormat": "日付の形式",
     "dateFormatHint": "カードに表示する期限の書式です。",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "中 (2026/09/10)",
-    "dateUs": "米国 (9/10/2026)",
-    "dateEuro": "欧州 (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "中 (2026/09/10)",
+      "us": "米国 (9/10/2026)",
+      "euro": "欧州 (10/9/2026)"
+    },
     "name": "あなたの名前",
     "nameHint": "「自分の未完了タスク」フィルターを有効にします。担当者と照合するだけで、検索は行いません。",
     "namePlaceholder": "例: 山田 太郎",
