@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   addLabel,
   matchSuggestions,
@@ -24,6 +25,7 @@ interface LabelInputProps {
  * are always shown with a leading `#` but stored without one.
  */
 export function LabelInput({ labels, suggestions, onChange, ariaLabel }: LabelInputProps) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState('');
   const [active, setActive] = useState(-1);
   const [open, setOpen] = useState(false);
@@ -73,7 +75,7 @@ export function LabelInput({ labels, suggestions, onChange, ariaLabel }: LabelIn
             <button
               type="button"
               className="pdt-chip__x"
-              aria-label={`Remove label ${label}`}
+              aria-label={t('labels.remove', { label })}
               onClick={() => onChange(removeLabel(labels, label))}
             >
               ✕
@@ -87,9 +89,9 @@ export function LabelInput({ labels, suggestions, onChange, ariaLabel }: LabelIn
           aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={activeId}
-          aria-label={ariaLabel ?? 'Add label'}
+          aria-label={ariaLabel ?? t('labels.add')}
           value={draft}
-          placeholder={labels.length ? 'Add label…' : 'Add labels…'}
+          placeholder={labels.length ? t('labels.addMore') : t('labels.addFirst')}
           onChange={(e) => {
             setDraft(e.target.value.replace(/,/g, ''));
             setOpen(true);
@@ -105,7 +107,7 @@ export function LabelInput({ labels, suggestions, onChange, ariaLabel }: LabelIn
           className="pdt-combobox__list"
           role="listbox"
           id={listId}
-          aria-label="Label suggestions"
+          aria-label={t('labels.suggestions')}
         >
           {matches.map((s, i) => (
             <li

@@ -9,6 +9,7 @@
  */
 
 import { reorderColumn, type BoardColumn, type BoardModel, type BoardTask } from './model';
+import { t } from '../i18n';
 import { parseISODate } from './dates';
 import type { Priority } from './types';
 
@@ -24,7 +25,7 @@ export const MANUAL_SORT: SortState = { key: 'manual', dir: 'asc' };
 
 export interface SortOption {
   key: SortKey;
-  label: string;
+  labelKey: `sort.options.${SortKey}`;
   /** Whether the direction toggle is meaningful for this key. */
   directional: boolean;
   /** The direction a user most likely wants when first picking this key. */
@@ -32,12 +33,12 @@ export interface SortOption {
 }
 
 export const SORT_OPTIONS: SortOption[] = [
-  { key: 'manual', label: 'Manual order', directional: false, defaultDir: 'asc' },
-  { key: 'due', label: 'Due date', directional: true, defaultDir: 'asc' },
-  { key: 'priority', label: 'Priority', directional: true, defaultDir: 'desc' },
-  { key: 'title', label: 'Title', directional: true, defaultDir: 'asc' },
-  { key: 'assignee', label: 'Assignee', directional: true, defaultDir: 'asc' },
-  { key: 'created', label: 'Recently created', directional: true, defaultDir: 'desc' },
+  { key: 'manual', labelKey: 'sort.options.manual', directional: false, defaultDir: 'asc' },
+  { key: 'due', labelKey: 'sort.options.due', directional: true, defaultDir: 'asc' },
+  { key: 'priority', labelKey: 'sort.options.priority', directional: true, defaultDir: 'desc' },
+  { key: 'title', labelKey: 'sort.options.title', directional: true, defaultDir: 'asc' },
+  { key: 'assignee', labelKey: 'sort.options.assignee', directional: true, defaultDir: 'asc' },
+  { key: 'created', labelKey: 'sort.options.created', directional: true, defaultDir: 'desc' },
 ];
 
 /** True when a sort actually reorders cards (i.e. anything but Manual). */
@@ -144,7 +145,8 @@ export function applySortToModel(
 /** Human summary of a sort, e.g. "Priority (high → low)". */
 export function describeSort(sort: SortState): string {
   const option = SORT_OPTIONS.find((o) => o.key === sort.key);
-  if (!option || sort.key === 'manual') return 'Manual order';
-  const arrow = sort.dir === 'asc' ? 'ascending' : 'descending';
-  return `${option.label}, ${arrow}`;
+  if (!option || sort.key === 'manual') return t('sort.options.manual');
+  return t(sort.dir === 'asc' ? 'sort.describeAsc' : 'sort.describeDesc', {
+    label: t(option.labelKey),
+  });
 }

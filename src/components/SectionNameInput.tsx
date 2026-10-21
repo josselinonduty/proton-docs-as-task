@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SectionNameInputProps {
   name: string;
   /** Names of the other sections, to reject a rename that would merge two. */
   otherNames: string[];
   /** What is being named, for messages and labels (default `section`). */
-  noun?: string;
+  noun?: 'section' | 'status';
   /** Compare names case-insensitively when rejecting duplicates. */
   ignoreCase?: boolean;
   /** Grab focus once (e.g. after a rename re-keyed the column). */
@@ -32,6 +33,7 @@ export function SectionNameInput({
   onRename,
   onInvalid,
 }: SectionNameInputProps) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState(name);
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +53,11 @@ export function SectionNameInput({
   const clean = draft.trim();
   const same = (a: string) => (ignoreCase ? a.toLowerCase() === clean.toLowerCase() : a === clean);
   const duplicate = clean !== name && otherNames.some(same);
-  const error = !clean ? `A ${noun} needs a name` : duplicate ? `“${clean}” already exists` : '';
+  const error = !clean
+    ? t('name.required', { context: noun })
+    : duplicate
+      ? t('name.exists', { name: clean })
+      : '';
 
   const commit = () => {
     setEditing(false);
@@ -60,7 +66,7 @@ export function SectionNameInput({
       return;
     }
     if (error) {
-      onInvalid(`${error}. Kept “${name}”.`);
+      onInvalid(t('name.kept', { error, name }));
       setDraft(name);
       return;
     }
@@ -72,9 +78,9 @@ export function SectionNameInput({
       ref={inputRef}
       className="pdt-column__name-input"
       value={draft}
-      aria-label={`${noun[0]!.toUpperCase()}${noun.slice(1)} name: ${name}`}
+      aria-label={t('name.label', { context: noun, name })}
       aria-invalid={error ? true : undefined}
-      title={error || `Rename ${noun}`}
+      title={error || t('name.rename', { context: noun })}
       onFocus={() => {
         viaKeyboard.current = false;
         setEditing(true);

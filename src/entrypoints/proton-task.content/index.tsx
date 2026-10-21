@@ -2,7 +2,7 @@ import { createShadowRootUi, defineContentScript } from '#imports';
 import ReactDOM from 'react-dom/client';
 import { OverlayApp } from '../../components/OverlayApp';
 import { connectEditor } from '../../lib/editorClient';
-import { getSettings } from '../../lib/settings';
+import { getSettings, syncLanguage } from '../../lib/settings';
 import './style.css';
 
 export default defineContentScript({
@@ -18,6 +18,7 @@ export default defineContentScript({
     if (!ctx.isValid) return;
 
     const settings = await getSettings();
+    await syncLanguage().then((stop) => ctx.onInvalidated(stop));
 
     const ui = await createShadowRootUi(ctx, {
       name: 'proton-docs-as-task',
