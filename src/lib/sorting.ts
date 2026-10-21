@@ -136,7 +136,7 @@ export function applySortToModel(
   if (sort.key === 'manual') return model;
   let next = model;
   for (const col of columns) {
-    const orderedIds = sortTasks(col.tasks, sort).map((t) => t.id);
+    const orderedIds = sortTasks(col.tasks, sort).map((task) => task.id);
     if (orderedIds.length > 1) next = reorderColumn(next, orderedIds);
   }
   return next;

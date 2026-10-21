@@ -29,7 +29,15 @@ import {
   serializeStatusSetting,
   uniqueStatusKey,
 } from './statuses';
-import type { BoardView, ParseResult, Priority, StatusDef, StatusKey, Task } from './types';
+import type {
+  BoardView,
+  ParseResult,
+  Priority,
+  StatusCategory,
+  StatusDef,
+  StatusKey,
+  Task,
+} from './types';
 
 export const DEFAULT_SECTION = 'Tasks';
 
@@ -667,7 +675,7 @@ export function isStatusLabelAvailable(model: BoardModel, key: StatusKey, label:
 export function canChangeStatusCategory(
   model: BoardModel,
   key: StatusKey,
-  category: StatusDef['category'],
+  category: StatusCategory,
 ): boolean {
   const status = findStatus(model.statuses, key);
   if (!status) return false;
@@ -685,16 +693,16 @@ export function updateStatus(
   key: StatusKey,
   patch: Partial<Omit<StatusDef, 'key'>>,
 ): BoardModel {
+  if (patch.category && !canChangeStatusCategory(model, key, patch.category)) return model;
+  let newKey = key;
   if (patch.label !== undefined) {
     const label = patch.label.trim();
     if (!label || !isStatusLabelAvailable(model, key, label)) return model;
     patch = { ...patch, label };
-  }
-  if (patch.category && !canChangeStatusCategory(model, key, patch.category)) return model;
-  let newKey = key;
-  if (patch.label !== undefined) {
-    const others = model.statuses.filter((s) => s.key !== key);
-    newKey = uniqueStatusKey(others, patch.label);
+    newKey = uniqueStatusKey(
+      model.statuses.filter((s) => s.key !== key),
+      label,
+    );
   }
   return {
     ...model,
