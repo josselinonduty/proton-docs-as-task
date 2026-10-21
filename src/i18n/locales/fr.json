@@ -503,7 +503,7 @@
     "autoShowHint": "Ouvre le tableau dès qu’un document s’active.",
     "defaultView": "Vue par défaut",
     "defaultViewHint": "La disposition dans laquelle le tableau s’ouvre.",
-    "view": {
+    "views": {
       "workflow": "Workflow (par statut)",
       "sections": "Sections (par titre)",
       "swimlane": "Couloirs (statut × section)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automatique (langue du navigateur)",
     "theme": "Thème",
     "themeHint": "Suivre le système, ou forcer le clair / sombre.",
-    "themeSystem": "Système",
-    "themeLight": "Clair",
-    "themeDark": "Sombre",
+    "themes": {
+      "system": "Système",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
     "density": "Densité des cartes",
     "densityHint": "À quel point les cartes sont resserrées.",
-    "comfortable": "Confortable",
-    "compact": "Compacte",
+    "densities": {
+      "comfortable": "Confortable",
+      "compact": "Compacte"
+    },
     "behavior": "Comportement du tableau",
     "newCards": "Nouvelles cartes",
     "newCardsHint": "Où se place une carte ajoutée rapidement dans sa colonne.",
-    "bottom": "En bas",
-    "top": "En haut",
+    "newCardPositions": {
+      "bottom": "En bas",
+      "top": "En haut"
+    },
     "descPreview": "Afficher l’aperçu de la description",
     "descPreviewHint": "Affiche un court extrait de la description sur les cartes réduites.",
     "completed": "Tâches terminées",
     "completedHint": "Comment les tâches terminées sont affichées (jamais supprimées du document).",
-    "completedShow": "Afficher normalement",
-    "completedCollapse": "Réduire la colonne Terminé",
-    "completedHide": "Masquer les cartes terminées",
+    "completedDisplays": {
+      "show": "Afficher normalement",
+      "collapse": "Réduire la colonne Terminé",
+      "hide": "Masquer les cartes terminées"
+    },
     "confirmDelete": "Confirmer la suppression d’une carte",
     "confirmDeleteHint": "Demande confirmation avant de supprimer une carte (vous pouvez toujours annuler).",
     "display": "Préférences d’affichage",
     "dateFormat": "Format de date",
     "dateFormatHint": "Comment les échéances sont écrites sur les cartes.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Moyen (10 sept. 2026)",
-    "dateUs": "US (9/10/2026)",
-    "dateEuro": "Européen (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Moyen (10 sept. 2026)",
+      "us": "US (9/10/2026)",
+      "euro": "Européen (10/9/2026)"
+    },
     "name": "Votre nom",
     "nameHint": "Active le filtre « Mes tâches ouvertes ». Comparé aux assignés ; aucune recherche n’est effectuée.",
     "namePlaceholder": "p. ex. Sam Rivera",

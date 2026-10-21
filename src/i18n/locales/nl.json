@@ -503,7 +503,7 @@
     "autoShowHint": "Open het bord zodra een document wordt geactiveerd.",
     "defaultView": "Standaardweergave",
     "defaultViewHint": "In welke indeling het bord opent.",
-    "view": {
+    "views": {
       "workflow": "Workflow (op status)",
       "sections": "Secties (op kop)",
       "swimlane": "Swimlane (status × sectie)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automatisch (taal van de browser)",
     "theme": "Thema",
     "themeHint": "Het systeem volgen of licht / donker afdwingen.",
-    "themeSystem": "Systeem",
-    "themeLight": "Licht",
-    "themeDark": "Donker",
+    "themes": {
+      "system": "Systeem",
+      "light": "Licht",
+      "dark": "Donker"
+    },
     "density": "Kaartdichtheid",
     "densityHint": "Hoe dicht kaarten op elkaar staan.",
-    "comfortable": "Ruim",
-    "compact": "Compact",
+    "densities": {
+      "comfortable": "Ruim",
+      "compact": "Compact"
+    },
     "behavior": "Bordgedrag",
     "newCards": "Nieuwe kaarten",
     "newCardsHint": "Waar een snel toegevoegde kaart in zijn kolom terechtkomt.",
-    "bottom": "Onderaan",
-    "top": "Bovenaan",
+    "newCardPositions": {
+      "bottom": "Onderaan",
+      "top": "Bovenaan"
+    },
     "descPreview": "Beschrijvingsvoorbeeld tonen",
     "descPreviewHint": "Toon een kort fragment van de beschrijving op ingeklapte kaarten.",
     "completed": "Voltooide taken",
     "completedHint": "Hoe voltooide taken worden getoond (nooit uit het document verwijderd).",
-    "completedShow": "Normaal tonen",
-    "completedCollapse": "Klaar-kolom inklappen",
-    "completedHide": "Voltooide kaarten verbergen",
+    "completedDisplays": {
+      "show": "Normaal tonen",
+      "collapse": "Klaar-kolom inklappen",
+      "hide": "Voltooide kaarten verbergen"
+    },
     "confirmDelete": "Verwijderen van kaarten bevestigen",
     "confirmDeleteHint": "Vragen voordat een kaart wordt verwijderd (je kunt altijd ongedaan maken).",
     "display": "Weergavevoorkeuren",
     "dateFormat": "Datumnotatie",
     "dateFormatHint": "Hoe deadlines op kaarten worden geschreven.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Middel (10 sep 2026)",
-    "dateUs": "VS (9/10/2026)",
-    "dateEuro": "Europees (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Middel (10 sep 2026)",
+      "us": "VS (9/10/2026)",
+      "euro": "Europees (10/9/2026)"
+    },
     "name": "Je naam",
     "nameHint": "Schakelt het filter ‘Mijn openstaande taken’ in. Wordt vergeleken met toegewezen personen; er wordt niets opgezocht.",
     "namePlaceholder": "bijv. Sam Rivera",

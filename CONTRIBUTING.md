@@ -47,7 +47,7 @@ npm run build:firefox # Firefox production build
   and read it with `t()` / `<Trans>` (`useTranslation()`) — never hard-code UI text.
   To add a language, create `locales/<code>.json` with the same keys (plurals use
   i18next's `_one` / `_other` suffixes; languages with a single form only need
-  `_other`), register it in `src/i18n/index.ts`, and the locale test checks that
+  `_other`), register it in `src/i18n/languages.ts` and `src/i18n/index.ts`, and the locale test checks that
   keys and `{{placeholders}}` match English. Text written into the document
   (default section and status names) stays untranslated on purpose.
 - **Least privilege.** Don't add manifest permissions or host origins unless a

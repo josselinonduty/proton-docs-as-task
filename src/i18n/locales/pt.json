@@ -503,7 +503,7 @@
     "autoShowHint": "Abre o quadro assim que um documento é ativado.",
     "defaultView": "Visualização predefinida",
     "defaultViewHint": "Em que disposição o quadro abre.",
-    "view": {
+    "views": {
       "workflow": "Fluxo (por estado)",
       "sections": "Seções (por título)",
       "swimlane": "Raias (estado × seção)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automático (idioma do navegador)",
     "theme": "Tema",
     "themeHint": "Seguir o sistema ou forçar claro / escuro.",
-    "themeSystem": "Sistema",
-    "themeLight": "Claro",
-    "themeDark": "Escuro",
+    "themes": {
+      "system": "Sistema",
+      "light": "Claro",
+      "dark": "Escuro"
+    },
     "density": "Densidade dos cartões",
     "densityHint": "Quão juntos ficam os cartões.",
-    "comfortable": "Confortável",
-    "compact": "Compacta",
+    "densities": {
+      "comfortable": "Confortável",
+      "compact": "Compacta"
+    },
     "behavior": "Comportamento do quadro",
     "newCards": "Novos cartões",
     "newCardsHint": "Onde um cartão adicionado rapidamente fica na sua coluna.",
-    "bottom": "No fim",
-    "top": "No início",
+    "newCardPositions": {
+      "bottom": "No fim",
+      "top": "No início"
+    },
     "descPreview": "Mostrar pré-visualização da descrição",
     "descPreviewHint": "Mostra um breve excerto da descrição nos cartões recolhidos.",
     "completed": "Tarefas concluídas",
     "completedHint": "Como as tarefas feitas são apresentadas (nunca são removidas do documento).",
-    "completedShow": "Mostrar normalmente",
-    "completedCollapse": "Recolher a coluna Concluído",
-    "completedHide": "Ocultar os cartões concluídos",
+    "completedDisplays": {
+      "show": "Mostrar normalmente",
+      "collapse": "Recolher a coluna Concluído",
+      "hide": "Ocultar os cartões concluídos"
+    },
     "confirmDelete": "Confirmar a exclusão de cartões",
     "confirmDeleteHint": "Pede confirmação antes de excluir um cartão (pode sempre desfazer).",
     "display": "Preferências de apresentação",
     "dateFormat": "Formato da data",
     "dateFormatHint": "Como as datas de entrega são escritas nos cartões.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Médio (10 de set. de 2026)",
-    "dateUs": "EUA (9/10/2026)",
-    "dateEuro": "Europeu (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Médio (10 de set. de 2026)",
+      "us": "EUA (9/10/2026)",
+      "euro": "Europeu (10/9/2026)"
+    },
     "name": "O seu nome",
     "nameHint": "Ativa o filtro «As minhas tarefas abertas». Comparado com os responsáveis; não é feita nenhuma pesquisa.",
     "namePlaceholder": "ex.: Sam Rivera",
