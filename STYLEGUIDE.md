@@ -53,6 +53,11 @@ Conventions that follow from it:
   Proton's darker steps so 12px chip labels meet WCAG AA; the light warning
   text is one step darker than Proton's palette for the same reason (noted in
   `tokens.css`).
+- **Status swatches** (`--pdt-swatch-<name>-text` / `-bg`) are the named
+  colours a board can give its statuses. They alias the palette tokens, so
+  they inherit dark mode and readable text-on-tint for free — add a swatch by
+  aliasing an existing pair, never with a new raw value. Custom hex colours a
+  user picks are their own; the board only warns when a pair is below AA.
 - **Inter without bundling it**: the font stack leads with `InterVariable,
 Inter`. Proton's page already loads them, and page-level `@font-face`
   rules apply inside the board's shadow root, so the board renders in
@@ -77,7 +82,7 @@ Inter`. Proton's page already loads them, and page-level `@font-face`
 Applied to both `:root` (popup/options, ordinary documents) and `.pdt-host`
 (the shadow-DOM root of the board overlay), so one file drives every
 surface. Categories: brand/interactive, surfaces & text, signal colors,
-elevation, radius, spacing (4px scale), typography, motion. Always reach for
+status swatches, elevation, radius, spacing (4px scale), typography, motion. Always reach for
 a token (`var(--pdt-...)`) over a hard-coded value.
 
 ## Components (`src/styles/components.css`)

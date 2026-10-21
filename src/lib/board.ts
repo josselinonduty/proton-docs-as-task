@@ -1,4 +1,5 @@
-import type { ColumnDef, ParseResult, StatusKey, Task } from './types';
+import { isDoneStatus } from './statuses';
+import type { ParseResult, StatusDef, StatusKey, Task } from './types';
 
 export interface BoardGroup {
   key: string;
@@ -6,8 +7,8 @@ export interface BoardGroup {
   tasks: Task[];
 }
 
-/** Group tasks into the configured status columns (empty columns kept). */
-export function groupByStatus(tasks: Task[], columns: ColumnDef[]): BoardGroup[] {
+/** Group tasks into the board's status columns (empty columns kept). */
+export function groupByStatus(tasks: Task[], columns: StatusDef[]): BoardGroup[] {
   const byStatus = new Map<StatusKey, Task[]>();
   for (const col of columns) byStatus.set(col.key, []);
   const fallbackKey = columns[0]?.key;
@@ -49,7 +50,7 @@ export interface BoardSummary {
 
 export function summarize(result: ParseResult): BoardSummary {
   const total = result.tasks.length;
-  const done = result.tasks.filter((t) => t.status === 'done').length;
+  const done = result.tasks.filter((t) => isDoneStatus(result.statuses, t.status)).length;
   return {
     total,
     done,

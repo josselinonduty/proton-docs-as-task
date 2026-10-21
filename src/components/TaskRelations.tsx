@@ -4,6 +4,8 @@ import { Icon } from './Icon';
 
 interface TaskRelationsProps {
   links: TaskLinks;
+  /** Whether a linked task is completed (in a Done status). */
+  isDone: (task: BoardTask) => boolean;
   /** Tasks that may be linked to the open one, per relationship. */
   candidates: (kind: LinkKind) => BoardTask[];
   onOpen: (id: string) => void;
@@ -18,7 +20,14 @@ const GROUPS: { kind: LinkKind; label: string }[] = [
 ];
 
 /** GitLab-style linked tasks: grouped by relationship, one click to open or unlink. */
-export function TaskRelations({ links, candidates, onOpen, onLink, onUnlink }: TaskRelationsProps) {
+export function TaskRelations({
+  links,
+  isDone,
+  candidates,
+  onOpen,
+  onLink,
+  onUnlink,
+}: TaskRelationsProps) {
   const [kind, setKind] = useState<LinkKind>('blockedBy');
   const [query, setQuery] = useState('');
   const needle = query.trim().toLowerCase();
@@ -44,8 +53,8 @@ export function TaskRelations({ links, candidates, onOpen, onLink, onUnlink }: T
                     title="Open task"
                     onClick={() => onOpen(t.id)}
                   >
-                    <Icon name={t.status === 'done' ? 'checkmark-circle' : 'link'} size={14} />
-                    <span className={t.status === 'done' ? 'pdt-card__title--done' : ''}>
+                    <Icon name={isDone(t) ? 'checkmark-circle' : 'link'} size={14} />
+                    <span className={isDone(t) ? 'pdt-card__title--done' : ''}>
                       {t.title || 'Untitled task'}
                     </span>
                   </button>

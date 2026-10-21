@@ -37,3 +37,10 @@ describe('withDefaults — v0.6 fields', () => {
     expect(withDefaults(DEFAULT_SETTINGS)).toEqual(DEFAULT_SETTINGS);
   });
 });
+
+describe('withDefaults — per-document statuses', () => {
+  it('drops the legacy global status labels', () => {
+    const s = withDefaults({ columns: [{ key: 'todo', label: 'Later' }] } as never);
+    expect(s).not.toHaveProperty('columns');
+  });
+});

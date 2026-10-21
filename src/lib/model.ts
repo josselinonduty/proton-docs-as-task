@@ -10,7 +10,7 @@
  * Unlike v0.4, `status` and `section` are **independent** properties of a task.
  * The same flat task collection is projected into two different column layouts:
  *
- *   - Workflow view — columns are the three canonical statuses.
+ *   - Workflow view — columns are the board's statuses (defined per document).
  *   - Sections view — columns are the document's `## Headings`.
  *
  * The model's `tasks` array is the canonical ordering; each task's `order`
@@ -20,7 +20,16 @@
  */
 
 import { encodeDescription } from './parser';
-import type { BoardView, ParseResult, Priority, StatusKey, Task } from './types';
+import {
+  DEFAULT_STATUSES,
+  defaultStatus,
+  findStatus,
+  isDoneStatus,
+  isLastOfRequiredCategory,
+  serializeStatusSetting,
+  uniqueStatusKey,
+} from './statuses';
+import type { BoardView, ParseResult, Priority, StatusDef, StatusKey, Task } from './types';
 
 export const DEFAULT_SECTION = 'Tasks';
 
@@ -53,6 +62,8 @@ export interface BoardModel {
   sections: string[];
   /** Section marked `@default`; the List view shows only its tasks. */
   defaultSection?: string;
+  /** Workflow statuses in column order; always has a Not started and a Done one. */
+  statuses: StatusDef[];
   /** Flat task collection; array order is canonical. */
   tasks: BoardTask[];
 }
@@ -82,14 +93,19 @@ function reindex(model: BoardModel): BoardModel {
   return { ...model, tasks: model.tasks.map((t, i) => (t.order === i ? t : { ...t, order: i })) };
 }
 
-/** A brand-new task in the given section, defaulting to the "todo" status. */
-export function createTask(section: string, status: StatusKey = 'todo', title = ''): BoardTask {
+/** A brand-new task in the given section and status. */
+export function createTask(section: string, status: StatusKey, title = ''): BoardTask {
   return { id: createId('task'), title, status, section, labels: [], order: 0 };
 }
 
 /** The board seeded when a blank document is converted to a task board. */
 export function createStarterModel(): BoardModel {
-  return { title: undefined, sections: [DEFAULT_SECTION], tasks: [] };
+  return {
+    title: undefined,
+    sections: [DEFAULT_SECTION],
+    statuses: DEFAULT_STATUSES.map((s) => ({ ...s })),
+    tasks: [],
+  };
 }
 
 /** Build an editable model from a parsed document. */
@@ -100,7 +116,13 @@ export function fromParseResult(result: ParseResult): BoardModel {
   for (const task of tasks) {
     if (!sections.includes(task.section)) sections.push(task.section);
   }
-  return { title: result.boardTitle, sections, defaultSection: result.defaultSection, tasks };
+  return {
+    title: result.boardTitle,
+    sections,
+    defaultSection: result.defaultSection,
+    statuses: result.statuses.map((s) => ({ ...s })),
+    tasks,
+  };
 }
 
 function toBoardTask(task: Task, order: number): BoardTask {
@@ -126,11 +148,7 @@ function toBoardTask(task: Task, order: number): BoardTask {
 // ---------------------------------------------------------------------------
 
 /** Project the model into the columns for a given view. Empty columns kept. */
-export function columnsForView(
-  model: BoardModel,
-  view: BoardView,
-  statusColumns: { key: StatusKey; label: string }[],
-): BoardColumn[] {
+export function columnsForView(model: BoardModel, view: BoardView): BoardColumn[] {
   if (view === 'list') {
     const rank = (t: BoardTask) => model.sections.indexOf(t.section);
     const { defaultSection } = model;
@@ -146,7 +164,7 @@ export function columnsForView(
     ];
   }
   if (view === 'workflow') {
-    return statusColumns.map((col) => ({
+    return model.statuses.map((col) => ({
       key: col.key,
       label: col.label,
       status: col.key,
@@ -270,7 +288,11 @@ export function addTask(
   section: string,
   opts: { status?: StatusKey; title?: string; atTop?: boolean } = {},
 ): { model: BoardModel; taskId: string } {
-  const task = createTask(section, opts.status ?? 'todo', opts.title ?? '');
+  const task = createTask(
+    section,
+    opts.status ?? defaultStatus(model.statuses, false),
+    opts.title ?? '',
+  );
   const sections = model.sections.includes(section) ? model.sections : [...model.sections, section];
   let tasks: BoardTask[];
   if (opts.atTop) {
@@ -403,14 +425,23 @@ export function linksOf(model: BoardModel, task: BoardTask): TaskLinks {
   };
 }
 
-/** Tasks that still have to be completed before `task` may advance. */
-export function openBlockers(model: BoardModel, task: BoardTask): BoardTask[] {
-  return linksOf(model, task).blockedBy.filter((t) => t.status !== 'done');
+/** True when `task` sits in a Done status. */
+export function isTaskDone(model: BoardModel, task: BoardTask): boolean {
+  return isDoneStatus(model.statuses, task.status);
 }
 
-/** A blocked task may not leave `todo` until every blocker is done. */
+/** Tasks that still have to be completed before `task` may advance. */
+export function openBlockers(model: BoardModel, task: BoardTask): BoardTask[] {
+  return linksOf(model, task).blockedBy.filter((t) => !isTaskDone(model, t));
+}
+
+/** A blocked task may not leave Not started until every blocker is done. */
 export function canSetStatus(model: BoardModel, task: BoardTask, status: StatusKey): boolean {
-  return status === 'todo' || status === task.status || openBlockers(model, task).length === 0;
+  return (
+    status === task.status ||
+    findStatus(model.statuses, status)?.category === 'todo' ||
+    openBlockers(model, task).length === 0
+  );
 }
 
 /** True when following `blocks` links from `fromKey` reaches `targetKey`. */
@@ -561,10 +592,12 @@ export function applyBulkAction(
       return mapSelected(model, ids, (t) =>
         canSetStatus(model, t, action.status) ? { ...t, status: action.status } : t,
       );
-    case 'complete':
+    case 'complete': {
+      const done = defaultStatus(model.statuses, true);
       return mapSelected(model, ids, (t) =>
-        canSetStatus(model, t, 'done') ? { ...t, status: 'done' } : t,
+        isTaskDone(model, t) || !canSetStatus(model, t, done) ? t : { ...t, status: done },
       );
+    }
     case 'section':
       return mapSelected(model, ids, (t) => ({ ...t, section: action.section }), [action.section]);
     case 'priority':
@@ -592,11 +625,149 @@ export function applyBulkAction(
   }
 }
 
-/** Total and completed (`status === 'done'`) task counts. */
+/** Total and completed (in a Done status) task counts. */
 export function countTasks(model: BoardModel): { total: number; done: number } {
   let done = 0;
-  for (const task of model.tasks) if (task.status === 'done') done += 1;
+  for (const task of model.tasks) if (isTaskDone(model, task)) done += 1;
   return { total: model.tasks.length, done };
+}
+
+// ---------------------------------------------------------------------------
+// Status management. A board always keeps at least one Not started and one
+// Done status; helpers that would break that return the model unchanged.
+// ---------------------------------------------------------------------------
+
+/** Append a status, keyed after its label. Returns the new key too. */
+export function addStatus(
+  model: BoardModel,
+  init: Partial<Omit<StatusDef, 'key'>> = {},
+): { model: BoardModel; key: StatusKey } {
+  const label = uniqueStatusLabel(model, init.label?.trim() || 'New status');
+  const key = uniqueStatusKey(model.statuses, label);
+  const status: StatusDef = { ...init, key, label, category: init.category ?? 'doing' };
+  return { model: { ...model, statuses: [...model.statuses, status] }, key };
+}
+
+/** Return a status label no other status uses yet, based on `base`. */
+function uniqueStatusLabel(model: BoardModel, base: string): string {
+  const taken = new Set(model.statuses.map((s) => s.label.toLowerCase()));
+  if (!taken.has(base.toLowerCase())) return base;
+  let n = 2;
+  while (taken.has(`${base} ${n}`.toLowerCase())) n += 1;
+  return `${base} ${n}`;
+}
+
+/** Whether `label` is free for status `key` (labels are unique, case-insensitively). */
+export function isStatusLabelAvailable(model: BoardModel, key: StatusKey, label: string): boolean {
+  const clean = label.trim().toLowerCase();
+  return !model.statuses.some((s) => s.key !== key && s.label.toLowerCase() === clean);
+}
+
+/** Whether status `key` may switch to `category` without leaving one empty. */
+export function canChangeStatusCategory(
+  model: BoardModel,
+  key: StatusKey,
+  category: StatusDef['category'],
+): boolean {
+  const status = findStatus(model.statuses, key);
+  if (!status) return false;
+  return status.category === category || !isLastOfRequiredCategory(model.statuses, key);
+}
+
+/**
+ * Change a status's label, category or colours. Renaming also re-derives its
+ * key from the new label (slugified, suffixed to stay unique) and moves the
+ * tasks using it along. An empty or duplicate label, or a category change
+ * that would leave the board without a Not started or Done status, is refused.
+ */
+export function updateStatus(
+  model: BoardModel,
+  key: StatusKey,
+  patch: Partial<Omit<StatusDef, 'key'>>,
+): BoardModel {
+  if (patch.label !== undefined) {
+    const label = patch.label.trim();
+    if (!label || !isStatusLabelAvailable(model, key, label)) return model;
+    patch = { ...patch, label };
+  }
+  if (patch.category && !canChangeStatusCategory(model, key, patch.category)) return model;
+  let newKey = key;
+  if (patch.label !== undefined) {
+    const others = model.statuses.filter((s) => s.key !== key);
+    newKey = uniqueStatusKey(others, patch.label);
+  }
+  return {
+    ...model,
+    tasks:
+      newKey === key
+        ? model.tasks
+        : model.tasks.map((t) => (t.status === key ? { ...t, status: newKey } : t)),
+    statuses: model.statuses.map((s) => {
+      if (s.key !== key) return s;
+      const next: StatusDef = { ...s, ...patch, key: newKey };
+      // `undefined` in the patch clears a colour.
+      if (!next.color) delete next.color;
+      if (!next.bg) delete next.bg;
+      return next;
+    }),
+  };
+}
+
+/** Move a status column by `delta` positions (negative = earlier). */
+export function moveStatus(model: BoardModel, key: StatusKey, delta: number): BoardModel {
+  const from = model.statuses.findIndex((s) => s.key === key);
+  if (from < 0) return model;
+  const to = Math.max(0, Math.min(model.statuses.length - 1, from + delta));
+  if (to === from) return model;
+  const statuses = [...model.statuses];
+  const [moved] = statuses.splice(from, 1);
+  statuses.splice(to, 0, moved!);
+  return { ...model, statuses };
+}
+
+/** Whether status `key` may be deleted (it isn't the last Not started / Done one). */
+export function canRemoveStatus(model: BoardModel, key: StatusKey): boolean {
+  return (
+    !!findStatus(model.statuses, key) &&
+    model.statuses.length > 1 &&
+    !isLastOfRequiredCategory(model.statuses, key)
+  );
+}
+
+/** Give every task in status `from` the status `to`, keeping their positions. */
+export function moveTasksToStatus(model: BoardModel, from: StatusKey, to: StatusKey): BoardModel {
+  if (from === to || !findStatus(model.statuses, to)) return model;
+  return {
+    ...model,
+    tasks: model.tasks.map((t) => (t.status === from ? { ...t, status: to } : t)),
+  };
+}
+
+/** Delete a status, moving its tasks to `target` first (required when it has any). */
+export function removeStatus(model: BoardModel, key: StatusKey, target?: StatusKey): BoardModel {
+  if (!canRemoveStatus(model, key)) return model;
+  let next = model;
+  if (model.tasks.some((t) => t.status === key)) {
+    if (!target || target === key || !findStatus(model.statuses, target)) return model;
+    next = moveTasksToStatus(model, key, target);
+  }
+  return { ...next, statuses: next.statuses.filter((s) => s.key !== key) };
+}
+
+/** A status key referenced by tasks but not defined by the board. */
+export interface OrphanStatus {
+  key: StatusKey;
+  count: number;
+}
+
+/** Status keys tasks use that the board doesn't define, in first-seen order. */
+export function orphanStatuses(model: BoardModel): OrphanStatus[] {
+  const counts = new Map<StatusKey, number>();
+  for (const task of model.tasks) {
+    if (findStatus(model.statuses, task.status)) continue;
+    counts.set(task.status, (counts.get(task.status) ?? 0) + 1);
+  }
+  return [...counts].map(([key, count]) => ({ key, count }));
 }
 
 // ---------------------------------------------------------------------------
@@ -609,18 +780,15 @@ function tokenFor(key: string, value: string): string {
 }
 
 /** Serialize a single task to its Markdown checklist line (for "Copy as Markdown"). */
-export function serializeTaskLine(task: BoardTask): string {
-  return serializeTask(task);
-}
-
-function serializeTask(task: BoardTask): string {
-  const checkbox = task.status === 'done' ? 'x' : ' ';
+export function serializeTaskLine(task: BoardTask, statuses: readonly StatusDef[]): string {
+  const done = isDoneStatus(statuses, task.status);
+  const checkbox = done ? 'x' : ' ';
   const parts: string[] = [];
   const title = task.title.trim();
   if (title) parts.push(title);
 
-  // `done`/`todo` are implied by the checkbox; only `doing` needs a token.
-  if (task.status === 'doing') parts.push('@status:doing');
+  // The checkbox implies the first Not started / Done status; others need a token.
+  if (task.status !== defaultStatus(statuses, done)) parts.push(tokenFor('status', task.status));
   if (task.priority) parts.push(`@priority:${task.priority}`);
   if (task.due?.trim()) parts.push(tokenFor('due', task.due.trim()));
   if (task.assignee?.trim()) parts.push(tokenFor('who', task.assignee.trim()));
@@ -646,6 +814,7 @@ export function serializeModel(source: BoardModel, marker: string): string {
   const lines: string[] = [];
   const title = model.title?.trim();
   lines.push(title ? `${marker} ${title}` : marker);
+  for (const status of model.statuses) lines.push(serializeStatusSetting(status));
 
   // Every section, plus any orphan section referenced only by a task.
   const sections = [...model.sections];
@@ -661,7 +830,7 @@ export function serializeModel(source: BoardModel, marker: string): string {
     const inSection = model.tasks
       .filter((t) => t.section === section)
       .sort((a, b) => a.order - b.order);
-    for (const task of inSection) lines.push(serializeTask(task));
+    for (const task of inSection) lines.push(serializeTaskLine(task, model.statuses));
   }
 
   return lines.join('\n');
