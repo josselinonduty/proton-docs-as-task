@@ -124,7 +124,7 @@ export function QuickAddForm({
         <label className="pdt-field">
           <span className="pdt-field-label">{t('quickAdd.status')}</span>
           <select
-            className="pdt-input"
+            className="pdt-select"
             value={status}
             onChange={(e) => setStatus(e.target.value as StatusKey)}
           >
@@ -139,7 +139,7 @@ export function QuickAddForm({
         <label className="pdt-field">
           <span className="pdt-field-label">{t('quickAdd.section')}</span>
           <select
-            className="pdt-input"
+            className="pdt-select"
             value={section}
             onChange={(e) => setSection(e.target.value)}
           >
@@ -154,7 +154,7 @@ export function QuickAddForm({
         <label className="pdt-field">
           <span className="pdt-field-label">{t('quickAdd.priority')}</span>
           <select
-            className="pdt-input"
+            className="pdt-select"
             value={priority}
             onChange={(e) => setPriority(e.target.value as '' | Priority)}
           >

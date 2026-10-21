@@ -86,9 +86,11 @@ code {
   padding-top: 0;
 }
 .op-row__label {
+  display: block;
   font-weight: var(--pdt-font-weight-medium);
 }
 .op-row__hint {
+  display: block;
   font-size: var(--pdt-text-xs);
   color: var(--pdt-text-weak);
 }
