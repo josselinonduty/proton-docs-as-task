@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import {
   addStatus,
   canChangeStatusCategory,
@@ -35,6 +36,7 @@ export function BoardSettingsDialog({
   onRequestDelete,
   onClose,
 }: BoardSettingsDialogProps) {
+  const { t } = useTranslation();
   const [focusKey, setFocusKey] = useState<StatusKey | null>(null);
   const [dragKey, setDragKey] = useState<StatusKey | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -43,8 +45,8 @@ export function BoardSettingsDialog({
   const move = (status: StatusDef, delta: number) => {
     const next = moveStatus(model, status.key, delta);
     if (next === model) return;
-    onChange(next, `Moved status “${status.label}”`);
-    announce(`${status.label} moved ${delta < 0 ? 'up' : 'down'}`);
+    onChange(next, t('settings.undo.moved', { label: status.label }));
+    announce(t(delta < 0 ? 'settings.movedUp' : 'settings.movedDown', { label: status.label }));
   };
 
   const dropOn = (target: StatusDef) => {
@@ -57,13 +59,13 @@ export function BoardSettingsDialog({
 
   const add = () => {
     const { model: next, key } = addStatus(model);
-    onChange(next, 'Added status');
+    onChange(next, t('settings.undo.added'));
     setFocusKey(key);
-    announce('Status added');
+    announce(t('settings.added'));
   };
 
   return (
-    <Dialog title="Board settings" size="lg" onClose={onClose} initialFocus={headingRef}>
+    <Dialog title={t('settings.title')} size="lg" onClose={onClose} initialFocus={headingRef}>
       <section className="pdt-settings" aria-labelledby="pdt-settings-statuses">
         <h3
           className="pdt-settings__heading"
@@ -71,17 +73,15 @@ export function BoardSettingsDialog({
           ref={headingRef}
           tabIndex={-1}
         >
-          Statuses
+          {t('settings.statuses')}
         </h3>
         <p className="pdt-modal__text">
-          The board’s workflow columns, saved in this document. A ticked checkbox means the first{' '}
-          <em>Done</em> status; new tasks start in the first <em>Not started</em> one. Reorder with
-          drag and drop or <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>.
+          <Trans i18nKey="settings.statusesHelp" components={{ em: <em />, kbd: <kbd /> }} />
         </p>
 
         <ul className="pdt-statuslist">
           {statuses.map((status, i) => {
-            const count = model.tasks.filter((t) => t.status === status.key).length;
+            const count = model.tasks.filter((task) => task.status === status.key).length;
             const removable = canRemoveStatus(model, status.key);
             return (
               <li
@@ -105,7 +105,7 @@ export function BoardSettingsDialog({
                   className="pdt-statuslist__handle"
                   draggable
                   aria-hidden="true"
-                  title="Drag to reorder"
+                  title={t('settings.drag')}
                   onDragStart={(e) => {
                     e.dataTransfer.effectAllowed = 'move';
                     setDragKey(status.key);
@@ -128,30 +128,32 @@ export function BoardSettingsDialog({
                         onRename={(label) => {
                           onChange(
                             updateStatus(model, status.key, { label }),
-                            `Renamed status to “${label}”`,
+                            t('settings.undo.renamed', { label }),
                           );
-                          announce(`Status renamed to ${label}`);
+                          announce(t('settings.renamed', { label }));
                         }}
                         onInvalid={announce}
                       />
                     </span>
-                    <code className="pdt-statuslist__key" title="Key written on task lines">
+                    <code className="pdt-statuslist__key" title={t('settings.keyHint')}>
                       @status:{status.key}
                     </code>
                   </div>
 
                   <div className="pdt-statuslist__props">
                     <label className="pdt-statuslist__category">
-                      <span className="pdt-sr-only">Category of {status.label}</span>
+                      <span className="pdt-sr-only">
+                        {t('settings.categoryOf', { label: status.label })}
+                      </span>
                       <select
                         className="pdt-select"
                         value={status.category}
-                        title="Category"
+                        title={t('settings.category')}
                         onChange={(e) => {
                           const category = e.target.value as StatusCategory;
                           onChange(
                             updateStatus(model, status.key, { category }),
-                            `Changed category of “${status.label}”`,
+                            t('settings.undo.category', { label: status.label }),
                           );
                         }}
                       >
@@ -161,43 +163,40 @@ export function BoardSettingsDialog({
                             value={c.key}
                             disabled={!canChangeStatusCategory(model, status.key, c.key)}
                           >
-                            {c.label}
+                            {t(`statusCategory.${c.key}`)}
                           </option>
                         ))}
                       </select>
                     </label>
                     <StatusColorPicker
-                      label="Text"
+                      label={t('settings.text')}
                       role="text"
                       value={status.color}
                       pairedValue={status.bg}
                       onChange={(color) =>
                         onChange(
                           updateStatus(model, status.key, { color }),
-                          `Changed colour of “${status.label}”`,
+                          t('settings.undo.color', { label: status.label }),
                         )
                       }
                     />
                     <StatusColorPicker
-                      label="Background"
+                      label={t('settings.background')}
                       role="bg"
                       value={status.bg}
                       pairedValue={status.color}
                       onChange={(bg) =>
                         onChange(
                           updateStatus(model, status.key, { bg }),
-                          `Changed background of “${status.label}”`,
+                          t('settings.undo.background', { label: status.label }),
                         )
                       }
                     />
-                    <span className="pdt-statuslist__count">
-                      {count} {count === 1 ? 'task' : 'tasks'}
-                    </span>
+                    <span className="pdt-statuslist__count">{t('count.tasks', { count })}</span>
                   </div>
                   {hasLowContrast(status) && (
                     <p className="pdt-statuslist__warning" role="status">
-                      <Icon name="exclamation-circle" size={14} /> These colours may be hard to
-                      read. Aim for more contrast between text and background.
+                      <Icon name="exclamation-circle" size={14} /> {t('settings.lowContrast')}
                     </p>
                   )}
                 </div>
@@ -206,8 +205,8 @@ export function BoardSettingsDialog({
                   <button
                     type="button"
                     className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                    aria-label={`Move ${status.label} up`}
-                    title="Move up (Alt+↑)"
+                    aria-label={t('settings.moveUp', { label: status.label })}
+                    title={t('settings.moveUpHint')}
                     disabled={i === 0}
                     onClick={() => move(status, -1)}
                   >
@@ -216,8 +215,8 @@ export function BoardSettingsDialog({
                   <button
                     type="button"
                     className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                    aria-label={`Move ${status.label} down`}
-                    title="Move down (Alt+↓)"
+                    aria-label={t('settings.moveDown', { label: status.label })}
+                    title={t('settings.moveDownHint')}
                     disabled={i === statuses.length - 1}
                     onClick={() => move(status, 1)}
                   >
@@ -226,11 +225,13 @@ export function BoardSettingsDialog({
                   <button
                     type="button"
                     className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                    aria-label={`Delete status ${status.label}`}
+                    aria-label={t('settings.delete', { label: status.label })}
                     title={
                       removable
-                        ? 'Delete status'
-                        : `A board needs at least one ${status.category === 'done' ? 'Done' : 'Not started'} status`
+                        ? t('settings.deleteStatus')
+                        : t('settings.needOne', {
+                            category: t(`statusCategory.${status.category}`),
+                          })
                     }
                     disabled={!removable}
                     onClick={() => onRequestDelete(status.key)}
@@ -245,13 +246,13 @@ export function BoardSettingsDialog({
 
         <button type="button" className="pdt-btn pdt-btn-sm" onClick={add}>
           <Icon name="plus" size={14} />
-          Add status
+          {t('settings.add')}
         </button>
       </section>
 
       <div className="pdt-modal__actions">
         <button type="button" className="pdt-btn pdt-btn-primary" onClick={onClose}>
-          Done
+          {t('common.done')}
         </button>
       </div>
     </Dialog>

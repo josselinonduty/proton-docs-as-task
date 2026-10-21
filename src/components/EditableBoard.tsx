@@ -1,4 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { t } from '../i18n';
 import {
   addSection,
   addStatus,
@@ -104,13 +106,6 @@ interface EditableBoardProps {
 type PendingSectionDelete = { name: string; count: number };
 type PendingStatusDelete = { key: StatusKey; count: number };
 
-const VIEW_LABELS: { key: BoardView; label: string; hint: string }[] = [
-  { key: 'workflow', label: 'Workflow', hint: 'Columns by status (V)' },
-  { key: 'sections', label: 'Sections', hint: 'Columns by document heading (V)' },
-  { key: 'swimlane', label: 'Swimlane', hint: 'Status columns × section rows (V)' },
-  { key: 'list', label: 'List', hint: 'Simple checklist (V)' },
-];
-
 /** Order in which the V shortcut cycles through views. */
 const VIEW_ORDER: BoardView[] = ['workflow', 'sections', 'swimlane', 'list'];
 
@@ -143,6 +138,8 @@ export function EditableBoard(props: EditableBoardProps) {
     onClose,
   } = props;
 
+  const { t } = useTranslation();
+  const taskName = (task: BoardTask) => task.title || t('board.task');
   const { statuses } = model;
   const isDone = (task: BoardTask) => isTaskDone(model, task);
   const now = new Date();
@@ -265,8 +262,8 @@ export function EditableBoard(props: EditableBoardProps) {
   /** True when `task` may take `status`; otherwise explains which tasks stand in the way. */
   const allowStatus = (task: BoardTask, status: StatusKey) => {
     if (canSetStatus(model, task, status)) return true;
-    const names = openBlockers(model, task).map((t) => `“${t.title || 'Untitled task'}”`);
-    const message = `Blocked by ${names.join(', ')}. Finish ${names.length === 1 ? 'it' : 'them'} first.`;
+    const names = openBlockers(model, task).map((b) => `“${b.title || t('card.untitled')}”`);
+    const message = t('board.blocked', { names: names.join(', '), count: names.length });
     setBlockedNotice(message);
     announce(message);
     return false;
@@ -276,22 +273,25 @@ export function EditableBoard(props: EditableBoardProps) {
     const wasDone = isDone(task);
     const next = defaultStatus(statuses, !wasDone);
     if (!allowStatus(task, next)) return;
-    onChange(setTaskStatus(model, task.id, next), wasDone ? 'Reopened task' : 'Completed task');
-    announce(`${task.title || 'Task'} ${wasDone ? 'reopened' : 'completed'}`);
+    onChange(
+      setTaskStatus(model, task.id, next),
+      t(wasDone ? 'board.undo.reopened' : 'board.undo.completed'),
+    );
+    announce(t(wasDone ? 'board.reopened' : 'board.completed', { title: taskName(task) }));
   };
 
   const setStatus = (task: BoardTask, status: StatusKey) => {
     if (status === task.status || !allowStatus(task, status)) return;
     const label = findStatus(statuses, status)?.label ?? status;
-    onChange(setTaskStatus(model, task.id, status), `Moved to ${label}`);
-    announce(`${task.title || 'Task'} moved to ${label}`);
+    onChange(setTaskStatus(model, task.id, status), t('board.undo.movedTo', { to: label }));
+    announce(t('board.movedTo', { title: taskName(task), to: label }));
     setFocusTaskId(task.id);
   };
 
   const setSection = (task: BoardTask, section: string) => {
     if (section === task.section) return;
-    onChange(setTaskSection(model, task.id, section), `Moved to ${section}`);
-    announce(`${task.title || 'Task'} moved to ${section}`);
+    onChange(setTaskSection(model, task.id, section), t('board.undo.movedTo', { to: section }));
+    announce(t('board.movedTo', { title: taskName(task), to: section }));
     setFocusTaskId(task.id);
   };
 
@@ -304,7 +304,9 @@ export function EditableBoard(props: EditableBoardProps) {
     const next = [...ids];
     [next[i], next[j]] = [next[j]!, next[i]!];
     onChange(reorderColumn(model, next));
-    announce(`${task.title || 'Task'} moved ${delta < 0 ? 'up' : 'down'} in ${label}`);
+    announce(
+      t(delta < 0 ? 'board.movedUp' : 'board.movedDown', { title: taskName(task), column: label }),
+    );
     setFocusTaskId(task.id);
   };
 
@@ -314,8 +316,8 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const confirmDeleteCard = (task: BoardTask) => {
-    onChange(removeTask(model, task.id), 'Deleted task');
-    announce(`${task.title || 'Task'} deleted`);
+    onChange(removeTask(model, task.id), t('board.undo.deleted'));
+    announce(t('board.deleted', { title: taskName(task) }));
     setPendingCardDelete(null);
     // The card (and maybe the details panel) is gone; keep keyboard focus on the board.
     if (details?.id === task.id) setDetails(null);
@@ -326,15 +328,15 @@ export function EditableBoard(props: EditableBoardProps) {
     const { model: next, taskId } = duplicateTask(model, task.id);
     onChange(next);
     if (taskId) setFocusTaskId(taskId);
-    announce(`${task.title || 'Task'} duplicated`);
+    announce(t('board.duplicated', { title: taskName(task) }));
   };
 
   const copyMarkdown = async (task: BoardTask) => {
     try {
       await navigator.clipboard.writeText(serializeTaskLine(task, statuses));
-      announce('Task copied as Markdown');
+      announce(t('board.taskCopied'));
     } catch {
-      announce('Could not copy to clipboard');
+      announce(t('board.copyFailed'));
     }
   };
 
@@ -382,14 +384,14 @@ export function EditableBoard(props: EditableBoardProps) {
       if (at < 0) at = ids.length;
       ids.splice(at, 0, id);
       onChange(reorderColumn(model, ids));
-      announce(`${dragged.title || 'Task'} reordered in ${col.label}`);
+      announce(t('board.reordered', { title: taskName(dragged), column: col.label }));
     } else if (view === 'workflow' && col.status) {
       if (!allowStatus(dragged, col.status)) return;
-      onChange(setTaskStatus(model, id, col.status), `Moved to ${col.label}`);
-      announce(`${dragged.title || 'Task'} moved to ${col.label}`);
+      onChange(setTaskStatus(model, id, col.status), t('board.undo.movedTo', { to: col.label }));
+      announce(t('board.movedTo', { title: taskName(dragged), to: col.label }));
     } else if (view === 'sections' && col.section) {
-      onChange(setTaskSection(model, id, col.section), `Moved to ${col.label}`);
-      announce(`${dragged.title || 'Task'} moved to ${col.label}`);
+      onChange(setTaskSection(model, id, col.section), t('board.undo.movedTo', { to: col.label }));
+      announce(t('board.movedTo', { title: taskName(dragged), to: col.label }));
     }
     setFocusTaskId(id);
   };
@@ -407,8 +409,8 @@ export function EditableBoard(props: EditableBoardProps) {
     if (dragged.section !== section) next = setTaskSection(next, id, section);
     if (next !== model) {
       const label = findStatus(statuses, status)?.label ?? status;
-      onChange(next, `Moved to ${section} / ${label}`);
-      announce(`${dragged.title || 'Task'} moved to ${section}, ${label}`);
+      onChange(next, t('board.undo.movedTo', { to: `${section} / ${label}` }));
+      announce(t('board.movedTo', { title: taskName(dragged), to: `${section}, ${label}` }));
     }
     setFocusTaskId(id);
   };
@@ -427,10 +429,10 @@ export function EditableBoard(props: EditableBoardProps) {
       title: clean,
       atTop: settings.newCardsAtTop,
     });
-    onChange(next, 'Added task');
+    onChange(next, t('board.undo.added'));
     setFocusTaskId(taskId);
     setHighlightId(taskId);
-    announce(`Task "${clean}" added to ${col.label}`);
+    announce(t('board.addedTo', { title: clean, column: col.label }));
   };
 
   // ---- Quick add (header form) -------------------------------------------
@@ -446,11 +448,11 @@ export function EditableBoard(props: EditableBoardProps) {
       assignee: payload.assignee,
       labels: payload.labels,
     });
-    onChange(next, 'Added task');
+    onChange(next, t('board.undo.added'));
     onQuickAddSectionChange(payload.section);
     setFocusTaskId(taskId);
     setHighlightId(taskId);
-    announce(`Task "${payload.title}" added`);
+    announce(t('board.added', { title: payload.title }));
 
     const created = next.tasks.find((t) => t.id === taskId);
     const hiddenByFilters = created
@@ -480,9 +482,7 @@ export function EditableBoard(props: EditableBoardProps) {
           }).length
         : 0;
     if (skipped) {
-      setBlockedNotice(
-        `${skipped} blocked ${skipped === 1 ? 'task was' : 'tasks were'} left as is.`,
-      );
+      setBlockedNotice(t('board.skipped', { count: skipped }));
     }
     if (action.kind === 'delete') {
       setSelected(new Set());
@@ -495,7 +495,7 @@ export function EditableBoard(props: EditableBoardProps) {
     for (const t of model.tasks) if (passesView(t)) ids.add(t.id);
     setSelected(ids);
     setSelectionMode(true);
-    announce(`${ids.size} tasks selected`);
+    announce(t('board.selectedCount', { count: ids.size }));
   };
 
   const exitSelection = () => {
@@ -536,8 +536,8 @@ export function EditableBoard(props: EditableBoardProps) {
     const count = model.tasks.filter((t) => t.section === name).length;
     if (count === 0) {
       // Nothing to lose and the toast offers Undo — no confirmation needed.
-      onChange(removeSection(model, name), `Deleted section “${name}”`);
-      announce(`Section ${name} deleted`);
+      onChange(removeSection(model, name), t('board.undo.sectionDeleted', { name }));
+      announce(t('board.sectionDeleted', { name }));
       return;
     }
     setPendingSectionDelete({ name, count });
@@ -548,15 +548,13 @@ export function EditableBoard(props: EditableBoardProps) {
     const status = findStatus(statuses, key);
     if (!status) return;
     if (!canRemoveStatus(model, key)) {
-      announce(
-        `A board needs at least one ${status.category === 'done' ? 'Done' : 'Not started'} status`,
-      );
+      announce(t('settings.needOne', { category: t(`statusCategory.${status.category}`) }));
       return;
     }
     const count = model.tasks.filter((t) => t.status === key).length;
     if (count === 0) {
-      onChange(removeStatus(model, key), `Deleted status “${status.label}”`);
-      announce(`Status ${status.label} deleted`);
+      onChange(removeStatus(model, key), t('board.undo.statusDeleted', { label: status.label }));
+      announce(t('board.statusDeleted', { label: status.label }));
       return;
     }
     setPendingStatusDelete({ key, count });
@@ -564,21 +562,24 @@ export function EditableBoard(props: EditableBoardProps) {
 
   const addStatusColumn = () => {
     const { model: next, key } = addStatus(model);
-    onChange(next, 'Added status');
+    onChange(next, t('settings.undo.added'));
     setFocusStatus(key);
-    announce('Status added');
+    announce(t('settings.added'));
   };
 
   const setStatusColors = (status: StatusDef, patch: Pick<StatusDef, 'color' | 'bg'>) =>
-    onChange(updateStatus(model, status.key, patch), `Changed colours of “${status.label}”`);
+    onChange(
+      updateStatus(model, status.key, patch),
+      t('board.undo.colors', { label: status.label }),
+    );
 
   const orphans = orphanStatuses(model);
 
   const moveOrphans = (targets: Record<StatusKey, StatusKey>) => {
     let next = model;
     for (const [from, to] of Object.entries(targets)) next = moveTasksToStatus(next, from, to);
-    onChange(next, 'Moved tasks with a missing status');
-    announce('Tasks moved');
+    onChange(next, t('board.undo.orphans'));
+    announce(t('board.tasksMoved'));
   };
 
   const doneKeys = statuses.filter((s) => s.category === 'done').map((s) => s.key);
@@ -593,9 +594,9 @@ export function EditableBoard(props: EditableBoardProps) {
   const copyBoardMarkdown = async () => {
     try {
       await navigator.clipboard.writeText(serializeModel(model, marker));
-      announce('Board copied as Markdown');
+      announce(t('board.boardCopied'));
     } catch {
-      announce('Could not copy to clipboard');
+      announce(t('board.copyFailed'));
     }
     setMenuOpen(false);
   };
@@ -607,14 +608,14 @@ export function EditableBoard(props: EditableBoardProps) {
     const i = VIEW_ORDER.indexOf(view);
     const nextView = VIEW_ORDER[(i + 1) % VIEW_ORDER.length]!;
     onViewChange(nextView);
-    announce(`${VIEW_LABELS.find((v) => v.key === nextView)?.label} view`);
+    announce(t('board.viewAnnounce', { view: t(`views.${nextView}.label`) }));
   };
 
   const applySortToDocument = () => {
     const cols = columnsForView(model, view === 'swimlane' ? 'sections' : view);
-    onChange(applySortToModel(model, cols, sort), 'Applied sort order');
+    onChange(applySortToModel(model, cols, sort), t('board.undo.sortApplied'));
     onSortChange(MANUAL_SORT);
-    announce('Sort order applied to the document');
+    announce(t('board.sortApplied'));
   };
 
   // ---- Keyboard shortcuts -------------------------------------------------
@@ -847,7 +848,7 @@ export function EditableBoard(props: EditableBoardProps) {
     <section
       className={`pdt-board ${selectionMode ? 'pdt-board--selecting' : ''}`}
       role="region"
-      aria-label="Task board"
+      aria-label={t('board.region')}
       tabIndex={-1}
       ref={boardRef}
       onKeyDown={handleKeyDown}
@@ -858,14 +859,14 @@ export function EditableBoard(props: EditableBoardProps) {
             type="button"
             className="pdt-btn pdt-btn-ghost pdt-btn-sm pdt-board__back"
             onClick={onClose}
-            title="Back to document"
+            title={t('board.back')}
           >
             <Icon name="arrow-left" size={14} />
-            <span>Document</span>
+            <span>{t('board.document')}</span>
           </button>
 
           <div className="pdt-board__titlewrap">
-            <h1 className="pdt-board__title">{model.title || 'Task board'}</h1>
+            <h1 className="pdt-board__title">{model.title || t('board.defaultTitle')}</h1>
             <BoardProgress done={progress.done} total={progress.total} />
           </div>
 
@@ -877,10 +878,10 @@ export function EditableBoard(props: EditableBoardProps) {
             className="pdt-btn pdt-btn-primary"
             onClick={() => setQuickAddOpen(true)}
             aria-haspopup="dialog"
-            title="Add task (N)"
+            title={t('board.addTaskKey')}
           >
             <Icon name="plus" size={16} />
-            Add task
+            {t('quickAdd.add')}
           </button>
 
           <div className="pdt-menu" ref={menuRef}>
@@ -889,8 +890,8 @@ export function EditableBoard(props: EditableBoardProps) {
               className="pdt-btn pdt-btn-icon"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              aria-label="More actions"
-              title="More actions"
+              aria-label={t('board.more')}
+              title={t('board.more')}
               onClick={() => setMenuOpen((v) => !v)}
             >
               <Icon name="dots-vertical" />
@@ -898,7 +899,7 @@ export function EditableBoard(props: EditableBoardProps) {
             {menuOpen && (
               <div className="pdt-menu__panel" role="menu">
                 <MenuItem
-                  label={selectionMode ? 'Exit selection' : 'Select tasks'}
+                  label={selectionMode ? t('board.menu.exitSelection') : t('board.menu.select')}
                   hint={`${mod} A`}
                   onClick={() => {
                     if (selectionMode) exitSelection();
@@ -907,15 +908,15 @@ export function EditableBoard(props: EditableBoardProps) {
                   }}
                 />
                 <MenuItem
-                  label="Board settings"
+                  label={t('settings.title')}
                   onClick={() => {
                     setSettingsOpen(true);
                     setMenuOpen(false);
                   }}
                 />
-                <MenuItem label="Copy board as Markdown" onClick={copyBoardMarkdown} />
+                <MenuItem label={t('board.menu.copyBoard')} onClick={copyBoardMarkdown} />
                 <MenuItem
-                  label="Reload from document"
+                  label={t('board.menu.reload')}
                   onClick={() => {
                     onReloadFromDoc();
                     setMenuOpen(false);
@@ -923,7 +924,7 @@ export function EditableBoard(props: EditableBoardProps) {
                 />
                 <div className="pdt-menu__sep" role="separator" />
                 <MenuItem
-                  label="Command palette"
+                  label={t('palette.title')}
                   hint={`${mod} K`}
                   onClick={() => {
                     setPaletteOpen(true);
@@ -931,7 +932,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   }}
                 />
                 <MenuItem
-                  label="Keyboard shortcuts"
+                  label={t('shortcuts.title')}
                   hint="?"
                   onClick={() => {
                     setHelpOpen(true);
@@ -939,7 +940,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   }}
                 />
                 <MenuItem
-                  label="Extension settings"
+                  label={t('board.menu.extension')}
                   onClick={() => {
                     onOpenSettings();
                     setMenuOpen(false);
@@ -951,17 +952,17 @@ export function EditableBoard(props: EditableBoardProps) {
         </div>
 
         <div className="pdt-board__row pdt-board__row--tools">
-          <div className="pdt-segment" role="tablist" aria-label="Board view">
-            {VIEW_LABELS.map((v) => (
+          <div className="pdt-segment" role="tablist" aria-label={t('board.viewLabel')}>
+            {VIEW_ORDER.map((v) => (
               <button
-                key={v.key}
+                key={v}
                 role="tab"
-                aria-selected={view === v.key}
-                className={`pdt-segment__btn ${view === v.key ? 'is-active' : ''}`}
-                title={v.hint}
-                onClick={() => onViewChange(v.key)}
+                aria-selected={view === v}
+                className={`pdt-segment__btn ${view === v ? 'is-active' : ''}`}
+                title={t(`views.${v}.hint`)}
+                onClick={() => onViewChange(v)}
               >
-                {v.label}
+                {t(`views.${v}.label`)}
               </button>
             ))}
           </div>
@@ -973,8 +974,8 @@ export function EditableBoard(props: EditableBoardProps) {
               type="search"
               className="pdt-input pdt-search__input"
               value={filters.search}
-              placeholder="Search tasks"
-              aria-label="Search tasks"
+              placeholder={t('board.search')}
+              aria-label={t('board.search')}
               aria-keyshortcuts="/"
               onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
               onKeyDown={(e) => {
@@ -1016,7 +1017,11 @@ export function EditableBoard(props: EditableBoardProps) {
               if (preset.recommendedSort) onSortChange(preset.recommendedSort);
             }}
             onUnavailablePreset={(preset: Preset) => {
-              announce(preset.reason ?? `${preset.label} is unavailable`);
+              announce(
+                preset.reason
+                  ? t(`presets.reason.${preset.reason}`)
+                  : t('presets.unavailable', { label: t(`presets.${preset.id}`) }),
+              );
               onOpenSettings();
             }}
           />
@@ -1024,7 +1029,7 @@ export function EditableBoard(props: EditableBoardProps) {
       </header>
 
       {quickAddOpen && (
-        <Dialog title="New task" size="lg" onClose={() => setQuickAddOpen(false)}>
+        <Dialog title={t('board.newTask')} size="lg" onClose={() => setQuickAddOpen(false)}>
           <QuickAddForm
             sections={model.sections}
             statuses={statuses}
@@ -1051,7 +1056,7 @@ export function EditableBoard(props: EditableBoardProps) {
               className="pdt-btn pdt-btn-sm pdt-btn-ghost"
               onClick={() => setBlockedNotice(null)}
             >
-              Dismiss
+              {t('board.dismiss')}
             </button>
           </div>
         </div>
@@ -1059,7 +1064,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
       {hiddenNotice && (
         <div className="pdt-banner pdt-banner--info" role="status">
-          <span className="pdt-banner__text">The new task is hidden by the active filters.</span>
+          <span className="pdt-banner__text">{t('board.hiddenNotice')}</span>
           <div className="pdt-banner__actions">
             <button
               className="pdt-btn pdt-btn-sm"
@@ -1068,13 +1073,13 @@ export function EditableBoard(props: EditableBoardProps) {
                 setHiddenNotice(false);
               }}
             >
-              Clear filters
+              {t('board.clearFilters')}
             </button>
             <button
               className="pdt-btn pdt-btn-sm pdt-btn-ghost"
               onClick={() => setHiddenNotice(false)}
             >
-              Dismiss
+              {t('board.dismiss')}
             </button>
           </div>
         </div>
@@ -1104,10 +1109,12 @@ export function EditableBoard(props: EditableBoardProps) {
             onBack={trail.length ? goBack : undefined}
             onOpenLinked={openLinked}
             onLink={(kind, id) => {
-              onChange(linkTasks(model, detailsTask.id, id, kind), 'Linked tasks');
-              announce('Tasks linked');
+              onChange(linkTasks(model, detailsTask.id, id, kind), t('board.undo.linked'));
+              announce(t('board.linked'));
             }}
-            onUnlink={(id) => onChange(unlinkTasks(model, detailsTask.id, id), 'Unlinked tasks')}
+            onUnlink={(id) =>
+              onChange(unlinkTasks(model, detailsTask.id, id), t('board.undo.unlinked'))
+            }
             onPatch={(patch) => patchTask(detailsTask.id, patch)}
             onToggleDone={() => toggleDone(detailsTask)}
             onSetStatus={(st) => setStatus(detailsTask, st)}
@@ -1144,39 +1151,36 @@ export function EditableBoard(props: EditableBoardProps) {
         <div className="pdt-toast" role="status">
           <span>{undoLabel}</span>
           <button type="button" className="pdt-link pdt-toast__undo" onClick={onUndo}>
-            Undo
+            {t('board.undo.button')}
           </button>
         </div>
       )}
 
       {pendingCardDelete && (
-        <Dialog title="Delete task" onClose={() => setPendingCardDelete(null)}>
+        <Dialog title={t('details.delete')} onClose={() => setPendingCardDelete(null)}>
           <p className="pdt-modal__text">
-            Delete “{pendingCardDelete.title || 'this task'}”? You can undo this right after.
+            {t('board.confirmDelete', { title: pendingCardDelete.title || t('board.thisTask') })}
           </p>
           <div className="pdt-modal__actions">
             <button className="pdt-btn" onClick={() => setPendingCardDelete(null)}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               className="pdt-btn pdt-btn-danger-solid"
               onClick={() => confirmDeleteCard(pendingCardDelete)}
             >
-              Delete
+              {t('common.delete')}
             </button>
           </div>
         </Dialog>
       )}
 
       {pendingBulkDelete && (
-        <Dialog title="Delete selected tasks" onClose={() => setPendingBulkDelete(false)}>
-          <p className="pdt-modal__text">
-            Delete {selected.size} selected {selected.size === 1 ? 'task' : 'tasks'}? This is one
-            undoable action.
-          </p>
+        <Dialog title={t('board.deleteSelected')} onClose={() => setPendingBulkDelete(false)}>
+          <p className="pdt-modal__text">{t('board.confirmBulk', { count: selected.size })}</p>
           <div className="pdt-modal__actions">
             <button className="pdt-btn" onClick={() => setPendingBulkDelete(false)}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               className="pdt-btn pdt-btn-danger-solid"
@@ -1185,7 +1189,7 @@ export function EditableBoard(props: EditableBoardProps) {
                 setPendingBulkDelete(false);
               }}
             >
-              Delete
+              {t('common.delete')}
             </button>
           </div>
         </Dialog>
@@ -1199,14 +1203,14 @@ export function EditableBoard(props: EditableBoardProps) {
           onMove={(target) => {
             onChange(
               removeSectionMovingTasks(model, pendingSectionDelete.name, target),
-              'Deleted section',
+              t('board.undo.sectionMoved'),
             );
-            announce(`Section ${pendingSectionDelete.name} deleted, tasks moved to ${target}`);
+            announce(t('board.sectionMoved', { name: pendingSectionDelete.name, target }));
             setPendingSectionDelete(null);
           }}
           onDeleteAll={() => {
-            onChange(removeSection(model, pendingSectionDelete.name), 'Deleted section and tasks');
-            announce(`Section ${pendingSectionDelete.name} and its tasks deleted`);
+            onChange(removeSection(model, pendingSectionDelete.name), t('board.undo.sectionAll'));
+            announce(t('board.sectionAll', { name: pendingSectionDelete.name }));
             setPendingSectionDelete(null);
           }}
         />
@@ -1231,8 +1235,11 @@ export function EditableBoard(props: EditableBoardProps) {
           onConfirm={(target) => {
             const status = findStatus(statuses, pendingStatusDelete.key)!;
             const label = findStatus(statuses, target)?.label ?? target;
-            onChange(removeStatus(model, status.key, target), `Deleted status “${status.label}”`);
-            announce(`Status ${status.label} deleted, tasks moved to ${label}`);
+            onChange(
+              removeStatus(model, status.key, target),
+              t('board.undo.statusDeleted', { label: status.label }),
+            );
+            announce(t('board.statusMoved', { label: status.label, target: label }));
             setPendingStatusDelete(null);
           }}
         />
@@ -1345,8 +1352,10 @@ export function EditableBoard(props: EditableBoardProps) {
                   type="button"
                   className="pdt-btn pdt-btn-icon pdt-btn-sm"
                   aria-expanded={!collapsed}
-                  aria-label={collapsed ? `Expand ${col.label}` : `Collapse ${col.label}`}
-                  title={collapsed ? 'Expand' : 'Collapse'}
+                  aria-label={t(collapsed ? 'board.expandCol' : 'board.collapseCol', {
+                    label: col.label,
+                  })}
+                  title={collapsed ? t('board.expand') : t('board.collapse')}
                   onClick={() => onToggleColumnCollapse(col.key)}
                 >
                   <Icon name={collapsed ? 'chevron-right' : 'chevron-down'} />
@@ -1358,8 +1367,11 @@ export function EditableBoard(props: EditableBoardProps) {
                     autoFocus={focusSection === col.key}
                     onFocusHandled={clearFocusSection}
                     onRename={(next, viaKeyboard) => {
-                      onChange(renameSection(model, col.key, next), `Renamed section to “${next}”`);
-                      announce(`Section renamed to ${next}`);
+                      onChange(
+                        renameSection(model, col.key, next),
+                        t('board.undo.sectionRenamed', { name: next }),
+                      );
+                      announce(t('board.sectionRenamed', { name: next }));
                       if (viaKeyboard) setFocusSection(next);
                     }}
                     onInvalid={announce}
@@ -1376,9 +1388,9 @@ export function EditableBoard(props: EditableBoardProps) {
                       onRename={(label) => {
                         onChange(
                           updateStatus(model, status.key, { label }),
-                          `Renamed status to “${label}”`,
+                          t('settings.undo.renamed', { label }),
                         );
-                        announce(`Status renamed to ${label}`);
+                        announce(t('settings.renamed', { label }));
                       }}
                       onInvalid={announce}
                     />
@@ -1390,8 +1402,11 @@ export function EditableBoard(props: EditableBoardProps) {
                   className="pdt-column__count"
                   aria-label={
                     filtersActive || hideCompleted
-                      ? `${visibleTasks.length} of ${col.tasks.length} tasks shown`
-                      : `${col.tasks.length} tasks`
+                      ? t('board.countShown', {
+                          shown: visibleTasks.length,
+                          count: col.tasks.length,
+                        })
+                      : t('count.tasks', { count: col.tasks.length })
                   }
                 >
                   {filtersActive || hideCompleted
@@ -1406,8 +1421,8 @@ export function EditableBoard(props: EditableBoardProps) {
                     <button
                       type="button"
                       className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                      aria-label={`Move ${col.label} left`}
-                      title="Move left"
+                      aria-label={t('board.moveLeft', { label: col.label })}
+                      title={t('board.moveLeftShort')}
                       disabled={model.sections.indexOf(col.key) === 0}
                       onClick={() => onChange(moveSection(model, col.key, -1))}
                     >
@@ -1416,8 +1431,8 @@ export function EditableBoard(props: EditableBoardProps) {
                     <button
                       type="button"
                       className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                      aria-label={`Move ${col.label} right`}
-                      title="Move right"
+                      aria-label={t('board.moveRight', { label: col.label })}
+                      title={t('board.moveRightShort')}
                       disabled={model.sections.indexOf(col.key) === model.sections.length - 1}
                       onClick={() => onChange(moveSection(model, col.key, 1))}
                     >
@@ -1426,9 +1441,9 @@ export function EditableBoard(props: EditableBoardProps) {
                     <button
                       type="button"
                       className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                      aria-label={`Use ${col.label} as the List view`}
+                      aria-label={t('board.useAsList', { label: col.label })}
                       aria-pressed={model.defaultSection === col.key}
-                      title="Show in List view"
+                      title={t('board.showInList')}
                       onClick={() => onChange(toggleDefaultSection(model, col.key))}
                     >
                       <Icon name="checkmark-circle" />
@@ -1436,8 +1451,8 @@ export function EditableBoard(props: EditableBoardProps) {
                     <button
                       type="button"
                       className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                      aria-label={`Delete section ${col.label}`}
-                      title="Delete section"
+                      aria-label={t('board.deleteSection', { label: col.label })}
+                      title={t('board.deleteSectionShort')}
                       onClick={() => requestSectionDelete(col.key)}
                     >
                       <Icon name="trash" />
@@ -1465,8 +1480,8 @@ export function EditableBoard(props: EditableBoardProps) {
                   {visibleTasks.length === 0 && (
                     <p className="pdt-column__empty">
                       {(filtersActive || hideCompleted) && col.tasks.length > 0
-                        ? 'No tasks match the filters.'
-                        : 'No tasks yet.'}
+                        ? t('board.noMatch')
+                        : t('board.empty')}
                     </p>
                   )}
                 </div>
@@ -1490,7 +1505,7 @@ export function EditableBoard(props: EditableBoardProps) {
           <div className="pdt-column pdt-column--add">
             <button type="button" className="pdt-add-column" onClick={addStatusColumn}>
               <Icon name="plus" size={14} />
-              Add status
+              {t('settings.add')}
             </button>
           </div>
         )}
@@ -1502,11 +1517,11 @@ export function EditableBoard(props: EditableBoardProps) {
               className="pdt-add-column"
               onClick={() => {
                 onChange(addSection(model));
-                announce('Section added');
+                announce(t('board.sectionAdded'));
               }}
             >
               <Icon name="plus" size={14} />
-              Add section
+              {t('board.addSection')}
             </button>
           </div>
         )}
@@ -1523,8 +1538,8 @@ export function EditableBoard(props: EditableBoardProps) {
         <button
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
-          aria-label={`Move ${status.label} left`}
-          title="Move left"
+          aria-label={t('board.moveLeft', { label: status.label })}
+          title={t('board.moveLeftShort')}
           disabled={index === 0}
           onClick={() => onChange(moveStatus(model, status.key, -1))}
         >
@@ -1533,8 +1548,8 @@ export function EditableBoard(props: EditableBoardProps) {
         <button
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
-          aria-label={`Move ${status.label} right`}
-          title="Move right"
+          aria-label={t('board.moveRight', { label: status.label })}
+          title={t('board.moveRightShort')}
           disabled={index === statuses.length - 1}
           onClick={() => onChange(moveStatus(model, status.key, 1))}
         >
@@ -1544,10 +1559,10 @@ export function EditableBoard(props: EditableBoardProps) {
           <button
             type="button"
             className="pdt-btn pdt-btn-icon pdt-btn-sm"
-            aria-label={`Colours of ${status.label}`}
+            aria-label={t('board.colors', { label: status.label })}
             aria-haspopup="dialog"
             aria-expanded={colorMenuFor === status.key}
-            title="Colours"
+            title={t('board.colorsShort')}
             onClick={() => setColorMenuFor((k) => (k === status.key ? null : status.key))}
           >
             <Icon name="palette" />
@@ -1556,18 +1571,18 @@ export function EditableBoard(props: EditableBoardProps) {
             <div
               className="pdt-colorpicker__panel pdt-colorpicker__panel--end"
               role="dialog"
-              aria-label={`Colours of ${status.label}`}
+              aria-label={t('board.colors', { label: status.label })}
             >
-              <span className="pdt-field-label">Text</span>
+              <span className="pdt-field-label">{t('settings.text')}</span>
               <ColorSwatches
-                label="Text colour"
+                label={t('board.textColor')}
                 role="text"
                 value={status.color}
                 onChange={(color) => setStatusColors(status, { color, bg: status.bg })}
               />
-              <span className="pdt-field-label">Background</span>
+              <span className="pdt-field-label">{t('settings.background')}</span>
               <ColorSwatches
-                label="Background colour"
+                label={t('board.bgColor')}
                 role="bg"
                 value={status.bg}
                 onChange={(bg) => setStatusColors(status, { color: status.color, bg })}
@@ -1580,7 +1595,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   setSettingsOpen(true);
                 }}
               >
-                All board settings…
+                {t('board.allSettings')}
               </button>
             </div>
           )}
@@ -1588,11 +1603,11 @@ export function EditableBoard(props: EditableBoardProps) {
         <button
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
-          aria-label={`Delete status ${status.label}`}
+          aria-label={t('settings.delete', { label: status.label })}
           title={
             removable
-              ? 'Delete status'
-              : `A board needs at least one ${status.category === 'done' ? 'Done' : 'Not started'} status`
+              ? t('settings.deleteStatus')
+              : t('settings.needOne', { category: t(`statusCategory.${status.category}`) })
           }
           disabled={!removable}
           onClick={() => requestStatusDelete(status.key)}
@@ -1605,14 +1620,14 @@ export function EditableBoard(props: EditableBoardProps) {
 
   function renderSwimlane() {
     return (
-      <div className="pdt-swimlane" role="table" aria-label="Swimlane board">
+      <div className="pdt-swimlane" role="table" aria-label={t('board.swimlane')}>
         <div
           className="pdt-swimlane__head"
           role="row"
           style={{ '--pdt-swimlane-cols': statuses.length } as React.CSSProperties}
         >
           <div className="pdt-swimlane__corner" role="columnheader">
-            Section
+            {t('quickAdd.section')}
           </div>
           {statuses.map((c) => (
             <div
@@ -1641,7 +1656,9 @@ export function EditableBoard(props: EditableBoardProps) {
                   type="button"
                   className="pdt-btn pdt-btn-icon"
                   aria-expanded={!rowCollapsed}
-                  aria-label={rowCollapsed ? `Expand ${section}` : `Collapse ${section}`}
+                  aria-label={t(rowCollapsed ? 'board.expandCol' : 'board.collapseCol', {
+                    label: section,
+                  })}
                   onClick={() => onToggleRowCollapse(section)}
                 >
                   <Icon name={rowCollapsed ? 'chevron-right' : 'chevron-down'} />
@@ -1709,26 +1726,26 @@ function DropPlaceholder() {
 
 /** Human label for a bulk action, for the undo toast + announcement. */
 function bulkActionLabel(action: BulkAction, count: number): string {
-  const n = `${count} ${count === 1 ? 'task' : 'tasks'}`;
+  const n = t('count.tasks', { count });
   switch (action.kind) {
     case 'complete':
-      return `Completed ${n}`;
+      return t('bulkLabel.complete', { n });
     case 'status':
-      return `Changed status of ${n}`;
+      return t('bulkLabel.status', { n });
     case 'section':
-      return `Moved ${n} to ${action.section}`;
+      return t('bulkLabel.section', { n, section: action.section });
     case 'priority':
-      return `Set priority of ${n}`;
+      return t('bulkLabel.priority', { n });
     case 'assignee':
-      return `Set assignee of ${n}`;
+      return t('bulkLabel.assignee', { n });
     case 'due':
-      return `Set due date of ${n}`;
+      return t('bulkLabel.due', { n });
     case 'addLabel':
-      return `Labelled ${n} #${action.label}`;
+      return t('bulkLabel.addLabel', { n, label: action.label });
     case 'removeLabel':
-      return `Removed #${action.label} from ${n}`;
+      return t('bulkLabel.removeLabel', { n, label: action.label });
     case 'delete':
-      return `Deleted ${n}`;
+      return t('bulkLabel.delete', { n });
   }
 }
 
@@ -1753,49 +1770,49 @@ interface BuildCommandsArgs {
 
 function buildCommands(a: BuildCommandsArgs): Command[] {
   return [
-    { id: 'add', title: 'Add task', hint: 'N', run: () => a.setQuickAddOpen(true) },
-    { id: 'search', title: 'Search tasks', hint: '/', keywords: 'find', run: a.focusSearch },
+    { id: 'add', title: t('quickAdd.add'), hint: 'N', run: () => a.setQuickAddOpen(true) },
+    { id: 'search', title: t('board.search'), hint: '/', keywords: 'find', run: a.focusSearch },
     {
       id: 'view',
-      title: 'Switch view',
+      title: t('commands.switchView'),
       hint: 'V',
       keywords: 'workflow sections swimlane list',
       run: a.cycleView,
     },
     {
       id: 'clear',
-      title: 'Clear filters',
+      title: t('board.clearFilters'),
       keywords: 'reset',
       disabled: !a.filtersActive,
-      disabledReason: 'No filters are active',
+      disabledReason: t('commands.noFilters'),
       run: a.clearFilters,
     },
-    { id: 'sort', title: 'Change sorting', hint: 'S', run: a.openSort },
+    { id: 'sort', title: t('commands.sorting'), hint: 'S', run: a.openSort },
     {
       id: 'completed',
-      title: a.hideCompleted ? 'Show completed tasks' : 'Hide completed tasks',
+      title: a.hideCompleted ? t('commands.showCompleted') : t('commands.hideCompleted'),
       keywords: 'done',
       run: a.toggleHideCompleted,
     },
     {
       id: 'collapse-done',
-      title: a.doneCollapsed ? 'Expand Done columns' : 'Collapse Done columns',
+      title: a.doneCollapsed ? t('commands.expandDone') : t('commands.collapseDone'),
       run: a.toggleDoneCollapsed,
     },
     {
       id: 'board-settings',
-      title: 'Board settings',
-      keywords: 'statuses columns colours colors workflow',
+      title: t('settings.title'),
+      keywords: t('commands.settingsKeywords'),
       run: a.openBoardSettings,
     },
-    { id: 'settings', title: 'Open settings', run: a.openSettings },
-    { id: 'back', title: 'Back to document', run: a.back },
-    { id: 'shortcuts', title: 'Open keyboard shortcuts', hint: '?', run: a.openHelp },
+    { id: 'settings', title: t('commands.openSettings'), run: a.openSettings },
+    { id: 'back', title: t('board.back'), run: a.back },
+    { id: 'shortcuts', title: t('commands.shortcuts'), hint: '?', run: a.openHelp },
     {
       id: 'retry',
-      title: 'Retry failed save',
+      title: t('commands.retry'),
       disabled: a.saveState !== 'error',
-      disabledReason: 'The document is saved',
+      disabledReason: t('commands.saved'),
       run: a.retry,
     },
   ];
@@ -1812,23 +1829,22 @@ function MenuItem({ label, hint, onClick }: { label: string; hint?: string; onCl
 
 /** Board completion summary next to the title: "4 of 12 done" with a bar. */
 function BoardProgress({ done, total }: { done: number; total: number }) {
+  const { t } = useTranslation();
   if (total === 0) return null;
   const pct = Math.round((done / total) * 100);
   return (
-    <span className="pdt-progress" title={`${pct}% complete`}>
+    <span className="pdt-progress" title={t('board.percent', { pct })}>
       <span
         className="pdt-progress__bar"
         role="progressbar"
-        aria-label="Tasks completed"
+        aria-label={t('board.completedAria')}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={done}
       >
         <span className="pdt-progress__fill" style={{ width: `${pct}%` }} />
       </span>
-      <span className="pdt-progress__text">
-        {done} of {total} done
-      </span>
+      <span className="pdt-progress__text">{t('board.progress', { done, total })}</span>
     </span>
   );
 }
@@ -1840,24 +1856,21 @@ function BoardProgress({ done, total }: { done: number; total: number }) {
  * saved/saving states render nothing.
  */
 function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
+  const { t } = useTranslation();
   if (state === 'error') {
     return (
       <span className="pdt-save pdt-save--error" role="status">
-        <Icon name="exclamation-circle" size={14} /> Save failed
+        <Icon name="exclamation-circle" size={14} /> {t('board.saveFailed')}
         <button type="button" className="pdt-link" onClick={onRetry}>
-          Retry
+          {t('board.retry')}
         </button>
       </span>
     );
   }
   if (state === 'paused') {
     return (
-      <span
-        className="pdt-save pdt-save--warning"
-        role="status"
-        title="Proton Docs has editing paused (still loading, offline, or view-only). Your changes will be saved as soon as editing resumes."
-      >
-        <Icon name="exclamation-circle" size={14} /> Waiting to save
+      <span className="pdt-save pdt-save--warning" role="status" title={t('board.pausedTitle')}>
+        <Icon name="exclamation-circle" size={14} /> {t('board.waiting')}
       </span>
     );
   }
@@ -1873,6 +1886,7 @@ interface QuickAddProps {
 }
 
 function QuickAdd({ open, label, onOpen, onCancel, onSubmit }: QuickAddProps) {
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -1885,7 +1899,7 @@ function QuickAdd({ open, label, onOpen, onCancel, onSubmit }: QuickAddProps) {
     return (
       <button type="button" className="pdt-add-task" onClick={onOpen}>
         <Icon name="plus" size={14} />
-        Add task
+        {t('quickAdd.add')}
       </button>
     );
   }
@@ -1895,8 +1909,8 @@ function QuickAdd({ open, label, onOpen, onCancel, onSubmit }: QuickAddProps) {
       ref={inputRef}
       className="pdt-input pdt-quickadd"
       value={value}
-      placeholder={`Add a task to ${label}…`}
-      aria-label={`Add a task to ${label}`}
+      placeholder={t('board.addTo', { label })}
+      aria-label={t('board.addToAria', { label })}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
@@ -1931,18 +1945,18 @@ function SectionDeleteDialog({
   onMove,
   onDeleteAll,
 }: SectionDeleteDialogProps) {
+  const { t } = useTranslation();
   const [target, setTarget] = useState(sections[0] ?? '');
   return (
-    <Dialog title={`Delete section “${info.name}”`} onClose={onCancel}>
+    <Dialog title={t('sectionDialog.title', { name: info.name })} onClose={onCancel}>
       <p className="pdt-modal__text">
-        “{info.name}” has {info.count} {info.count === 1 ? 'task' : 'tasks'}. Choose what to do with
-        {info.count === 1 ? ' it' : ' them'}.
+        {t('sectionDialog.text', { name: info.name, count: info.count })}
       </p>
 
       {sections.length > 0 && (
         <div className="pdt-modal__choice">
           <label className="pdt-field pdt-field--grow">
-            <span className="pdt-field-label">Move tasks to</span>
+            <span className="pdt-field-label">{t('statusDialog.moveTo')}</span>
             <select
               className="pdt-input"
               value={target}
@@ -1956,17 +1970,17 @@ function SectionDeleteDialog({
             </select>
           </label>
           <button className="pdt-btn pdt-btn-primary" onClick={() => onMove(target)}>
-            Move tasks &amp; delete section
+            {t('sectionDialog.move')}
           </button>
         </div>
       )}
 
       <div className="pdt-modal__actions">
         <button className="pdt-btn" onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </button>
         <button className="pdt-btn pdt-btn-danger" onClick={onDeleteAll}>
-          Delete section &amp; its tasks
+          {t('sectionDialog.deleteAll')}
         </button>
       </div>
     </Dialog>

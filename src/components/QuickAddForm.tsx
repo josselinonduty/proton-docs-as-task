@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import type { Suggestion } from '../lib/suggestions';
 import { defaultStatus } from '../lib/statuses';
 import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
-import { PRIORITY_OPTIONS } from './taskFields';
+import { PRIORITY_OPTIONS, priorityOptionLabel } from './taskFields';
 
 export interface QuickAddPayload {
   title: string;
@@ -46,6 +47,7 @@ export function QuickAddForm({
   onSubmit,
   onClose,
 }: QuickAddFormProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState<StatusKey>(() => defaultStatus(statuses, false));
   const [section, setSection] = useState(defaultSection);
@@ -106,8 +108,8 @@ export function QuickAddForm({
           ref={titleRef}
           className="pdt-input pdt-quickadd-form__title"
           value={title}
-          placeholder="What needs to be done?"
-          aria-label="Task title (required)"
+          placeholder={t('quickAdd.placeholder')}
+          aria-label={t('quickAdd.titleRequired')}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
@@ -120,7 +122,7 @@ export function QuickAddForm({
 
       <div className="pdt-quickadd-form__grid">
         <label className="pdt-field">
-          <span className="pdt-field-label">Status</span>
+          <span className="pdt-field-label">{t('quickAdd.status')}</span>
           <select
             className="pdt-input"
             value={status}
@@ -135,7 +137,7 @@ export function QuickAddForm({
         </label>
 
         <label className="pdt-field">
-          <span className="pdt-field-label">Section</span>
+          <span className="pdt-field-label">{t('quickAdd.section')}</span>
           <select
             className="pdt-input"
             value={section}
@@ -150,61 +152,61 @@ export function QuickAddForm({
         </label>
 
         <label className="pdt-field">
-          <span className="pdt-field-label">Priority</span>
+          <span className="pdt-field-label">{t('quickAdd.priority')}</span>
           <select
             className="pdt-input"
             value={priority}
             onChange={(e) => setPriority(e.target.value as '' | Priority)}
           >
             {PRIORITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+              <option key={o} value={o}>
+                {priorityOptionLabel(o)}
               </option>
             ))}
           </select>
         </label>
 
         <div className="pdt-field">
-          <span className="pdt-field-label">Due date</span>
+          <span className="pdt-field-label">{t('quickAdd.due')}</span>
           <DueDateControl
             value={due}
             onChange={setDue}
             now={now}
             format={dateFormat}
-            ariaLabel="Due date"
+            ariaLabel={t('quickAdd.due')}
           />
         </div>
 
         <div className="pdt-field">
-          <span className="pdt-field-label">Assignee</span>
+          <span className="pdt-field-label">{t('quickAdd.assignee')}</span>
           <Combobox
             value={assignee}
             suggestions={assigneeSuggestions}
             onChange={setAssignee}
-            placeholder="Assignee"
-            ariaLabel="Assignee"
+            placeholder={t('quickAdd.assignee')}
+            ariaLabel={t('quickAdd.assignee')}
             showCounts
           />
         </div>
 
         <div className="pdt-field pdt-quickadd-form__labels">
-          <span className="pdt-field-label">Labels</span>
+          <span className="pdt-field-label">{t('quickAdd.labels')}</span>
           <LabelInput
             labels={labels}
             suggestions={labelSuggestions}
             onChange={setLabels}
-            ariaLabel="Labels"
+            ariaLabel={t('quickAdd.labels')}
           />
         </div>
       </div>
 
       <div className="pdt-quickadd-form__foot">
         <span className="pdt-quickadd-form__hint">
-          <kbd>Enter</kbd> adds and keeps the form open for the next task
+          <Trans i18nKey="quickAdd.hint" components={{ kbd: <kbd /> }} />
         </span>
         <div className="pdt-quickadd-form__actions">
           <button type="button" className="pdt-btn" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -212,7 +214,7 @@ export function QuickAddForm({
             disabled={!title.trim()}
             onClick={submit}
           >
-            Add task
+            {t('quickAdd.add')}
           </button>
         </div>
       </div>

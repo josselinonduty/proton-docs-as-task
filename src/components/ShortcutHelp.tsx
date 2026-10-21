@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { modLabel } from '../lib/platform';
 import { Dialog } from './Dialog';
 
@@ -6,42 +8,42 @@ interface ShortcutHelpProps {
 }
 
 /** Groups of documented board shortcuts, rendered in the help dialog. */
-function groups(mod: string): { title: string; items: [string, string][] }[] {
+function groups(mod: string, t: TFunction): { title: string; items: [string, string][] }[] {
   return [
     {
-      title: 'Create & find',
+      title: t('shortcuts.createFind.title'),
       items: [
-        ['N', 'New task'],
-        ['/', 'Focus search'],
-        ['F', 'Open filters'],
-        [`${mod} K`, 'Open command palette'],
+        ['N', t('shortcuts.createFind.newTask')],
+        ['/', t('shortcuts.createFind.search')],
+        ['F', t('shortcuts.createFind.filters')],
+        [`${mod} K`, t('shortcuts.createFind.palette')],
       ],
     },
     {
-      title: 'View',
+      title: t('shortcuts.view.title'),
       items: [
-        ['V', 'Change board view'],
-        ['S', 'Open sort menu'],
-        ['?', 'Open this shortcut reference'],
+        ['V', t('shortcuts.view.changeView')],
+        ['S', t('shortcuts.view.sort')],
+        ['?', t('shortcuts.view.help')],
       ],
     },
     {
-      title: 'Navigate & edit cards',
+      title: t('shortcuts.cards.title'),
       items: [
-        ['J / K', 'Focus next / previous card'],
-        ['Enter', 'Open focused card details'],
-        ['E', 'Edit focused card title'],
-        ['Space', 'Select focused card'],
-        ['X', 'Toggle completion'],
-        ['M', 'Move focused card to another section'],
-        ['Delete / Backspace', 'Delete selected card (after confirm)'],
+        ['J / K', t('shortcuts.cards.focus')],
+        ['Enter', t('shortcuts.cards.open')],
+        ['E', t('shortcuts.cards.edit')],
+        ['Space', t('shortcuts.cards.select')],
+        ['X', t('shortcuts.cards.toggle')],
+        ['M', t('shortcuts.cards.move')],
+        ['Delete / Backspace', t('shortcuts.cards.delete')],
       ],
     },
     {
-      title: 'General',
+      title: t('shortcuts.general.title'),
       items: [
-        [`${mod} Z`, 'Undo last board action'],
-        ['Esc', 'Close the active menu, panel, or dialog'],
+        [`${mod} Z`, t('shortcuts.general.undo')],
+        ['Esc', t('shortcuts.general.close')],
       ],
     },
   ];
@@ -49,11 +51,12 @@ function groups(mod: string): { title: string; items: [string, string][] }[] {
 
 /** Keyboard shortcut reference, reachable via `?` and the command palette. */
 export function ShortcutHelp({ onClose }: ShortcutHelpProps) {
+  const { t } = useTranslation();
   const mod = modLabel();
   return (
-    <Dialog title="Keyboard shortcuts" onClose={onClose}>
+    <Dialog title={t('shortcuts.title')} onClose={onClose}>
       <div className="pdt-shortcuts">
-        {groups(mod).map((group) => (
+        {groups(mod, t).map((group) => (
           <section key={group.title} className="pdt-shortcuts__group">
             <h3 className="pdt-shortcuts__title">{group.title}</h3>
             <dl className="pdt-shortcuts__list">
@@ -71,9 +74,7 @@ export function ShortcutHelp({ onClose }: ShortcutHelpProps) {
           </section>
         ))}
       </div>
-      <p className="pdt-shortcuts__note">
-        Shortcuts don't fire while typing in a field, except the documented submission shortcuts.
-      </p>
+      <p className="pdt-shortcuts__note">{t('shortcuts.note')}</p>
     </Dialog>
   );
 }

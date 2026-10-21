@@ -264,10 +264,9 @@ export interface PresetContext {
 
 export interface Preset {
   id: PresetId;
-  label: string;
   available: boolean;
-  /** Why the preset is unavailable, for a disabled tooltip. */
-  reason?: string;
+  /** Why the preset is unavailable, as a `presets.reason.*` translation key. */
+  reason?: 'setName' | 'noCreationOrder';
   filters: FilterState;
   /** A sort that best presents the preset, applied alongside the filters. */
   recommendedSort?: { key: SortKey; dir: SortDir };
@@ -279,9 +278,8 @@ export function buildPresets(ctx: PresetContext = {}): Preset[] {
   const presets: Preset[] = [
     {
       id: 'my-open',
-      label: 'My open tasks',
       available: Boolean(ctx.userAssignee?.trim()),
-      reason: 'Set your name in settings to use this.',
+      reason: 'setName',
       filters: {
         ...base(),
         assignees: ctx.userAssignee?.trim() ? [ctx.userAssignee.trim()] : [],
@@ -290,36 +288,31 @@ export function buildPresets(ctx: PresetContext = {}): Preset[] {
     },
     {
       id: 'overdue',
-      label: 'Overdue',
       available: true,
       filters: { ...base(), due: ['overdue'], completion: 'incomplete' },
       recommendedSort: { key: 'due', dir: 'asc' },
     },
     {
       id: 'due-this-week',
-      label: 'Due this week',
       available: true,
       filters: { ...base(), dueWithinDays: 7, completion: 'incomplete' },
       recommendedSort: { key: 'due', dir: 'asc' },
     },
     {
       id: 'high-priority',
-      label: 'High priority',
       available: true,
       filters: { ...base(), priorities: ['high'], completion: 'incomplete' },
       recommendedSort: { key: 'priority', dir: 'desc' },
     },
     {
       id: 'unassigned',
-      label: 'Unassigned',
       available: true,
       filters: { ...base(), assignment: 'unassigned' },
     },
     {
       id: 'recently-completed',
-      label: 'Recently completed',
       available: ctx.canUseCreated !== false,
-      reason: 'Reliable creation order is unavailable.',
+      reason: 'noCreationOrder',
       filters: { ...base(), completion: 'complete' },
       recommendedSort: { key: 'created', dir: 'desc' },
     },

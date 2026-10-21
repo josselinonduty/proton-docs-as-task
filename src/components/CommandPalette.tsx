@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface Command {
   id: string;
@@ -41,6 +42,7 @@ function score(command: Command, q: string): number {
  * here is also reachable elsewhere in the UI.
  */
 export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,7 +111,7 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
       <div
         className="pdt-palette"
         role="dialog"
-        aria-label="Command palette"
+        aria-label={t('palette.title')}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={onKeyDown}
       >
@@ -121,8 +123,8 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
           aria-controls="pdt-palette-list"
           aria-activedescendant={results[active] ? `pdt-cmd-${results[active].id}` : undefined}
           aria-autocomplete="list"
-          aria-label="Search commands"
-          placeholder="Type a command…"
+          aria-label={t('palette.search')}
+          placeholder={t('palette.placeholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -153,7 +155,7 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
               )}
             </li>
           ))}
-          {results.length === 0 && <li className="pdt-palette__empty">No matching commands</li>}
+          {results.length === 0 && <li className="pdt-palette__empty">{t('palette.empty')}</li>}
         </ul>
       </div>
     </div>

@@ -2,6 +2,7 @@
  * Shared domain types for Proton Docs as Task.
  */
 
+import type { LanguageSetting } from '../i18n';
 import type { DateFormat } from './dates';
 
 export type { DateFormat };
@@ -139,6 +140,8 @@ export interface Settings {
   defaultView: BoardView;
   /** Whether the board should be opened automatically on activation. */
   autoShow: boolean;
+  /** UI language; `auto` follows the browser. */
+  language: LanguageSetting;
   /** Color theme for the board and extension surfaces. */
   theme: Theme;
   /** Card layout density. */

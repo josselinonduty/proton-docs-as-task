@@ -1,4 +1,5 @@
 import { storage } from '#imports';
+import { setLanguage } from '../i18n';
 import type { Settings } from './types';
 import { DEFAULT_SETTINGS, withDefaults } from './defaults';
 
@@ -27,4 +28,10 @@ export async function setSettings(patch: Partial<Settings>): Promise<Settings> {
   const next = withDefaults({ ...(await getSettings()), ...patch });
   await settingsItem.setValue(next);
   return next;
+}
+
+/** Applies the stored language and keeps following changes made elsewhere. */
+export async function syncLanguage(): Promise<() => void> {
+  await setLanguage((await getSettings()).language);
+  return settingsItem.watch((value) => void setLanguage(withDefaults(value).language));
 }

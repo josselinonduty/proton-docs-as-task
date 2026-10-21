@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BoardTask, LinkKind, TaskLinks } from '../lib/model';
 import { Icon } from './Icon';
 
@@ -13,11 +14,7 @@ interface TaskRelationsProps {
   onUnlink: (id: string) => void;
 }
 
-const GROUPS: { kind: LinkKind; label: string }[] = [
-  { kind: 'blockedBy', label: 'Blocked by' },
-  { kind: 'blocks', label: 'Blocks' },
-  { kind: 'related', label: 'Related to' },
-];
+const GROUPS: LinkKind[] = ['blockedBy', 'blocks', 'related'];
 
 /** GitLab-style linked tasks: grouped by relationship, one click to open or unlink. */
 export function TaskRelations({
@@ -28,42 +25,43 @@ export function TaskRelations({
   onLink,
   onUnlink,
 }: TaskRelationsProps) {
+  const { t } = useTranslation();
   const [kind, setKind] = useState<LinkKind>('blockedBy');
   const [query, setQuery] = useState('');
   const needle = query.trim().toLowerCase();
   const matches = needle
     ? candidates(kind)
-        .filter((t) => t.title.toLowerCase().includes(needle))
+        .filter((task) => task.title.toLowerCase().includes(needle))
         .slice(0, 6)
     : [];
 
   return (
     <div className="pdt-field">
-      <span className="pdt-field-label">Linked tasks</span>
-      {GROUPS.map(({ kind: groupKind, label }) =>
+      <span className="pdt-field-label">{t('relations.title')}</span>
+      {GROUPS.map((groupKind) =>
         links[groupKind].length ? (
           <div key={groupKind} className="pdt-rel__group">
-            <span className="pdt-rel__label">{label}</span>
+            <span className="pdt-rel__label">{t(`relations.${groupKind}`)}</span>
             <ul className="pdt-rel__list">
-              {links[groupKind].map((t) => (
-                <li key={t.id} className="pdt-rel__item">
+              {links[groupKind].map((task) => (
+                <li key={task.id} className="pdt-rel__item">
                   <button
                     type="button"
                     className="pdt-rel__open"
-                    title="Open task"
-                    onClick={() => onOpen(t.id)}
+                    title={t('relations.open')}
+                    onClick={() => onOpen(task.id)}
                   >
-                    <Icon name={isDone(t) ? 'checkmark-circle' : 'link'} size={14} />
-                    <span className={isDone(t) ? 'pdt-card__title--done' : ''}>
-                      {t.title || 'Untitled task'}
+                    <Icon name={isDone(task) ? 'checkmark-circle' : 'link'} size={14} />
+                    <span className={isDone(task) ? 'pdt-card__title--done' : ''}>
+                      {task.title || t('card.untitled')}
                     </span>
                   </button>
                   <button
                     type="button"
                     className="pdt-btn pdt-btn-icon pdt-btn-sm"
-                    aria-label={`Unlink ${t.title || 'task'}`}
-                    title="Unlink"
-                    onClick={() => onUnlink(t.id)}
+                    aria-label={t('relations.unlink', { title: task.title || t('relations.task') })}
+                    title={t('relations.unlinkShort')}
+                    onClick={() => onUnlink(task.id)}
                   >
                     <Icon name="cross" size={12} />
                   </button>
@@ -76,13 +74,13 @@ export function TaskRelations({
       <div className="pdt-details__row">
         <select
           className="pdt-select pdt-rel__kind"
-          aria-label="Relationship"
+          aria-label={t('relations.kind')}
           value={kind}
           onChange={(e) => setKind(e.target.value as LinkKind)}
         >
           {GROUPS.map((g) => (
-            <option key={g.kind} value={g.kind}>
-              {g.label}
+            <option key={g} value={g}>
+              {t(`relations.${g}`)}
             </option>
           ))}
         </select>
@@ -90,32 +88,32 @@ export function TaskRelations({
           className="pdt-input pdt-rel__search"
           type="search"
           value={query}
-          placeholder="Search tasks to link…"
-          aria-label="Search tasks to link"
+          placeholder={t('relations.searchPlaceholder')}
+          aria-label={t('relations.search')}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
       {needle && (
-        <ul className="pdt-rel__list" aria-label="Matching tasks">
+        <ul className="pdt-rel__list" aria-label={t('relations.matching')}>
           {matches.length ? (
-            matches.map((t) => (
-              <li key={t.id}>
+            matches.map((task) => (
+              <li key={task.id}>
                 <button
                   type="button"
                   className="pdt-rel__open"
                   onClick={() => {
-                    onLink(kind, t.id);
+                    onLink(kind, task.id);
                     setQuery('');
                   }}
                 >
                   <Icon name="plus" size={14} />
-                  <span>{t.title || 'Untitled task'}</span>
-                  <span className="pdt-text-weak">{t.section}</span>
+                  <span>{task.title || t('card.untitled')}</span>
+                  <span className="pdt-text-weak">{task.section}</span>
                 </button>
               </li>
             ))
           ) : (
-            <li className="pdt-text-weak pdt-details__hint">No linkable task found</li>
+            <li className="pdt-text-weak pdt-details__hint">{t('relations.none')}</li>
           )}
         </ul>
       )}

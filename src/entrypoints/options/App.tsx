@@ -1,29 +1,40 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_SETTINGS, getSettings, markersAreValid, setSettings } from '../../lib/settings';
+import { Trans, useTranslation } from 'react-i18next';
+import { LANGUAGES } from '../../i18n';
+import {
+  DEFAULT_SETTINGS,
+  getSettings,
+  markersAreValid,
+  setSettings,
+  syncLanguage,
+} from '../../lib/settings';
 import type { CardFieldVisibility, Settings } from '../../lib/types';
 
-const CARD_FIELD_OPTIONS: { key: keyof CardFieldVisibility; label: string }[] = [
-  { key: 'description', label: 'Description preview' },
-  { key: 'priority', label: 'Priority' },
-  { key: 'due', label: 'Due date' },
-  { key: 'assignee', label: 'Assignee' },
-  { key: 'labels', label: 'Labels' },
-  { key: 'sectionInWorkflow', label: 'Section (in Workflow view)' },
-  { key: 'statusInSections', label: 'Status (in Sections view)' },
+const CARD_FIELDS: (keyof CardFieldVisibility)[] = [
+  'description',
+  'priority',
+  'due',
+  'assignee',
+  'labels',
+  'sectionInWorkflow',
+  'statusInSections',
 ];
 
 export function App() {
+  const { t } = useTranslation();
   const [settings, setLocal] = useState<Settings | null>(null);
   const [markersText, setMarkersText] = useState('');
   const [markerError, setMarkerError] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    const unwatch = syncLanguage();
     void (async () => {
       const s = await getSettings();
       setLocal(s);
       setMarkersText(s.markers.join('\n'));
     })();
+    return () => void unwatch.then((stop) => stop());
   }, []);
 
   async function persist(patch: Partial<Settings>) {
@@ -40,14 +51,14 @@ export function App() {
       .map((m) => m.trim())
       .filter(Boolean);
     if (!markersAreValid(markers)) {
-      setMarkerError('Add at least one activation marker — an empty list is not allowed.');
+      setMarkerError(t('options.markers.error'));
       return;
     }
     setMarkerError('');
     void persist({ markers });
   }
 
-  if (!settings) return <div className="op-loading">Loading…</div>;
+  if (!settings) return <div className="op-loading">{t('common.loading')}</div>;
 
   return (
     <div className="op">
@@ -55,89 +66,101 @@ export function App() {
         <img className="op-logo" src="/icon/128.png" alt="" width={40} height={40} />
         <div>
           <h1>Proton Docs as Task</h1>
-          <p className="op-sub">Turn a Proton Docs document into an interactive task board.</p>
+          <p className="op-sub">{t('options.subtitle')}</p>
         </div>
         {saved && (
           <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success op-saved">
-            Saved ✓
+            {t('options.saved')}
           </span>
         )}
       </header>
 
       <section className="op-card pdt-card">
-        <h2>General</h2>
+        <h2>{t('options.general')}</h2>
         <Toggle
-          label="Enable the extension"
-          hint="Turn the whole board on or off."
+          label={t('options.enabled')}
+          hint={t('options.enabledHint')}
           checked={settings.enabled}
           onChange={(v) => persist({ enabled: v })}
         />
         <Toggle
-          label="Open activated boards automatically"
-          hint="Open the board as soon as a document activates."
+          label={t('options.autoShow')}
+          hint={t('options.autoShowHint')}
           checked={settings.autoShow}
           onChange={(v) => persist({ autoShow: v })}
         />
 
-        <Row label="Default view" hint="Which layout the board opens in.">
+        <Row label={t('options.defaultView')} hint={t('options.defaultViewHint')}>
           <select
             className="pdt-select"
             value={settings.defaultView}
             onChange={(e) => persist({ defaultView: e.target.value as Settings['defaultView'] })}
           >
-            <option value="workflow">Workflow (by status)</option>
-            <option value="sections">Sections (by heading)</option>
-            <option value="swimlane">Swimlane (status × section)</option>
-            <option value="list">List (simple checklist)</option>
+            <option value="workflow">{t('options.view.workflow')}</option>
+            <option value="sections">{t('options.view.sections')}</option>
+            <option value="swimlane">{t('options.view.swimlane')}</option>
+            <option value="list">{t('options.view.list')}</option>
           </select>
         </Row>
 
-        <Row label="Theme" hint="Match the system, or force light / dark.">
+        <Row label={t('options.language')} hint={t('options.languageHint')}>
+          <select
+            className="pdt-select"
+            value={settings.language}
+            onChange={(e) => persist({ language: e.target.value as Settings['language'] })}
+          >
+            <option value="auto">{t('options.languageAuto')}</option>
+            {Object.entries(LANGUAGES).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </Row>
+
+        <Row label={t('options.theme')} hint={t('options.themeHint')}>
           <select
             className="pdt-select"
             value={settings.theme}
             onChange={(e) => persist({ theme: e.target.value as Settings['theme'] })}
           >
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
+            <option value="system">{t('options.themeSystem')}</option>
+            <option value="light">{t('options.themeLight')}</option>
+            <option value="dark">{t('options.themeDark')}</option>
           </select>
         </Row>
 
-        <Row label="Card density" hint="How tightly cards are packed.">
+        <Row label={t('options.density')} hint={t('options.densityHint')}>
           <select
             className="pdt-select"
             value={settings.density}
             onChange={(e) => persist({ density: e.target.value as Settings['density'] })}
           >
-            <option value="comfortable">Comfortable</option>
-            <option value="compact">Compact</option>
+            <option value="comfortable">{t('options.comfortable')}</option>
+            <option value="compact">{t('options.compact')}</option>
           </select>
         </Row>
       </section>
 
       <section className="op-card pdt-card">
-        <h2>Board behavior</h2>
-        <Row label="New cards" hint="Where a quick-added card lands in its column.">
+        <h2>{t('options.behavior')}</h2>
+        <Row label={t('options.newCards')} hint={t('options.newCardsHint')}>
           <select
             className="pdt-select"
             value={settings.newCardsAtTop ? 'top' : 'bottom'}
             onChange={(e) => persist({ newCardsAtTop: e.target.value === 'top' })}
           >
-            <option value="bottom">At the bottom</option>
-            <option value="top">At the top</option>
+            <option value="bottom">{t('options.bottom')}</option>
+            <option value="top">{t('options.top')}</option>
           </select>
         </Row>
         <Toggle
-          label="Show description preview"
-          hint="Show a short snippet of the description on collapsed cards."
+          label={t('options.descPreview')}
+          hint={t('options.descPreviewHint')}
           checked={settings.showDescriptionPreview}
           onChange={(v) => persist({ showDescriptionPreview: v })}
         />
-        <Row
-          label="Completed tasks"
-          hint="How done tasks are shown (never removed from the document)."
-        >
+        <Row label={t('options.completed')} hint={t('options.completedHint')}>
           <select
             className="pdt-select"
             value={settings.completedDisplay}
@@ -145,53 +168,50 @@ export function App() {
               persist({ completedDisplay: e.target.value as Settings['completedDisplay'] })
             }
           >
-            <option value="show">Show normally</option>
-            <option value="collapse">Collapse Done column</option>
-            <option value="hide">Hide completed cards</option>
+            <option value="show">{t('options.completedShow')}</option>
+            <option value="collapse">{t('options.completedCollapse')}</option>
+            <option value="hide">{t('options.completedHide')}</option>
           </select>
         </Row>
         <Toggle
-          label="Confirm card deletion"
-          hint="Ask before deleting a card (you can always undo)."
+          label={t('options.confirmDelete')}
+          hint={t('options.confirmDeleteHint')}
           checked={settings.confirmDelete}
           onChange={(v) => persist({ confirmDelete: v })}
         />
       </section>
 
       <section className="op-card pdt-card">
-        <h2>Display preferences</h2>
-        <Row label="Date format" hint="How due dates are written on cards.">
+        <h2>{t('options.display')}</h2>
+        <Row label={t('options.dateFormat')} hint={t('options.dateFormatHint')}>
           <select
             className="pdt-select"
             value={settings.dateFormat}
             onChange={(e) => persist({ dateFormat: e.target.value as Settings['dateFormat'] })}
           >
-            <option value="iso">ISO (2026-09-10)</option>
-            <option value="medium">Medium (Sep 10, 2026)</option>
-            <option value="us">US (9/10/2026)</option>
-            <option value="euro">European (10/9/2026)</option>
+            <option value="iso">{t('options.dateIso')}</option>
+            <option value="medium">{t('options.dateMedium')}</option>
+            <option value="us">{t('options.dateUs')}</option>
+            <option value="euro">{t('options.dateEuro')}</option>
           </select>
         </Row>
 
-        <Row
-          label="Your name"
-          hint="Enables the “My open tasks” filter. Matched against assignees; no lookup is performed."
-        >
+        <Row label={t('options.name')} hint={t('options.nameHint')}>
           <input
             type="text"
             className="pdt-input"
             value={settings.userAssignee}
-            placeholder="e.g. Sam Rivera"
+            placeholder={t('options.namePlaceholder')}
             onChange={(e) => setLocal({ ...settings, userAssignee: e.target.value })}
             onBlur={(e) => persist({ userAssignee: e.target.value })}
           />
         </Row>
 
         <fieldset className="op-fieldset">
-          <legend className="op-row__label">Visible card fields</legend>
-          <p className="op-row__hint">The task title and completion control are always shown.</p>
+          <legend className="op-row__label">{t('options.fields')}</legend>
+          <p className="op-row__hint">{t('options.fieldsHint')}</p>
           <div className="op-checks">
-            {CARD_FIELD_OPTIONS.map(({ key, label }) => (
+            {CARD_FIELDS.map((key) => (
               <label key={key} className="op-check">
                 <input
                   type="checkbox"
@@ -201,7 +221,7 @@ export function App() {
                     persist({ cardFields: { ...settings.cardFields, [key]: e.target.checked } })
                   }
                 />
-                <span>{label}</span>
+                <span>{t(`options.field.${key}`)}</span>
               </label>
             ))}
           </div>
@@ -209,11 +229,12 @@ export function App() {
       </section>
 
       <section className="op-card pdt-card">
-        <h2>Activation markers</h2>
+        <h2>{t('options.markers.title')}</h2>
         <p className="op-hint">
-          A document becomes a task board when its <strong>first non-empty line</strong> starts with
-          one of these (one per line, case-insensitive). You can add a title after the marker, e.g.{' '}
-          <code>#!tasks Sprint 42</code>.
+          <Trans
+            i18nKey="options.markers.help"
+            components={{ strong: <strong />, code: <code /> }}
+          />
         </p>
         <textarea
           className="pdt-textarea pdt-textarea-code"
@@ -229,7 +250,7 @@ export function App() {
         )}
         <div className="op-actions">
           <button className="pdt-btn pdt-btn-primary" onClick={saveMarkers}>
-            Save markers
+            {t('options.markers.save')}
           </button>
           <button
             className="pdt-btn"
@@ -238,47 +259,41 @@ export function App() {
               void persist({ markers: DEFAULT_SETTINGS.markers });
             }}
           >
-            Reset to defaults
+            {t('options.markers.reset')}
           </button>
         </div>
       </section>
 
       <section className="op-card pdt-card">
-        <h2>Task syntax</h2>
+        <h2>{t('options.syntax.title')}</h2>
         <p className="op-hint">
-          Below the marker line, write your tasks as a checklist. The board updates live as you
-          type. Status and section are independent: a task's <code>@status</code> is its workflow
-          stage, while its <code>## Heading</code> is the section it lives under.
+          <Trans i18nKey="options.syntax.intro" components={{ code: <code /> }} />
         </p>
         <pre className="op-syntax">{SYNTAX_EXAMPLE}</pre>
         <ul className="op-legend">
           <li>
-            <code>- [ ]</code> / <code>- [x]</code> — an open or done task
+            <Trans i18nKey="options.syntax.task" components={{ code: <code /> }} />
           </li>
           <li>
-            <code>## Heading</code> — a section (the Sections view groups by these)
+            <Trans i18nKey="options.syntax.section" components={{ code: <code /> }} />
           </li>
           <li>
-            <code>@settings status review "In review" @category:doing</code> — defines a status (one
-            line each, right below the marker). Manage them from the board's <em>Board settings</em>
-            ; a board without any uses To Do · In Progress · Done
+            <Trans i18nKey="options.syntax.status" components={{ code: <code />, em: <em /> }} />
           </li>
           <li>
-            <code>@status:review</code> — the task's status, by key (a ticked checkbox means the
-            first Done status; built-in shorthands like <code>@s:wip</code> still work)
+            <Trans i18nKey="options.syntax.statusRef" components={{ code: <code /> }} />
           </li>
           <li>
-            <code>@priority:high</code> — high · medium · low (also <code>!</code>/<code>!!</code>/
-            <code>!!!</code>)
+            <Trans i18nKey="options.syntax.priority" components={{ code: <code /> }} />
           </li>
           <li>
-            <code>@due:2026-09-10</code> — a due date
+            <Trans i18nKey="options.syntax.due" components={{ code: <code /> }} />
           </li>
           <li>
-            <code>@who:alex</code> or <code>@@alex</code> — an assignee
+            <Trans i18nKey="options.syntax.who" components={{ code: <code /> }} />
           </li>
           <li>
-            <code>#label</code> — one or more labels
+            <Trans i18nKey="options.syntax.label" components={{ code: <code /> }} />
           </li>
         </ul>
       </section>

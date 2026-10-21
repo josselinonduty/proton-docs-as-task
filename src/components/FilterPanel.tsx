@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   activeFilterCount,
   hasActiveFilters,
@@ -19,18 +20,9 @@ interface FilterPanelProps {
   onClear: () => void;
 }
 
-const DUE_OPTIONS: { value: DueFilter; label: string }[] = [
-  { value: 'overdue', label: 'Overdue' },
-  { value: 'today', label: 'Today' },
-  { value: 'upcoming', label: 'Upcoming' },
-  { value: 'none', label: 'No due date' },
-];
+const DUE_OPTIONS: DueFilter[] = ['overdue', 'today', 'upcoming', 'none'];
 
-const COMPLETION_OPTIONS: { value: Completion; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'incomplete', label: 'Incomplete' },
-  { value: 'complete', label: 'Complete' },
-];
+const COMPLETION_OPTIONS: Completion[] = ['all', 'incomplete', 'complete'];
 
 /** Toggle a value in an array-valued filter dimension. */
 function toggle<T>(list: T[], value: T): T[] {
@@ -45,6 +37,7 @@ export function FilterPanel({
   onChange,
   onClear,
 }: FilterPanelProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const count = activeFilterCount(filters) - (filters.search.trim() ? 1 : 0);
@@ -78,12 +71,12 @@ export function FilterPanel({
         aria-haspopup="dialog"
         onClick={() => setOpen((v) => !v)}
       >
-        Filters{count > 0 ? ` (${count})` : ''}
+        {count > 0 ? t('filterPanel.buttonCount', { count }) : t('filterPanel.button')}
       </button>
 
       {open && (
-        <div className="pdt-filter__panel" role="dialog" aria-label="Filters">
-          <Group label="Status">
+        <div className="pdt-filter__panel" role="dialog" aria-label={t('filterPanel.button')}>
+          <Group label={t('filterPanel.status')}>
             {statuses.map((c) => (
               <Check
                 key={c.key}
@@ -94,7 +87,7 @@ export function FilterPanel({
             ))}
           </Group>
 
-          <Group label="Section">
+          <Group label={t('filterPanel.section')}>
             {facets.sections.map((s) => (
               <Check
                 key={s}
@@ -106,11 +99,11 @@ export function FilterPanel({
           </Group>
 
           {facets.priorities.length > 0 && (
-            <Group label="Priority">
+            <Group label={t('filterPanel.priority')}>
               {facets.priorities.map((p: Priority) => (
                 <Check
                   key={p}
-                  label={p[0]!.toUpperCase() + p.slice(1)}
+                  label={t(`priority.${p}`)}
                   checked={filters.priorities.includes(p)}
                   onChange={() =>
                     onChange({ ...filters, priorities: toggle(filters.priorities, p) })
@@ -121,7 +114,7 @@ export function FilterPanel({
           )}
 
           {facets.assignees.length > 0 && (
-            <Group label="Assignee">
+            <Group label={t('filterPanel.assignee')}>
               {facets.assignees.map((a) => (
                 <Check
                   key={a}
@@ -134,7 +127,7 @@ export function FilterPanel({
           )}
 
           {facets.labels.length > 0 && (
-            <Group label="Label">
+            <Group label={t('filterPanel.label')}>
               {facets.labels.map((l) => (
                 <Check
                   key={l}
@@ -146,27 +139,27 @@ export function FilterPanel({
             </Group>
           )}
 
-          <Group label="Due date">
+          <Group label={t('filterPanel.due')}>
             {DUE_OPTIONS.map((o) => (
               <Check
-                key={o.value}
-                label={o.label}
-                checked={filters.due.includes(o.value)}
-                onChange={() => onChange({ ...filters, due: toggle(filters.due, o.value) })}
+                key={o}
+                label={t(`filterPanel.dueOption.${o}`)}
+                checked={filters.due.includes(o)}
+                onChange={() => onChange({ ...filters, due: toggle(filters.due, o) })}
               />
             ))}
           </Group>
 
-          <Group label="Completion">
+          <Group label={t('filterPanel.completion')}>
             {COMPLETION_OPTIONS.map((o) => (
-              <label key={o.value} className="pdt-filter__opt">
+              <label key={o} className="pdt-filter__opt">
                 <input
                   type="radio"
                   name="pdt-completion"
-                  checked={filters.completion === o.value}
-                  onChange={() => onChange({ ...filters, completion: o.value })}
+                  checked={filters.completion === o}
+                  onChange={() => onChange({ ...filters, completion: o })}
                 />
-                <span>{o.label}</span>
+                <span>{t(`filterPanel.completionOption.${o}`)}</span>
               </label>
             ))}
           </Group>
@@ -178,7 +171,7 @@ export function FilterPanel({
               disabled={!hasActiveFilters(filters)}
               onClick={onClear}
             >
-              Clear all filters
+              {t('filterPanel.clear')}
             </button>
           </div>
         </div>

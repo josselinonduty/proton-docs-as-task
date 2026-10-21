@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BoardTask, LinkKind, TaskLinks } from '../lib/model';
 import type { Suggestion } from '../lib/suggestions';
 import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
@@ -7,7 +8,7 @@ import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
 import { Icon } from './Icon';
-import { PRIORITY_OPTIONS } from './taskFields';
+import { PRIORITY_OPTIONS, priorityOptionLabel } from './taskFields';
 import { TaskRelations } from './TaskRelations';
 
 /** Which control to focus when the panel opens (E → title, M → section). */
@@ -79,6 +80,7 @@ export function TaskDetailsPanel({
   onDelete,
   onClose,
 }: TaskDetailsPanelProps) {
+  const { t } = useTranslation();
   const panelRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const sectionRef = useRef<HTMLSelectElement>(null);
@@ -119,7 +121,7 @@ export function TaskDetailsPanel({
     <aside
       ref={panelRef}
       className="pdt-details"
-      aria-label={`Task details: ${task.title || 'Untitled task'}`}
+      aria-label={t('details.aria', { title: task.title || t('card.untitled') })}
       tabIndex={-1}
       onKeyDown={onKeyDown}
     >
@@ -128,8 +130,8 @@ export function TaskDetailsPanel({
           <button
             type="button"
             className="pdt-btn pdt-btn-icon pdt-btn-sm"
-            aria-label="Back to previous task"
-            title="Back"
+            aria-label={t('details.backAria')}
+            title={t('details.back')}
             onClick={onBack}
           >
             <Icon name="arrow-left" size={14} />
@@ -143,14 +145,14 @@ export function TaskDetailsPanel({
           onClick={onToggleDone}
         >
           <Icon name="checkmark" size={14} />
-          {done ? 'Completed' : 'Mark complete'}
+          {done ? t('due.completed') : t('bulk.complete')}
         </button>
         <span className="pdt-board__spacer" />
         <button
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
-          aria-label="Duplicate task"
-          title="Duplicate"
+          aria-label={t('details.duplicateAria')}
+          title={t('details.duplicate')}
           onClick={onDuplicate}
         >
           <Icon name="squares" />
@@ -158,8 +160,8 @@ export function TaskDetailsPanel({
         <button
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
-          aria-label="Copy task as Markdown"
-          title="Copy as Markdown"
+          aria-label={t('details.copyAria')}
+          title={t('details.copy')}
           onClick={onCopyMarkdown}
         >
           <Icon name="code" />
@@ -167,8 +169,8 @@ export function TaskDetailsPanel({
         <button
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
-          aria-label="Close task details"
-          title="Close (Esc)"
+          aria-label={t('details.closeAria')}
+          title={t('details.close')}
           onClick={onClose}
         >
           <Icon name="cross" />
@@ -179,8 +181,7 @@ export function TaskDetailsPanel({
         {blocked && (
           <p className="pdt-rel__blocked" role="status">
             <Icon name="lock" size={14} />
-            Blocked by {openBlockers} open {openBlockers === 1 ? 'task' : 'tasks'}. Finish{' '}
-            {openBlockers === 1 ? 'it' : 'them'} first.
+            {t('details.blocked', { count: openBlockers })}
           </p>
         )}
         <textarea
@@ -188,23 +189,23 @@ export function TaskDetailsPanel({
           className={`pdt-details__title ${done ? 'pdt-card__title--done' : ''}`}
           value={task.title}
           rows={1}
-          placeholder="Task title"
-          aria-label="Task title"
+          placeholder={t('details.titlePlaceholder')}
+          aria-label={t('details.titlePlaceholder')}
           onChange={(e) => onPatch({ title: e.target.value.replace(/\n/g, ' ') })}
           onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
         />
 
         <dl className="pdt-details__props">
-          <Prop label="Status" icon="checkmark-circle">
+          <Prop label={t('details.status')} icon="checkmark-circle">
             <select
               className="pdt-select"
-              aria-label="Status"
+              aria-label={t('details.status')}
               value={task.status}
               onChange={(e) => onSetStatus(e.target.value as StatusKey)}
             >
               {!findStatus(statuses, task.status) && (
                 <option value={task.status} disabled>
-                  {task.status} (missing)
+                  {t('details.missing', { status: task.status })}
                 </option>
               )}
               {statuses.map((c) => (
@@ -218,11 +219,11 @@ export function TaskDetailsPanel({
               ))}
             </select>
           </Prop>
-          <Prop label="Section" icon="list">
+          <Prop label={t('details.section')} icon="list">
             <select
               ref={sectionRef}
               className="pdt-select"
-              aria-label="Section"
+              aria-label={t('details.section')}
               value={task.section}
               onChange={(e) => onSetSection(e.target.value)}
             >
@@ -233,66 +234,66 @@ export function TaskDetailsPanel({
               ))}
             </select>
           </Prop>
-          <Prop label="Priority" icon="flag">
+          <Prop label={t('details.priority')} icon="flag">
             <select
               className="pdt-select"
-              aria-label="Priority"
+              aria-label={t('details.priority')}
               value={task.priority ?? ''}
               onChange={(e) =>
                 onPatch({ priority: (e.target.value || undefined) as Priority | undefined })
               }
             >
               {PRIORITY_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
+                <option key={o} value={o}>
+                  {priorityOptionLabel(o)}
                 </option>
               ))}
             </select>
           </Prop>
-          <Prop label="Due date" icon="calendar">
+          <Prop label={t('details.due')} icon="calendar">
             <DueDateControl
               value={task.due}
               onChange={(due) => onPatch({ due })}
               now={now}
               format={dateFormat}
               completed={done}
-              ariaLabel="Due date"
+              ariaLabel={t('details.due')}
             />
           </Prop>
-          <Prop label="Assignee" icon="user">
+          <Prop label={t('details.assignee')} icon="user">
             <Combobox
               value={task.assignee ?? ''}
               suggestions={assigneeSuggestions}
               onChange={(assignee) => onPatch({ assignee: assignee.trim() || undefined })}
-              placeholder="Unassigned"
-              ariaLabel="Assignee"
+              placeholder={t('filters.unassigned')}
+              ariaLabel={t('details.assignee')}
               showCounts
             />
           </Prop>
-          <Prop label="Labels" icon="tag">
+          <Prop label={t('details.labels')} icon="tag">
             <LabelInput
               labels={task.labels}
               suggestions={labelSuggestions}
               onChange={(labels) => onPatch({ labels })}
-              ariaLabel="Labels"
+              ariaLabel={t('details.labels')}
             />
           </Prop>
         </dl>
 
         <label className="pdt-field">
-          <span className="pdt-field-label">Description</span>
+          <span className="pdt-field-label">{t('details.description')}</span>
           <textarea
             className="pdt-textarea"
             rows={5}
             value={task.description ?? ''}
-            placeholder="Add more detail…"
+            placeholder={t('details.descriptionPlaceholder')}
             onChange={(e) => onPatch({ description: e.target.value || undefined })}
           />
         </label>
 
         <TaskRelations
           links={links}
-          isDone={(t) => isDoneStatus(statuses, t.status)}
+          isDone={(linked) => isDoneStatus(statuses, linked.status)}
           candidates={linkCandidates}
           onOpen={onOpenLinked}
           onLink={onLink}
@@ -302,7 +303,7 @@ export function TaskDetailsPanel({
         {position && position.count > 1 && (
           <div className="pdt-field">
             <span className="pdt-field-label" id="pdt-details-order">
-              Order in column
+              {t('details.order')}
             </span>
             <div className="pdt-details__row" role="group" aria-labelledby="pdt-details-order">
               <button
@@ -311,7 +312,7 @@ export function TaskDetailsPanel({
                 disabled={position.index <= 0}
                 onClick={() => onMoveWithin(-1)}
               >
-                <Icon name="arrow-up" size={14} /> Move up
+                <Icon name="arrow-up" size={14} /> {t('details.moveUp')}
               </button>
               <button
                 type="button"
@@ -319,10 +320,10 @@ export function TaskDetailsPanel({
                 disabled={position.index >= position.count - 1}
                 onClick={() => onMoveWithin(1)}
               >
-                <Icon name="arrow-down" size={14} /> Move down
+                <Icon name="arrow-down" size={14} /> {t('details.moveDown')}
               </button>
               <span className="pdt-text-weak pdt-details__hint">
-                {position.index + 1} of {position.count}
+                {t('details.position', { index: position.index + 1, count: position.count })}
               </span>
             </div>
           </div>
@@ -332,7 +333,7 @@ export function TaskDetailsPanel({
       <footer className="pdt-details__foot">
         <button type="button" className="pdt-btn pdt-btn-sm pdt-btn-danger" onClick={onDelete}>
           <Icon name="trash" size={14} />
-          Delete task
+          {t('details.delete')}
         </button>
       </footer>
     </aside>

@@ -8,6 +8,8 @@
  * out of scope: the quick options below map to exact calendar dates.
  */
 
+import i18n, { t } from '../i18n';
+
 export type QuickDateOption = 'today' | 'tomorrow' | 'weekend' | 'next-week';
 
 /**
@@ -122,25 +124,8 @@ export function dueState(
 
 /** Human-readable, screen-reader-friendly label for a due state. */
 export function dueStateLabel(state: DueState): string {
-  switch (state) {
-    case 'overdue':
-      return 'Overdue';
-    case 'today':
-      return 'Due today';
-    case 'tomorrow':
-      return 'Due tomorrow';
-    case 'this-week':
-      return 'Due this week';
-    case 'future':
-      return 'Due';
-    case 'completed':
-      return 'Completed';
-    case 'none':
-      return 'No due date';
-  }
+  return t(`due.${state}`);
 }
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
  * Render a stored date for display in the configured format. Unparseable values
@@ -157,7 +142,7 @@ export function formatDate(value: string | undefined, format: DateFormat = 'iso'
     case 'iso':
       return toISODate(date);
     case 'medium':
-      return `${MONTHS[date.getMonth()]} ${d}, ${y}`;
+      return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(date);
     case 'us':
       return `${m}/${d}/${y}`;
     case 'euro':

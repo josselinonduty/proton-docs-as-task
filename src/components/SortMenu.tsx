@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SORT_OPTIONS, describeSort, isActiveSort, type SortState } from '../lib/sorting';
 import { Icon } from './Icon';
 
@@ -13,6 +14,7 @@ interface SortMenuProps {
 
 /** A dropdown for choosing the (non-destructive) sort key and direction. */
 export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument }: SortMenuProps) {
+  const { t } = useTranslation();
   const wrapRef = useRef<HTMLDivElement>(null);
   const active = isActiveSort(sort);
 
@@ -46,11 +48,13 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
         onClick={() => onOpenChange(!open)}
         title={describeSort(sort)}
       >
-        Sort{active ? `: ${option?.label}` : ''}
+        {active && option
+          ? t('sort.buttonActive', { label: t(option.labelKey) })
+          : t('sort.button')}
       </button>
 
       {open && (
-        <div className="pdt-sortmenu__panel" role="menu" aria-label="Sort tasks">
+        <div className="pdt-sortmenu__panel" role="menu" aria-label={t('sort.menuLabel')}>
           {SORT_OPTIONS.map((o) => {
             const selected = o.key === sort.key;
             return (
@@ -62,21 +66,21 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
                 className={`pdt-menu__item ${selected ? 'is-active' : ''}`}
                 onClick={() => onChange({ key: o.key, dir: selected ? sort.dir : o.defaultDir })}
               >
-                <span>{o.label}</span>
+                <span>{t(o.labelKey)}</span>
                 {selected && o.directional && <Icon name="checkmark" size={14} />}
               </button>
             );
           })}
 
           {active && option?.directional && (
-            <div className="pdt-sortmenu__dir" role="group" aria-label="Sort direction">
+            <div className="pdt-sortmenu__dir" role="group" aria-label={t('sort.direction')}>
               <button
                 type="button"
                 className={`pdt-btn pdt-btn-sm ${sort.dir === 'asc' ? 'pdt-btn-selected' : ''}`}
                 aria-pressed={sort.dir === 'asc'}
                 onClick={() => onChange({ ...sort, dir: 'asc' })}
               >
-                Ascending
+                {t('sort.ascending')}
               </button>
               <button
                 type="button"
@@ -84,7 +88,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
                 aria-pressed={sort.dir === 'desc'}
                 onClick={() => onChange({ ...sort, dir: 'desc' })}
               >
-                Descending
+                {t('sort.descending')}
               </button>
             </div>
           )}
@@ -99,7 +103,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
                 onOpenChange(false);
               }}
             >
-              Apply this order to document
+              {t('sort.apply')}
             </button>
           </div>
         </div>
