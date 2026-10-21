@@ -30,8 +30,7 @@
   /* Neutral hover/pressed wash for ghost buttons, menu items and rows. */
   --pdt-interaction-hover: rgb(194 193 192 / 0.2);
   --pdt-interaction-active: rgb(194 192 190 / 0.35);
-  /* Bordered secondary button (Proton's `button-outline-weak`). */
-  --pdt-interaction-weak-border: #dedbd9;
+  /* Hover wash of the bordered secondary button (Proton's `button-outline-weak`). */
   --pdt-interaction-weak-hover: #f9f8f7;
 
   /* ---------- Surfaces & text ---------- */
@@ -54,6 +53,8 @@
   /* ---------- Form fields ---------- */
   --pdt-field-norm: #adaba8;
   --pdt-field-hover: #8f8d8a;
+  /* The `chevron-down` icon in `text-norm`, for native selects (no currentColor in a data URI). */
+  --pdt-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230c0c14'%3E%3Cpath d='M4.293 6.293a1 1 0 0 1 1.414 0L8 8.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 0-1.414Z'/%3E%3C/svg%3E");
 
   /* ---------- Focus ---------- */
   --pdt-focus-outline: #6d4aff;
@@ -166,7 +167,6 @@
     --pdt-interaction-norm-active: #8a6eff;
     --pdt-interaction-hover: rgb(91 87 107 / 0.2);
     --pdt-interaction-active: rgb(91 87 107 / 0.4);
-    --pdt-interaction-weak-border: #5c5969;
     --pdt-interaction-weak-hover: #16151a;
 
     --pdt-background-norm: #16141c;
@@ -185,6 +185,7 @@
 
     --pdt-field-norm: #5b576b;
     --pdt-field-hover: #6d697d;
+    --pdt-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3E%3Cpath d='M4.293 6.293a1 1 0 0 1 1.414 0L8 8.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 0-1.414Z'/%3E%3C/svg%3E");
     --pdt-focus-ring: rgb(109 74 255 / 0.3);
 
     --pdt-signal-danger: #f5385a;
@@ -221,7 +222,6 @@
   --pdt-interaction-norm-active: #8a6eff;
   --pdt-interaction-hover: rgb(91 87 107 / 0.2);
   --pdt-interaction-active: rgb(91 87 107 / 0.4);
-  --pdt-interaction-weak-border: #5c5969;
   --pdt-interaction-weak-hover: #16151a;
 
   --pdt-background-norm: #16141c;
@@ -240,6 +240,7 @@
 
   --pdt-field-norm: #5b576b;
   --pdt-field-hover: #6d697d;
+  --pdt-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3E%3Cpath d='M4.293 6.293a1 1 0 0 1 1.414 0L8 8.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 0-1.414Z'/%3E%3C/svg%3E");
   --pdt-focus-ring: rgb(109 74 255 / 0.3);
 
   --pdt-signal-danger: #f5385a;

@@ -187,7 +187,7 @@ function PickSelect({
   const { t } = useTranslation();
   return (
     <select
-      className="pdt-input pdt-bulkbar__select"
+      className="pdt-select pdt-select-sm pdt-bulkbar__select"
       value=""
       disabled={disabled}
       aria-label={t('bulk.setFor', { label })}

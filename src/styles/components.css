@@ -18,7 +18,8 @@
 }
 
 /* ---------- Buttons ---------- */
-/* Default: Proton's bordered neutral (`button-outline-weak`), 36px tall.
+/* Default: Proton's bordered neutral (`button-outline-weak`), 36px tall, with
+ * the field border so buttons line up with the inputs beside them.
  * An open popup trigger (`aria-haspopup` + `aria-expanded`) keeps the pressed
  * look; a plain expand/collapse toggle doesn't, since expanded is its rest state. */
 .pdt-btn {
@@ -28,7 +29,7 @@
   gap: var(--pdt-space-2);
   min-height: var(--pdt-control-md);
   padding: 7px 15px;
-  border: 1px solid var(--pdt-interaction-weak-border);
+  border: 1px solid var(--pdt-field-norm);
   border-radius: var(--pdt-radius-md);
   background: var(--pdt-background-norm);
   color: var(--pdt-text-norm);
@@ -46,7 +47,7 @@
 }
 .pdt-btn:hover {
   background: var(--pdt-interaction-weak-hover);
-  border-color: var(--pdt-field-norm);
+  border-color: var(--pdt-field-hover);
 }
 .pdt-btn:active,
 .pdt-btn[aria-haspopup][aria-expanded='true'] {
@@ -89,11 +90,6 @@
   border-color: var(--pdt-primary-hover);
   background: var(--pdt-primary-weak);
   color: var(--pdt-primary-hover);
-}
-
-.pdt-btn-pill {
-  border-radius: var(--pdt-radius-pill);
-  box-shadow: var(--pdt-shadow-md);
 }
 
 /* Outline danger (`button-outline-danger`). */
@@ -231,8 +227,18 @@
 .pdt-input[aria-invalid='true'] {
   border-color: var(--pdt-signal-danger);
 }
+/* The same chevron as the popup-trigger buttons, instead of the native arrow. */
 .pdt-select {
+  appearance: none;
+  padding-right: 32px;
+  background: var(--pdt-select-chevron) no-repeat right 11px center / 12px
+    var(--pdt-background-norm);
   cursor: pointer;
+}
+/* Small (28px), to sit beside `.pdt-btn-sm`. */
+.pdt-select-sm {
+  min-height: var(--pdt-control-sm);
+  padding-block: 3px;
 }
 
 /* Checkbox / radio accent, left as native controls with a matching hue. */
