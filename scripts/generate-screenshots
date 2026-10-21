@@ -15,7 +15,7 @@
  *   - A Chromium-based browser. The script uses, in order:
  *       1. PDT_BROWSER_PATH, if set (path to a chrome/chromium executable)
  *       2. the Google Chrome channel, if installed system-wide
- *       3. the browser Playwright manages (`npx playwright install chromium`)
+ *       3. the browser Playwright manages (`npx --no playwright-core install chromium`)
  *
  * Runs on Linux, macOS and Windows: no shell-specific commands, and paths are
  * built with node:path.
@@ -62,7 +62,7 @@ async function launchBrowser(chromium) {
   throw new Error(
     `No usable browser found (${lastError?.message ?? 'unknown error'}).\n` +
       'Set PDT_BROWSER_PATH to a Chrome/Chromium executable, or run ' +
-      '`npx playwright install chromium`.',
+      '`npx --no playwright-core install chromium`.',
   );
 }
 
