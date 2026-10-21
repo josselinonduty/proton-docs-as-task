@@ -1,7 +1,6 @@
 import type {
   BoardView,
   CardFieldVisibility,
-  ColumnDef,
   CompletedDisplay,
   DateFormat,
   Settings,
@@ -17,12 +16,6 @@ export const DEFAULT_CARD_FIELDS: CardFieldVisibility = {
   statusInSections: false,
 };
 
-export const DEFAULT_COLUMNS: ColumnDef[] = [
-  { key: 'todo', label: 'To Do' },
-  { key: 'doing', label: 'In Progress' },
-  { key: 'done', label: 'Done' },
-];
-
 /**
  * Default activation markers. The first non-empty line of a document must
  * start with one of these (trimmed, case-insensitive) for the board to show.
@@ -32,7 +25,6 @@ export const DEFAULT_MARKERS = ['#!tasks', '#!task', ':::tasks'];
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   markers: DEFAULT_MARKERS,
-  columns: DEFAULT_COLUMNS,
   defaultView: 'workflow',
   autoShow: true,
   theme: 'system',
@@ -47,35 +39,22 @@ export const DEFAULT_SETTINGS: Settings = {
   userAssignee: '',
 };
 
-/** The canonical status keys, in display order. */
-const STATUS_KEYS: ColumnDef['key'][] = ['todo', 'doing', 'done'];
-
-/** Normalize a stored columns array, keeping labels but enforcing the 3 keys. */
-function normalizeColumns(columns?: ColumnDef[] | null): ColumnDef[] {
-  if (!columns || columns.length === 0) return DEFAULT_COLUMNS;
-  return STATUS_KEYS.map((key) => {
-    const found = columns.find((c) => c.key === key);
-    const fallback = DEFAULT_COLUMNS.find((c) => c.key === key)!;
-    const label = found?.label?.trim();
-    return { key, label: label || fallback.label };
-  });
-}
-
 /**
  * Merge stored settings over the defaults, guarding against empty/invalid
- * values. Also migrates the v0.4 `grouping` field to `defaultView`.
+ * values. Also migrates the v0.4 `grouping` field to `defaultView`, and drops
+ * the global status labels that statuses defined per document replaced.
  */
 export function withDefaults(
-  stored?: (Partial<Settings> & { grouping?: string }) | null,
+  stored?: (Partial<Settings> & { grouping?: string; columns?: unknown }) | null,
 ): Settings {
-  const raw = stored ?? {};
+  // `columns` (global status labels) predates per-document statuses; drop it.
+  const raw = { ...stored };
+  delete raw.columns;
   const merged: Settings = { ...DEFAULT_SETTINGS, ...raw } as Settings;
 
   // Never allow an empty marker configuration.
   merged.markers = (merged.markers ?? []).map((m) => m.trim()).filter(Boolean);
   if (merged.markers.length === 0) merged.markers = DEFAULT_MARKERS;
-
-  merged.columns = normalizeColumns(merged.columns);
 
   // Migrate the legacy `grouping` ('status' | 'section') → `defaultView`.
   if (raw.defaultView == null && typeof raw.grouping === 'string') {

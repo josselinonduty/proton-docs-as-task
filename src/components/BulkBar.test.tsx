@@ -3,12 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BulkBar } from './BulkBar';
+import { DEFAULT_STATUSES } from '../lib/statuses';
 
-const STATUS = [
-  { key: 'todo' as const, label: 'To Do' },
-  { key: 'doing' as const, label: 'In Progress' },
-  { key: 'done' as const, label: 'Done' },
-];
+const STATUS = [...DEFAULT_STATUSES];
 
 afterEach(cleanup);
 
@@ -20,7 +17,7 @@ function setup(count = 3) {
     <BulkBar
       count={count}
       sections={['Build', 'Launch']}
-      statusColumns={STATUS}
+      statuses={STATUS}
       labelSuggestions={[]}
       now={new Date(2026, 8, 3)}
       dateFormat="iso"

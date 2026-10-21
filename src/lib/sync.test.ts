@@ -74,3 +74,28 @@ describe('hasRedundantStatus', () => {
     expect(hasRedundantStatus(parse('- [ ] bar @status:doing', '- [x] baz'))).toBe(false);
   });
 });
+
+describe('documents without status settings', () => {
+  it('compare equal to the board that would write the built-in statuses', () => {
+    const model = fromParseResult(parseDocument(DOC, MARKERS));
+    expect(serializeModel(model, MARKER)).toContain('@settings status todo "To Do"');
+    // Opening such a board must not count as a change, so nothing is written.
+    expect(documentsDiverged(DOC, model, MARKERS, MARKER)).toBe(false);
+  });
+});
+
+describe('hasRedundantStatus with document statuses', () => {
+  const parse = (...lines: string[]) => parseDocument(['#!tasks', ...lines].join('\n'), MARKERS);
+  const SETTINGS = [
+    '@settings status backlog "Backlog" @category:todo',
+    '@settings status shipped "Shipped" @category:done',
+  ];
+
+  it('flags a token naming the checkbox default', () => {
+    expect(hasRedundantStatus(parse(...SETTINGS, '- [ ] a @status:backlog'))).toBe(true);
+  });
+
+  it('keeps a token for an undefined status', () => {
+    expect(hasRedundantStatus(parse(...SETTINGS, '- [ ] a @status:qa'))).toBe(false);
+  });
+});

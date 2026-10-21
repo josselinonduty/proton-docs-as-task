@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { BoardTask, LinkKind, TaskLinks } from '../lib/model';
 import type { Suggestion } from '../lib/suggestions';
-import type { DateFormat, Priority, StatusKey } from '../lib/types';
+import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
+import { findStatus, isDoneStatus } from '../lib/statuses';
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
@@ -14,7 +15,7 @@ export type DetailsFocus = 'panel' | 'title' | 'section';
 
 interface TaskDetailsPanelProps {
   task: BoardTask;
-  statusColumns: { key: StatusKey; label: string }[];
+  statuses: StatusDef[];
   sections: string[];
   assigneeSuggestions: Suggestion[];
   labelSuggestions: Suggestion[];
@@ -52,7 +53,7 @@ interface TaskDetailsPanelProps {
  */
 export function TaskDetailsPanel({
   task,
-  statusColumns,
+  statuses,
   sections,
   assigneeSuggestions,
   labelSuggestions,
@@ -81,7 +82,7 @@ export function TaskDetailsPanel({
   const panelRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const sectionRef = useRef<HTMLSelectElement>(null);
-  const done = task.status === 'done';
+  const done = isDoneStatus(statuses, task.status);
   const blocked = openBlockers > 0;
 
   useEffect(() => {
@@ -201,11 +202,16 @@ export function TaskDetailsPanel({
               value={task.status}
               onChange={(e) => onSetStatus(e.target.value as StatusKey)}
             >
-              {statusColumns.map((c) => (
+              {!findStatus(statuses, task.status) && (
+                <option value={task.status} disabled>
+                  {task.status} (missing)
+                </option>
+              )}
+              {statuses.map((c) => (
                 <option
                   key={c.key}
                   value={c.key}
-                  disabled={blocked && c.key !== 'todo' && c.key !== task.status}
+                  disabled={blocked && c.category !== 'todo' && c.key !== task.status}
                 >
                   {c.label}
                 </option>
@@ -286,6 +292,7 @@ export function TaskDetailsPanel({
 
         <TaskRelations
           links={links}
+          isDone={(t) => isDoneStatus(statuses, t.status)}
           candidates={linkCandidates}
           onOpen={onOpenLinked}
           onLink={onLink}

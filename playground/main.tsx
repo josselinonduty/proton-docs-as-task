@@ -17,6 +17,10 @@ function inDays(days: number): string {
 
 const SAMPLE = [
   '#!tasks Product launch',
+  '@settings status todo "To Do" @category:todo',
+  '@settings status doing "In Progress" @category:doing @color:blue @bg:blue',
+  '@settings status review "In review" @category:doing @color:purple @bg:purple',
+  '@settings status done "Done" @category:done @color:green @bg:green',
   '',
   '## Discovery',
   '- [x] User interviews @who:sam #research',
@@ -24,7 +28,7 @@ const SAMPLE = [
   `- [ ] Synthesize findings @status:doing @due:${inDays(-2)} !!`,
   '## Build',
   `- [ ] API: tasks endpoint @priority:high @due:${inDays(0)} #backend @@jo`,
-  '- [ ] Board overlay @status:doing #frontend @desc(Shadow-DOM overlay on top of the Lexical editor)',
+  '- [ ] Board overlay @status:review #frontend @desc(Shadow-DOM overlay on top of the Lexical editor)',
   `- [ ] Options page #frontend @due:${inDays(5)}`,
   '- [ ] Empty + error states #frontend !',
   '## Launch',

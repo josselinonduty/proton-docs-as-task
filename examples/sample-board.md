@@ -7,6 +7,10 @@ to activate.
 ---
 
 #!tasks Product launch
+@settings status todo "To Do" @category:todo
+@settings status doing "In Progress" @category:doing @color:blue @bg:blue
+@settings status review "In review" @category:doing @color:purple @bg:purple
+@settings status done "Done" @category:done @color:green
 
 ## Discovery
 
@@ -17,7 +21,7 @@ to activate.
 ## Build
 
 - [ ] API: tasks endpoint @priority:high @due:2026-09-12 #backend @@jo
-- [ ] Board overlay @status:doing #frontend
+- [ ] Board overlay @status:review #frontend
 - [ ] Options page #frontend
 - [ ] Empty + error states #frontend !
 

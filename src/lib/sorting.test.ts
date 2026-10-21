@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { parseDocument } from './parser';
 import { DEFAULT_MARKERS } from './defaults';
 import { columnsForView, fromParseResult, serializeModel, type BoardTask } from './model';
-import { DEFAULT_COLUMNS } from './defaults';
 import {
   applySortToModel,
   isActiveSort,
@@ -128,7 +127,7 @@ describe('sortTasks', () => {
 
 describe('sortColumns', () => {
   it('sorts within each column and leaves manual columns as-is', () => {
-    const columns = columnsForView(model, 'workflow', DEFAULT_COLUMNS);
+    const columns = columnsForView(model, 'workflow');
     const sorted = sortColumns(columns, { key: 'title', dir: 'asc' });
     const todo = sorted.find((c) => c.key === 'todo')!;
     expect(todo.tasks.map((t) => t.title)).toEqual(['alpha', 'Bravo', 'Charlie', 'Delta']);
@@ -139,7 +138,7 @@ describe('sortColumns', () => {
 
 describe('applySortToModel', () => {
   it('bakes the sorted order into the document serialization', () => {
-    const columns = columnsForView(model, 'sections', DEFAULT_COLUMNS);
+    const columns = columnsForView(model, 'sections');
     const next = applySortToModel(model, columns, { key: 'title', dir: 'asc' });
     const text = serializeModel(next, '#!tasks');
     const order = text
@@ -156,7 +155,7 @@ describe('applySortToModel', () => {
   });
 
   it('is a no-op for a manual sort', () => {
-    const columns = columnsForView(model, 'sections', DEFAULT_COLUMNS);
+    const columns = columnsForView(model, 'sections');
     expect(applySortToModel(model, columns, MANUAL_SORT)).toBe(model);
   });
 });

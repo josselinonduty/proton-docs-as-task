@@ -85,4 +85,16 @@ describe('Dialog in a shadow root', () => {
     );
     expect(shadow.activeElement).toBe(second);
   });
+
+  it('ignores Escape and backdrop clicks when not dismissible', () => {
+    const onClose = vi.fn();
+    const { shadow } = renderInShadow(
+      <Dialog title="Blocking" dismissible={false} onClose={onClose}>
+        <button>Resolve</button>
+      </Dialog>,
+    );
+    fireEvent.keyDown(shadow.querySelector('button')!, { key: 'Escape' });
+    fireEvent.mouseDown(shadow.querySelector('.pdt-modal')!);
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

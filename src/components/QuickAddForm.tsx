@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Suggestion } from '../lib/suggestions';
-import type { DateFormat, Priority, StatusKey } from '../lib/types';
+import { defaultStatus } from '../lib/statuses';
+import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';
@@ -18,7 +19,7 @@ export interface QuickAddPayload {
 
 interface QuickAddFormProps {
   sections: string[];
-  statusColumns: { key: StatusKey; label: string }[];
+  statuses: StatusDef[];
   assigneeSuggestions: Suggestion[];
   labelSuggestions: Suggestion[];
   /** The section to default to (remembered across the board session). */
@@ -36,7 +37,7 @@ interface QuickAddFormProps {
  */
 export function QuickAddForm({
   sections,
-  statusColumns,
+  statuses,
   assigneeSuggestions,
   labelSuggestions,
   defaultSection,
@@ -46,7 +47,7 @@ export function QuickAddForm({
   onClose,
 }: QuickAddFormProps) {
   const [title, setTitle] = useState('');
-  const [status, setStatus] = useState<StatusKey>('todo');
+  const [status, setStatus] = useState<StatusKey>(() => defaultStatus(statuses, false));
   const [section, setSection] = useState(defaultSection);
   const [due, setDue] = useState<string | undefined>(undefined);
   const [priority, setPriority] = useState<'' | Priority>('');
@@ -125,7 +126,7 @@ export function QuickAddForm({
             value={status}
             onChange={(e) => setStatus(e.target.value as StatusKey)}
           >
-            {statusColumns.map((c) => (
+            {statuses.map((c) => (
               <option key={c.key} value={c.key}>
                 {c.label}
               </option>

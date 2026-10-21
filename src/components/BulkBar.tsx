@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import type { BulkAction } from '../lib/model';
 import type { Suggestion } from '../lib/suggestions';
-import type { DateFormat, Priority, StatusKey } from '../lib/types';
+import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
 import { DueDateControl } from './DueDateControl';
 
 interface BulkBarProps {
   count: number;
   sections: string[];
-  statusColumns: { key: StatusKey; label: string }[];
+  statuses: StatusDef[];
   labelSuggestions: Suggestion[];
   now: Date;
   dateFormat: DateFormat;
@@ -26,7 +26,7 @@ interface BulkBarProps {
 export function BulkBar({
   count,
   sections,
-  statusColumns,
+  statuses,
   labelSuggestions,
   now,
   dateFormat,
@@ -64,7 +64,7 @@ export function BulkBar({
         <PickSelect
           label="Status"
           disabled={count === 0}
-          options={statusColumns.map((c) => ({ value: c.key, label: c.label }))}
+          options={statuses.map((c) => ({ value: c.key, label: c.label }))}
           onPick={(value) => onAction({ kind: 'status', status: value as StatusKey })}
         />
 

@@ -5,13 +5,13 @@ import {
   type FilterState,
   type Preset,
 } from '../lib/filters';
-import type { Priority, StatusKey } from '../lib/types';
+import type { Priority, StatusDef, StatusKey } from '../lib/types';
 import { Icon } from './Icon';
 
 interface FilterBarProps {
   filters: FilterState;
   presets: Preset[];
-  statusColumns: { key: StatusKey; label: string }[];
+  statuses: StatusDef[];
   onChange: (filters: FilterState) => void;
   onApplyPreset: (preset: Preset) => void;
   /** A preset that needs setup (e.g. "My open tasks" without a name) was chosen. */
@@ -31,16 +31,12 @@ const DUE_LABELS: Record<string, string> = {
   none: 'No due date',
 };
 
-function statusLabel(cols: { key: StatusKey; label: string }[], key: StatusKey): string {
+function statusLabel(cols: StatusDef[], key: StatusKey): string {
   return cols.find((c) => c.key === key)?.label ?? key;
 }
 
 /** Enumerate the active filters as removable chips. */
-function buildChips(
-  f: FilterState,
-  cols: { key: StatusKey; label: string }[],
-  onChange: (f: FilterState) => void,
-): Chip[] {
+function buildChips(f: FilterState, cols: StatusDef[], onChange: (f: FilterState) => void): Chip[] {
   const chips: Chip[] = [];
   const drop = <K extends keyof FilterState>(
     dim: K,
@@ -104,12 +100,12 @@ function buildChips(
 export function FilterBar({
   filters,
   presets,
-  statusColumns,
+  statuses,
   onChange,
   onApplyPreset,
   onUnavailablePreset,
 }: FilterBarProps) {
-  const chips = buildChips(filters, statusColumns, onChange);
+  const chips = buildChips(filters, statuses, onChange);
   const active = hasActiveFilters(filters);
 
   return (
