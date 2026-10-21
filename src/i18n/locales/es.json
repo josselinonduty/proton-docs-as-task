@@ -503,7 +503,7 @@
     "autoShowHint": "Abre el tablero en cuanto se activa un documento.",
     "defaultView": "Vista predeterminada",
     "defaultViewHint": "En qué disposición se abre el tablero.",
-    "view": {
+    "views": {
       "workflow": "Flujo (por estado)",
       "sections": "Secciones (por encabezado)",
       "swimlane": "Carriles (estado × sección)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automático (idioma del navegador)",
     "theme": "Tema",
     "themeHint": "Seguir el sistema o forzar claro / oscuro.",
-    "themeSystem": "Sistema",
-    "themeLight": "Claro",
-    "themeDark": "Oscuro",
+    "themes": {
+      "system": "Sistema",
+      "light": "Claro",
+      "dark": "Oscuro"
+    },
     "density": "Densidad de las tarjetas",
     "densityHint": "Qué tan juntas se muestran las tarjetas.",
-    "comfortable": "Cómoda",
-    "compact": "Compacta",
+    "densities": {
+      "comfortable": "Cómoda",
+      "compact": "Compacta"
+    },
     "behavior": "Comportamiento del tablero",
     "newCards": "Tarjetas nuevas",
     "newCardsHint": "Dónde queda en su columna una tarjeta añadida rápidamente.",
-    "bottom": "Al final",
-    "top": "Al principio",
+    "newCardPositions": {
+      "bottom": "Al final",
+      "top": "Al principio"
+    },
     "descPreview": "Mostrar vista previa de la descripción",
     "descPreviewHint": "Muestra un breve fragmento de la descripción en las tarjetas contraídas.",
     "completed": "Tareas completadas",
     "completedHint": "Cómo se muestran las tareas hechas (nunca se eliminan del documento).",
-    "completedShow": "Mostrar normalmente",
-    "completedCollapse": "Contraer la columna Hecho",
-    "completedHide": "Ocultar las tarjetas completadas",
+    "completedDisplays": {
+      "show": "Mostrar normalmente",
+      "collapse": "Contraer la columna Hecho",
+      "hide": "Ocultar las tarjetas completadas"
+    },
     "confirmDelete": "Confirmar la eliminación de tarjetas",
     "confirmDeleteHint": "Pide confirmación antes de eliminar una tarjeta (siempre puedes deshacer).",
     "display": "Preferencias de visualización",
     "dateFormat": "Formato de fecha",
     "dateFormatHint": "Cómo se escriben las fechas límite en las tarjetas.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Medio (10 sept 2026)",
-    "dateUs": "EE. UU. (9/10/2026)",
-    "dateEuro": "Europeo (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Medio (10 sept 2026)",
+      "us": "EE. UU. (9/10/2026)",
+      "euro": "Europeo (10/9/2026)"
+    },
     "name": "Tu nombre",
     "nameHint": "Activa el filtro «Mis tareas abiertas». Se compara con los responsables; no se realiza ninguna búsqueda.",
     "namePlaceholder": "p. ej. Sam Rivera",

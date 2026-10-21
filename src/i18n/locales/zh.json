@@ -491,7 +491,7 @@
     "autoShowHint": "文档一旦激活就打开看板。",
     "defaultView": "默认视图",
     "defaultViewHint": "看板打开时使用的布局。",
-    "view": {
+    "views": {
       "workflow": "工作流（按状态）",
       "sections": "分组（按标题）",
       "swimlane": "泳道（状态 × 分组）",
@@ -502,34 +502,44 @@
     "languageAuto": "自动（浏览器语言）",
     "theme": "主题",
     "themeHint": "跟随系统，或强制使用浅色 / 深色。",
-    "themeSystem": "跟随系统",
-    "themeLight": "浅色",
-    "themeDark": "深色",
+    "themes": {
+      "system": "跟随系统",
+      "light": "浅色",
+      "dark": "深色"
+    },
     "density": "卡片密度",
     "densityHint": "卡片排列的紧凑程度。",
-    "comfortable": "舒适",
-    "compact": "紧凑",
+    "densities": {
+      "comfortable": "舒适",
+      "compact": "紧凑"
+    },
     "behavior": "看板行为",
     "newCards": "新卡片",
     "newCardsHint": "快速添加的卡片在列中的位置。",
-    "bottom": "底部",
-    "top": "顶部",
+    "newCardPositions": {
+      "bottom": "底部",
+      "top": "顶部"
+    },
     "descPreview": "显示描述预览",
     "descPreviewHint": "在折叠的卡片上显示描述的简短片段。",
     "completed": "已完成的任务",
     "completedHint": "已完成任务的显示方式（不会从文档中删除）。",
-    "completedShow": "正常显示",
-    "completedCollapse": "折叠“已完成”列",
-    "completedHide": "隐藏已完成的卡片",
+    "completedDisplays": {
+      "show": "正常显示",
+      "collapse": "折叠“已完成”列",
+      "hide": "隐藏已完成的卡片"
+    },
     "confirmDelete": "删除卡片前确认",
     "confirmDeleteHint": "删除卡片前先询问（你随时可以撤销）。",
     "display": "显示偏好",
     "dateFormat": "日期格式",
     "dateFormatHint": "卡片上截止日期的书写方式。",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "中等 (2026年9月10日)",
-    "dateUs": "美式 (9/10/2026)",
-    "dateEuro": "欧式 (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "中等 (2026年9月10日)",
+      "us": "美式 (9/10/2026)",
+      "euro": "欧式 (10/9/2026)"
+    },
     "name": "你的名字",
     "nameHint": "启用“我的未完成任务”筛选器。仅与负责人进行匹配，不会进行任何查询。",
     "namePlaceholder": "例如：张伟",

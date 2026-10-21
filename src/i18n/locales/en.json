@@ -503,7 +503,7 @@
     "autoShowHint": "Open the board as soon as a document activates.",
     "defaultView": "Default view",
     "defaultViewHint": "Which layout the board opens in.",
-    "view": {
+    "views": {
       "workflow": "Workflow (by status)",
       "sections": "Sections (by heading)",
       "swimlane": "Swimlane (status × section)",
@@ -514,34 +514,44 @@
     "languageAuto": "Automatic (browser language)",
     "theme": "Theme",
     "themeHint": "Match the system, or force light / dark.",
-    "themeSystem": "System",
-    "themeLight": "Light",
-    "themeDark": "Dark",
+    "themes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "density": "Card density",
     "densityHint": "How tightly cards are packed.",
-    "comfortable": "Comfortable",
-    "compact": "Compact",
+    "densities": {
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    },
     "behavior": "Board behavior",
     "newCards": "New cards",
     "newCardsHint": "Where a quick-added card lands in its column.",
-    "bottom": "At the bottom",
-    "top": "At the top",
+    "newCardPositions": {
+      "bottom": "At the bottom",
+      "top": "At the top"
+    },
     "descPreview": "Show description preview",
     "descPreviewHint": "Show a short snippet of the description on collapsed cards.",
     "completed": "Completed tasks",
     "completedHint": "How done tasks are shown (never removed from the document).",
-    "completedShow": "Show normally",
-    "completedCollapse": "Collapse Done column",
-    "completedHide": "Hide completed cards",
+    "completedDisplays": {
+      "show": "Show normally",
+      "collapse": "Collapse Done column",
+      "hide": "Hide completed cards"
+    },
     "confirmDelete": "Confirm card deletion",
     "confirmDeleteHint": "Ask before deleting a card (you can always undo).",
     "display": "Display preferences",
     "dateFormat": "Date format",
     "dateFormatHint": "How due dates are written on cards.",
-    "dateIso": "ISO (2026-09-10)",
-    "dateMedium": "Medium (Sep 10, 2026)",
-    "dateUs": "US (9/10/2026)",
-    "dateEuro": "European (10/9/2026)",
+    "dateFormats": {
+      "iso": "ISO (2026-09-10)",
+      "medium": "Medium (Sep 10, 2026)",
+      "us": "US (9/10/2026)",
+      "euro": "European (10/9/2026)"
+    },
     "name": "Your name",
     "nameHint": "Enables the “My open tasks” filter. Matched against assignees; no lookup is performed.",
     "namePlaceholder": "e.g. Sam Rivera",
