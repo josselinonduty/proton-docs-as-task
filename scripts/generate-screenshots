@@ -103,6 +103,7 @@ async function openPage(browser, { colorScheme = 'light' } = {}) {
     viewport: VIEWPORT,
     deviceScaleFactor: 1,
     colorScheme,
+    locale: 'en-US',
   });
   const page = await context.newPage();
   page.on('pageerror', (error) => console.warn(`  page error: ${error.message}`));
