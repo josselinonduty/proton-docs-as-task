@@ -4,12 +4,9 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FilterBar } from './FilterBar';
 import { buildPresets, EMPTY_FILTERS, type FilterState } from '../lib/filters';
+import { DEFAULT_STATUSES } from '../lib/statuses';
 
-const STATUS = [
-  { key: 'todo' as const, label: 'To Do' },
-  { key: 'doing' as const, label: 'In Progress' },
-  { key: 'done' as const, label: 'Done' },
-];
+const STATUS = [...DEFAULT_STATUSES];
 
 afterEach(cleanup);
 
@@ -22,7 +19,7 @@ describe('FilterBar', () => {
       <FilterBar
         filters={{ ...EMPTY_FILTERS }}
         presets={buildPresets({})}
-        statusColumns={STATUS}
+        statuses={STATUS}
         onChange={onChange}
         onApplyPreset={onApplyPreset}
       />,
@@ -39,7 +36,7 @@ describe('FilterBar', () => {
       <FilterBar
         filters={{ ...EMPTY_FILTERS }}
         presets={buildPresets({})}
-        statusColumns={STATUS}
+        statuses={STATUS}
         onChange={vi.fn()}
         onApplyPreset={onApplyPreset}
         onUnavailablePreset={onUnavailablePreset}
@@ -62,7 +59,7 @@ describe('FilterBar', () => {
       <FilterBar
         filters={filters}
         presets={buildPresets({})}
-        statusColumns={STATUS}
+        statuses={STATUS}
         onChange={onChange}
         onApplyPreset={vi.fn()}
       />,

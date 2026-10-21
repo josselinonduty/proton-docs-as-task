@@ -1,10 +1,13 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addSection,
+  addStatus,
   addTask,
   applyBulkAction,
   canLink,
+  canRemoveStatus,
   canSetStatus,
+  isTaskDone,
   linksOf,
   linkTasks,
   openBlockers,
@@ -13,9 +16,13 @@ import {
   countTasks,
   duplicateTask,
   moveSection,
+  moveStatus,
+  moveTasksToStatus,
+  orphanStatuses,
   toggleDefaultSection,
   removeSection,
   removeSectionMovingTasks,
+  removeStatus,
   removeTask,
   renameSection,
   reorderColumn,
@@ -23,6 +30,7 @@ import {
   serializeTaskLine,
   setTaskSection,
   setTaskStatus,
+  updateStatus,
   updateTask,
   type BulkAction,
   type BoardColumn,
@@ -45,9 +53,10 @@ import {
   sortTasks,
   type SortState,
 } from '../lib/sorting';
+import { defaultStatus, findStatus } from '../lib/statuses';
 import { buildAssigneeIndex, buildLabelIndex } from '../lib/suggestions';
 import { modLabel } from '../lib/platform';
-import type { BoardView, SaveState, Settings, StatusKey } from '../lib/types';
+import type { BoardView, SaveState, Settings, StatusDef, StatusKey } from '../lib/types';
 import { EditableTaskCard } from './EditableTaskCard';
 import { TaskDetailsPanel, type DetailsFocus } from './TaskDetailsPanel';
 import { SectionNameInput } from './SectionNameInput';
@@ -60,6 +69,9 @@ import { CommandPalette, type Command } from './CommandPalette';
 import { ShortcutHelp } from './ShortcutHelp';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
+import { BoardSettingsDialog } from './BoardSettingsDialog';
+import { ColorSwatches, statusStyle } from './StatusColorPicker';
+import { MissingStatusDialog, StatusDeleteDialog } from './StatusDialogs';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -90,6 +102,7 @@ interface EditableBoardProps {
 }
 
 type PendingSectionDelete = { name: string; count: number };
+type PendingStatusDelete = { key: StatusKey; count: number };
 
 const VIEW_LABELS: { key: BoardView; label: string; hint: string }[] = [
   { key: 'workflow', label: 'Workflow', hint: 'Columns by status (V)' },
@@ -130,7 +143,8 @@ export function EditableBoard(props: EditableBoardProps) {
     onClose,
   } = props;
 
-  const statusColumns = settings.columns;
+  const { statuses } = model;
+  const isDone = (task: BoardTask) => isTaskDone(model, task);
   const now = new Date();
   const facets = collectFacets(model);
   const filtersActive = hasActiveFilters(filters);
@@ -168,6 +182,11 @@ export function EditableBoard(props: EditableBoardProps) {
   const [trail, setTrail] = useState<string[]>([]);
   const [blockedNotice, setBlockedNotice] = useState<string | null>(null);
   const [focusSection, setFocusSection] = useState<string | null>(null);
+  const [focusStatus, setFocusStatus] = useState<StatusKey | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [pendingStatusDelete, setPendingStatusDelete] = useState<PendingStatusDelete | null>(null);
+  const [colorMenuFor, setColorMenuFor] = useState<StatusKey | null>(null);
+  const colorMenuRef = useRef<HTMLDivElement>(null);
 
   const draggedId = useRef<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -206,6 +225,17 @@ export function EditableBoard(props: EditableBoardProps) {
     };
   }, [menuOpen]);
 
+  // Close a column's colour menu on outside click (see the overflow menu above).
+  useEffect(() => {
+    if (!colorMenuFor) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (colorMenuRef.current && !e.composedPath().includes(colorMenuRef.current))
+        setColorMenuFor(null);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [colorMenuFor]);
+
   // The task shown in the details panel was deleted (here or elsewhere).
   useEffect(() => {
     if (details && !model.tasks.some((t) => t.id === details.id)) setDetails(null);
@@ -226,7 +256,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   // Selection is only meaningful over currently-visible cards.
   const passesView = (t: BoardTask) =>
-    (!filtersActive || matchesFilters(t, filters, now)) && !(hideCompleted && t.status === 'done');
+    (!filtersActive || matchesFilters(t, filters, now, isDone)) && !(hideCompleted && isDone(t));
 
   // ---- Card mutations -----------------------------------------------------
   const patchTask = (id: string, patch: Partial<Omit<BoardTask, 'id' | 'order'>>) =>
@@ -243,18 +273,16 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const toggleDone = (task: BoardTask) => {
-    const next = task.status === 'done' ? 'todo' : 'done';
+    const wasDone = isDone(task);
+    const next = defaultStatus(statuses, !wasDone);
     if (!allowStatus(task, next)) return;
-    onChange(
-      setTaskStatus(model, task.id, next),
-      task.status === 'done' ? 'Reopened task' : 'Completed task',
-    );
-    announce(`${task.title || 'Task'} ${next === 'done' ? 'completed' : 'reopened'}`);
+    onChange(setTaskStatus(model, task.id, next), wasDone ? 'Reopened task' : 'Completed task');
+    announce(`${task.title || 'Task'} ${wasDone ? 'reopened' : 'completed'}`);
   };
 
   const setStatus = (task: BoardTask, status: StatusKey) => {
     if (status === task.status || !allowStatus(task, status)) return;
-    const label = statusColumns.find((c) => c.key === status)?.label ?? status;
+    const label = findStatus(statuses, status)?.label ?? status;
     onChange(setTaskStatus(model, task.id, status), `Moved to ${label}`);
     announce(`${task.title || 'Task'} moved to ${label}`);
     setFocusTaskId(task.id);
@@ -303,7 +331,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   const copyMarkdown = async (task: BoardTask) => {
     try {
-      await navigator.clipboard.writeText(serializeTaskLine(task));
+      await navigator.clipboard.writeText(serializeTaskLine(task, statuses));
       announce('Task copied as Markdown');
     } catch {
       announce('Could not copy to clipboard');
@@ -378,7 +406,7 @@ export function EditableBoard(props: EditableBoardProps) {
     if (dragged.status !== status) next = setTaskStatus(next, id, status);
     if (dragged.section !== section) next = setTaskSection(next, id, section);
     if (next !== model) {
-      const label = statusColumns.find((c) => c.key === status)?.label ?? status;
+      const label = findStatus(statuses, status)?.label ?? status;
       onChange(next, `Moved to ${section} / ${label}`);
       announce(`${dragged.title || 'Task'} moved to ${section}, ${label}`);
     }
@@ -393,7 +421,7 @@ export function EditableBoard(props: EditableBoardProps) {
       view === 'sections'
         ? col.section!
         : (view === 'list' && model.defaultSection) || model.sections[0] || 'Tasks';
-    const status: StatusKey = view === 'workflow' ? (col.status as StatusKey) : 'todo';
+    const status = (view === 'workflow' && col.status) || defaultStatus(statuses, false);
     const { model: next, taskId } = addTask(model, section, {
       status,
       title: clean,
@@ -426,7 +454,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
     const created = next.tasks.find((t) => t.id === taskId);
     const hiddenByFilters = created
-      ? filtersActive && !matchesFilters(created, filters, now)
+      ? filtersActive && !matchesFilters(created, filters, now, isDone)
       : false;
     setHiddenNotice(hiddenByFilters);
   };
@@ -441,11 +469,16 @@ export function EditableBoard(props: EditableBoardProps) {
     const next = applyBulkAction(model, ids, action);
     onChange(next, label);
     announce(label);
-    const target =
-      action.kind === 'complete' ? 'done' : action.kind === 'status' ? action.status : null;
-    const skipped = target
-      ? ids.filter((id) => next.tasks.find((t) => t.id === id)?.status !== target).length
-      : 0;
+    const target = action.kind === 'status' ? action.status : null;
+    const reached = (task: BoardTask) =>
+      action.kind === 'complete' ? isTaskDone(next, task) : task.status === target;
+    const skipped =
+      action.kind === 'complete' || target
+        ? ids.filter((id) => {
+            const task = next.tasks.find((t) => t.id === id);
+            return task && !reached(task);
+          }).length
+        : 0;
     if (skipped) {
       setBlockedNotice(
         `${skipped} blocked ${skipped === 1 ? 'task was' : 'tasks were'} left as is.`,
@@ -510,6 +543,52 @@ export function EditableBoard(props: EditableBoardProps) {
     setPendingSectionDelete({ name, count });
   };
 
+  // ---- Status management --------------------------------------------------
+  const requestStatusDelete = (key: StatusKey) => {
+    const status = findStatus(statuses, key);
+    if (!status) return;
+    if (!canRemoveStatus(model, key)) {
+      announce(
+        `A board needs at least one ${status.category === 'done' ? 'Done' : 'Not started'} status`,
+      );
+      return;
+    }
+    const count = model.tasks.filter((t) => t.status === key).length;
+    if (count === 0) {
+      onChange(removeStatus(model, key), `Deleted status “${status.label}”`);
+      announce(`Status ${status.label} deleted`);
+      return;
+    }
+    setPendingStatusDelete({ key, count });
+  };
+
+  const addStatusColumn = () => {
+    const { model: next, key } = addStatus(model);
+    onChange(next, 'Added status');
+    setFocusStatus(key);
+    announce('Status added');
+  };
+
+  const setStatusColors = (status: StatusDef, patch: Pick<StatusDef, 'color' | 'bg'>) =>
+    onChange(updateStatus(model, status.key, patch), `Changed colours of “${status.label}”`);
+
+  const orphans = orphanStatuses(model);
+
+  const moveOrphans = (targets: Record<StatusKey, StatusKey>) => {
+    let next = model;
+    for (const [from, to] of Object.entries(targets)) next = moveTasksToStatus(next, from, to);
+    onChange(next, 'Moved tasks with a missing status');
+    announce('Tasks moved');
+  };
+
+  const doneKeys = statuses.filter((s) => s.category === 'done').map((s) => s.key);
+  const doneCollapsed = doneKeys.length > 0 && doneKeys.every((k) => collapsedColumns.includes(k));
+  const toggleDoneCollapsed = () => {
+    for (const key of doneKeys) {
+      if (collapsedColumns.includes(key) === doneCollapsed) onToggleColumnCollapse(key);
+    }
+  };
+
   // ---- Copy whole board ---------------------------------------------------
   const copyBoardMarkdown = async () => {
     try {
@@ -522,6 +601,7 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const clearFocusSection = useCallback(() => setFocusSection(null), []);
+  const clearFocusStatus = useCallback(() => setFocusStatus(null), []);
 
   const cycleView = () => {
     const i = VIEW_ORDER.indexOf(view);
@@ -531,7 +611,7 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const applySortToDocument = () => {
-    const cols = columnsForView(model, view === 'swimlane' ? 'sections' : view, statusColumns);
+    const cols = columnsForView(model, view === 'swimlane' ? 'sections' : view);
     onChange(applySortToModel(model, cols, sort), 'Applied sort order');
     onSortChange(MANUAL_SORT);
     announce('Sort order applied to the document');
@@ -582,7 +662,10 @@ export function EditableBoard(props: EditableBoardProps) {
     quickAddOpen ||
     pendingCardDelete != null ||
     pendingBulkDelete ||
-    pendingSectionDelete != null;
+    pendingSectionDelete != null ||
+    settingsOpen ||
+    pendingStatusDelete != null ||
+    orphans.length > 0;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const target = e.target as HTMLElement;
@@ -606,6 +689,7 @@ export function EditableBoard(props: EditableBoardProps) {
     if (anyOverlayOpen) return; // sub-dialogs handle their own keys
 
     if (e.key === 'Escape') {
+      if (colorMenuFor) return setColorMenuFor(null);
       if (sortOpen) return setSortOpen(false);
       if (details) return closeDetails();
       if (selectionMode) return exitSelection();
@@ -724,7 +808,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   // ---- Column / swimlane projection ---------------------------------------
   const projectionView: BoardView = view === 'swimlane' ? 'sections' : view;
-  const baseColumns = columnsForView(model, projectionView, statusColumns);
+  const baseColumns = columnsForView(model, projectionView);
 
   // Build the flat keyboard-nav order + per-card selection metadata.
   navOrderRef.current = [];
@@ -734,7 +818,7 @@ export function EditableBoard(props: EditableBoardProps) {
     filtersActive,
     saveState,
     hideCompleted,
-    doneCollapsed: collapsedColumns.includes('done'),
+    doneCollapsed,
     setQuickAddOpen,
     focusSearch: () => searchRef.current?.focus(),
     cycleView,
@@ -742,7 +826,8 @@ export function EditableBoard(props: EditableBoardProps) {
     openSort: () => setSortOpen(true),
     toggleHideCompleted: () =>
       onSettingsChange({ completedDisplay: hideCompleted ? 'show' : 'hide' }),
-    toggleDoneCollapsed: () => onToggleColumnCollapse('done'),
+    toggleDoneCollapsed,
+    openBoardSettings: () => setSettingsOpen(true),
     openSettings: onOpenSettings,
     back: onClose,
     openHelp: () => setHelpOpen(true),
@@ -818,6 +903,13 @@ export function EditableBoard(props: EditableBoardProps) {
                   onClick={() => {
                     if (selectionMode) exitSelection();
                     else setSelectionMode(true);
+                    setMenuOpen(false);
+                  }}
+                />
+                <MenuItem
+                  label="Board settings"
+                  onClick={() => {
+                    setSettingsOpen(true);
                     setMenuOpen(false);
                   }}
                 />
@@ -900,7 +992,7 @@ export function EditableBoard(props: EditableBoardProps) {
           <FilterPanel
             filters={filters}
             facets={facets}
-            statusColumns={statusColumns}
+            statuses={statuses}
             triggerRef={filterBtnRef}
             onChange={onFiltersChange}
             onClear={() => onFiltersChange({ ...EMPTY_FILTERS })}
@@ -917,7 +1009,7 @@ export function EditableBoard(props: EditableBoardProps) {
           <FilterBar
             filters={filters}
             presets={presets}
-            statusColumns={statusColumns}
+            statuses={statuses}
             onChange={onFiltersChange}
             onApplyPreset={(preset: Preset) => {
               onFiltersChange(preset.filters);
@@ -935,7 +1027,7 @@ export function EditableBoard(props: EditableBoardProps) {
         <Dialog title="New task" size="lg" onClose={() => setQuickAddOpen(false)}>
           <QuickAddForm
             sections={model.sections}
-            statusColumns={statusColumns}
+            statuses={statuses}
             assigneeSuggestions={assigneeSuggestions}
             labelSuggestions={labelSuggestions}
             defaultSection={
@@ -995,7 +1087,7 @@ export function EditableBoard(props: EditableBoardProps) {
         {detailsTask && (
           <TaskDetailsPanel
             task={detailsTask}
-            statusColumns={statusColumns}
+            statuses={statuses}
             sections={model.sections}
             assigneeSuggestions={assigneeSuggestions}
             labelSuggestions={labelSuggestions}
@@ -1036,7 +1128,7 @@ export function EditableBoard(props: EditableBoardProps) {
         <BulkBar
           count={selected.size}
           sections={model.sections}
-          statusColumns={statusColumns}
+          statuses={statuses}
           labelSuggestions={labelSuggestions}
           now={now}
           dateFormat={settings.dateFormat}
@@ -1120,6 +1212,41 @@ export function EditableBoard(props: EditableBoardProps) {
         />
       )}
 
+      {settingsOpen && (
+        <BoardSettingsDialog
+          model={model}
+          announce={announce}
+          onChange={onChange}
+          onRequestDelete={requestStatusDelete}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
+
+      {pendingStatusDelete && findStatus(statuses, pendingStatusDelete.key) && (
+        <StatusDeleteDialog
+          status={findStatus(statuses, pendingStatusDelete.key)!}
+          count={pendingStatusDelete.count}
+          targets={statuses.filter((st) => st.key !== pendingStatusDelete.key)}
+          onCancel={() => setPendingStatusDelete(null)}
+          onConfirm={(target) => {
+            const status = findStatus(statuses, pendingStatusDelete.key)!;
+            const label = findStatus(statuses, target)?.label ?? target;
+            onChange(removeStatus(model, status.key, target), `Deleted status “${status.label}”`);
+            announce(`Status ${status.label} deleted, tasks moved to ${label}`);
+            setPendingStatusDelete(null);
+          }}
+        />
+      )}
+
+      {orphans.length > 0 && !settingsOpen && (
+        <MissingStatusDialog
+          orphans={orphans}
+          statuses={statuses}
+          onMove={moveOrphans}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
+      )}
+
       {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
       {helpOpen && <ShortcutHelp onClose={() => setHelpOpen(false)} />}
     </section>
@@ -1147,7 +1274,7 @@ export function EditableBoard(props: EditableBoardProps) {
       <EditableTaskCard
         key={task.id}
         task={task}
-        statusColumns={statusColumns}
+        statuses={statuses}
         density={settings.density}
         showDescriptionPreview={settings.showDescriptionPreview}
         cardFields={settings.cardFields}
@@ -1157,7 +1284,7 @@ export function EditableBoard(props: EditableBoardProps) {
         focus={focusTaskId === task.id}
         active={details?.id === task.id}
         blockedBy={openBlockers(model, task).length}
-        blocking={linksOf(model, task).blocks.filter((t) => t.status !== 'done').length}
+        blocking={linksOf(model, task).blocks.filter((t) => !isDone(t)).length}
         highlight={highlightId === task.id}
         selection={
           selectionMode
@@ -1182,8 +1309,8 @@ export function EditableBoard(props: EditableBoardProps) {
 
   function visibleOf(col: BoardColumn): BoardTask[] {
     let list = sortActive ? sortTasks(col.tasks, sort) : col.tasks;
-    if (filtersActive) list = list.filter((t) => matchesFilters(t, filters, now));
-    if (hideCompleted) list = list.filter((t) => t.status !== 'done');
+    if (filtersActive) list = list.filter((t) => matchesFilters(t, filters, now, isDone));
+    if (hideCompleted) list = list.filter((t) => !isDone(t));
     return list;
   }
 
@@ -1191,13 +1318,15 @@ export function EditableBoard(props: EditableBoardProps) {
     return (
       <div className={`pdt-columns ${view === 'list' ? 'pdt-columns--list' : ''}`}>
         {columns.map((col) => {
-          const isDoneCol = view === 'workflow' && col.status === 'done';
+          const status = view === 'workflow' ? findStatus(statuses, col.key) : undefined;
+          const isDoneCol = status?.category === 'done';
           const collapsed = collapsedColumns.includes(col.key);
           const visibleTasks = visibleOf(col);
           const visibleIds = visibleTasks.map((t) => t.id);
           return (
             <div
-              className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''}`}
+              className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''} ${status?.bg ? 'pdt-column--tinted' : ''} ${colorMenuFor === col.key ? 'pdt-column--menu-open' : ''}`}
+              style={status ? statusStyle(status) : undefined}
               key={col.key}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -1235,6 +1364,25 @@ export function EditableBoard(props: EditableBoardProps) {
                     }}
                     onInvalid={announce}
                   />
+                ) : status ? (
+                  <span className="pdt-status-name">
+                    <SectionNameInput
+                      name={status.label}
+                      noun="status"
+                      ignoreCase
+                      otherNames={statuses.filter((x) => x !== status).map((x) => x.label)}
+                      autoFocus={focusStatus === status.key}
+                      onFocusHandled={clearFocusStatus}
+                      onRename={(label) => {
+                        onChange(
+                          updateStatus(model, status.key, { label }),
+                          `Renamed status to “${label}”`,
+                        );
+                        announce(`Status renamed to ${label}`);
+                      }}
+                      onInvalid={announce}
+                    />
+                  </span>
                 ) : (
                   <span className="pdt-column__name">{col.label}</span>
                 )}
@@ -1250,6 +1398,8 @@ export function EditableBoard(props: EditableBoardProps) {
                     ? `${visibleTasks.length}/${col.tasks.length}`
                     : col.tasks.length}
                 </span>
+
+                {status && renderStatusOps(status)}
 
                 {view === 'sections' && (
                   <div className="pdt-column__ops">
@@ -1336,6 +1486,15 @@ export function EditableBoard(props: EditableBoardProps) {
           );
         })}
 
+        {view === 'workflow' && (
+          <div className="pdt-column pdt-column--add">
+            <button type="button" className="pdt-add-column" onClick={addStatusColumn}>
+              <Icon name="plus" size={14} />
+              Add status
+            </button>
+          </div>
+        )}
+
         {view === 'sections' && (
           <div className="pdt-column pdt-column--add">
             <button
@@ -1355,20 +1514,114 @@ export function EditableBoard(props: EditableBoardProps) {
     );
   }
 
+  /** Workflow column controls: reorder, colours and delete, like a section's. */
+  function renderStatusOps(status: StatusDef) {
+    const index = statuses.indexOf(status);
+    const removable = canRemoveStatus(model, status.key);
+    return (
+      <div className="pdt-column__ops">
+        <button
+          type="button"
+          className="pdt-btn pdt-btn-icon pdt-btn-sm"
+          aria-label={`Move ${status.label} left`}
+          title="Move left"
+          disabled={index === 0}
+          onClick={() => onChange(moveStatus(model, status.key, -1))}
+        >
+          <Icon name="chevron-left" />
+        </button>
+        <button
+          type="button"
+          className="pdt-btn pdt-btn-icon pdt-btn-sm"
+          aria-label={`Move ${status.label} right`}
+          title="Move right"
+          disabled={index === statuses.length - 1}
+          onClick={() => onChange(moveStatus(model, status.key, 1))}
+        >
+          <Icon name="chevron-right" />
+        </button>
+        <div className="pdt-colorpicker" ref={colorMenuFor === status.key ? colorMenuRef : null}>
+          <button
+            type="button"
+            className="pdt-btn pdt-btn-icon pdt-btn-sm"
+            aria-label={`Colours of ${status.label}`}
+            aria-haspopup="dialog"
+            aria-expanded={colorMenuFor === status.key}
+            title="Colours"
+            onClick={() => setColorMenuFor((k) => (k === status.key ? null : status.key))}
+          >
+            <Icon name="palette" />
+          </button>
+          {colorMenuFor === status.key && (
+            <div
+              className="pdt-colorpicker__panel pdt-colorpicker__panel--end"
+              role="dialog"
+              aria-label={`Colours of ${status.label}`}
+            >
+              <span className="pdt-field-label">Text</span>
+              <ColorSwatches
+                label="Text colour"
+                role="text"
+                value={status.color}
+                onChange={(color) => setStatusColors(status, { color, bg: status.bg })}
+              />
+              <span className="pdt-field-label">Background</span>
+              <ColorSwatches
+                label="Background colour"
+                role="bg"
+                value={status.bg}
+                onChange={(bg) => setStatusColors(status, { color: status.color, bg })}
+              />
+              <button
+                type="button"
+                className="pdt-link"
+                onClick={() => {
+                  setColorMenuFor(null);
+                  setSettingsOpen(true);
+                }}
+              >
+                All board settings…
+              </button>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="pdt-btn pdt-btn-icon pdt-btn-sm"
+          aria-label={`Delete status ${status.label}`}
+          title={
+            removable
+              ? 'Delete status'
+              : `A board needs at least one ${status.category === 'done' ? 'Done' : 'Not started'} status`
+          }
+          disabled={!removable}
+          onClick={() => requestStatusDelete(status.key)}
+        >
+          <Icon name="trash" />
+        </button>
+      </div>
+    );
+  }
+
   function renderSwimlane() {
     return (
       <div className="pdt-swimlane" role="table" aria-label="Swimlane board">
         <div
           className="pdt-swimlane__head"
           role="row"
-          style={{ '--pdt-swimlane-cols': statusColumns.length } as React.CSSProperties}
+          style={{ '--pdt-swimlane-cols': statuses.length } as React.CSSProperties}
         >
           <div className="pdt-swimlane__corner" role="columnheader">
             Section
           </div>
-          {statusColumns.map((c) => (
-            <div key={c.key} className="pdt-swimlane__colhead" role="columnheader">
-              {c.label}
+          {statuses.map((c) => (
+            <div
+              key={c.key}
+              className="pdt-swimlane__colhead"
+              role="columnheader"
+              style={statusStyle(c)}
+            >
+              <span className="pdt-status-pill">{c.label}</span>
             </div>
           ))}
         </div>
@@ -1381,7 +1634,7 @@ export function EditableBoard(props: EditableBoardProps) {
               key={section}
               className="pdt-swimlane__row"
               role="row"
-              style={{ '--pdt-swimlane-cols': statusColumns.length } as React.CSSProperties}
+              style={{ '--pdt-swimlane-cols': statuses.length } as React.CSSProperties}
             >
               <div className="pdt-swimlane__rowhead" role="rowheader">
                 <button
@@ -1399,7 +1652,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
               {rowCollapsed
                 ? null
-                : statusColumns.map((c) => {
+                : statuses.map((c) => {
                     const cellCol: BoardColumn = {
                       key: `${section}::${c.key}`,
                       label: `${section} / ${c.label}`,
@@ -1412,7 +1665,8 @@ export function EditableBoard(props: EditableBoardProps) {
                     return (
                       <div
                         key={c.key}
-                        className="pdt-swimlane__cell"
+                        className={`pdt-swimlane__cell ${c.bg ? 'pdt-swimlane__cell--tinted' : ''}`}
+                        style={statusStyle(c)}
                         role="cell"
                         onDragOver={(e) => {
                           e.preventDefault();
@@ -1490,6 +1744,7 @@ interface BuildCommandsArgs {
   openSort: () => void;
   toggleHideCompleted: () => void;
   toggleDoneCollapsed: () => void;
+  openBoardSettings: () => void;
   openSettings: () => void;
   back: () => void;
   openHelp: () => void;
@@ -1524,8 +1779,14 @@ function buildCommands(a: BuildCommandsArgs): Command[] {
     },
     {
       id: 'collapse-done',
-      title: a.doneCollapsed ? 'Expand Done column' : 'Collapse Done column',
+      title: a.doneCollapsed ? 'Expand Done columns' : 'Collapse Done columns',
       run: a.toggleDoneCollapsed,
+    },
+    {
+      id: 'board-settings',
+      title: 'Board settings',
+      keywords: 'statuses columns colours colors workflow',
+      run: a.openBoardSettings,
     },
     { id: 'settings', title: 'Open settings', run: a.openSettings },
     { id: 'back', title: 'Back to document', run: a.back },

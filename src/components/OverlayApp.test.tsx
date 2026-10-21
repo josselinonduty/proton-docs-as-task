@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ApplyResult, EditorStateMessage } from '../lib/bridgeProtocol';
 import type { EditorClient } from '../lib/editorClient';
 import type { AddTaskResponse, ContentMessage } from '../lib/messaging';
@@ -208,5 +208,98 @@ describe('OverlayApp board interactions', () => {
     setup(['#!tasks Sprint 42', '', '## Tasks', '- [x] Done one', '- [ ] Open one']);
     expect(screen.getByRole('heading', { name: 'Sprint 42' })).toBeTruthy();
     expect(screen.getByText('1 of 2 done')).toBeTruthy();
+  });
+});
+
+describe('OverlayApp per-document statuses', () => {
+  const FLOW = [
+    '#!tasks Flow',
+    '@settings status todo "To Do" @category:todo',
+    '@settings status review "In review" @category:doing @color:purple',
+    '@settings status done "Done" @category:done',
+    '',
+    '## Tasks',
+    '- [ ] Write the spec @status:review',
+  ];
+
+  it('shows the document statuses as workflow columns', () => {
+    setup(FLOW);
+    expect(screen.getByRole('textbox', { name: 'Status name: In review' })).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: 'Status name: In Progress' })).toBeNull();
+  });
+
+  it('writes the built-in statuses into a document only with its first board write', async () => {
+    const editor = setup();
+    expect(editor.writes).toHaveLength(0);
+    await addTaskFromPopup('First edit');
+    expect(editor.lines.slice(0, 4)).toEqual([
+      '#!tasks Board',
+      '@settings status todo "To Do" @category:todo',
+      '@settings status doing "In Progress" @category:doing',
+      '@settings status done "Done" @category:done',
+    ]);
+  });
+
+  it('renames a status from its column header without rewriting task lines', () => {
+    vi.useFakeTimers();
+    const editor = setup(FLOW);
+    const input = screen.getByRole('textbox', { name: 'Status name: In review' });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'QA' } });
+    fireEvent.blur(input);
+    act(() => void vi.advanceTimersByTime(400));
+    expect(editor.lines).toContain('@settings status review "QA" @category:doing @color:purple');
+    expect(editor.lines).toContain('- [ ] Write the spec @status:review');
+  });
+
+  it('adds a status from board settings', () => {
+    vi.useFakeTimers();
+    const editor = setup(FLOW);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Board settings' }));
+    const dialog = screen.getByRole('dialog', { name: 'Board settings' });
+    fireEvent.click(within(dialog).getByRole('button', { name: /Add status/ }));
+    act(() => void vi.advanceTimersByTime(400));
+    expect(editor.lines).toContain('@settings status new-status "New status" @category:doing');
+  });
+
+  it('asks where tasks go before deleting a status that has some', () => {
+    vi.useFakeTimers();
+    const editor = setup(FLOW);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete status In review' }));
+    const dialog = screen.getByRole('dialog', { name: 'Delete status “In review”' });
+    fireEvent.change(within(dialog).getByRole('combobox', { name: 'Move tasks to' }), {
+      target: { value: 'done' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: /Move tasks/ }));
+    act(() => void vi.advanceTimersByTime(400));
+    expect(editor.lines.some((l) => l.includes('status review'))).toBe(false);
+    expect(editor.lines).toContain('- [x] Write the spec');
+  });
+
+  it('blocks the board until tasks with a missing status are moved', () => {
+    vi.useFakeTimers();
+    const editor = setup([...FLOW, '- [ ] Lost one @status:qa', '- [ ] Lost two @status:qa']);
+    const dialog = screen.getByRole('dialog', { name: 'Some tasks have a missing status' });
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.getByRole('dialog', { name: 'Some tasks have a missing status' })).toBeTruthy();
+    expect(within(dialog).getByText('2 tasks')).toBeTruthy();
+
+    fireEvent.change(
+      within(dialog).getByRole('combobox', { name: 'Move tasks with status qa to' }),
+      { target: { value: 'review' } },
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Move tasks' }));
+    act(() => void vi.advanceTimersByTime(400));
+    expect(screen.queryByRole('dialog', { name: /missing status/ })).toBeNull();
+    expect(editor.lines).toContain('- [ ] Lost one @status:review');
+    expect(editor.lines).toContain('- [ ] Lost two @status:review');
+  });
+
+  it('lets the user create the missing status from board settings instead', () => {
+    setup([...FLOW, '- [ ] Lost @status:qa']);
+    fireEvent.click(screen.getByRole('button', { name: 'Open board settings' }));
+    expect(screen.getByRole('dialog', { name: 'Board settings' })).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: /missing status/ })).toBeNull();
   });
 });

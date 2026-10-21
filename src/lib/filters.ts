@@ -9,6 +9,7 @@
 import type { BoardModel, BoardTask } from './model';
 import type { Priority, StatusKey } from './types';
 import { parseISODate } from './dates';
+import { DEFAULT_STATUSES, isDoneStatus } from './statuses';
 import type { SortDir, SortKey } from './sorting';
 
 /** Due-date buckets used by both card badges and the due-date filter. */
@@ -142,8 +143,19 @@ function matchesSearch(task: BoardTask, query: string): boolean {
   return haystack.includes(q);
 }
 
+/** Tells whether a task counts as completed (it sits in a Done status). */
+export type IsDone = (task: BoardTask) => boolean;
+
+/** Completion against the built-in statuses, for callers without a board at hand. */
+const builtInIsDone: IsDone = (task) => isDoneStatus(DEFAULT_STATUSES, task.status);
+
 /** True when a task passes every active filter dimension. */
-export function matchesFilters(task: BoardTask, f: FilterState, now: Date = new Date()): boolean {
+export function matchesFilters(
+  task: BoardTask,
+  f: FilterState,
+  now: Date = new Date(),
+  isDone: IsDone = builtInIsDone,
+): boolean {
   if (!matchesSearch(task, f.search)) return false;
   if (f.statuses.length && !f.statuses.includes(task.status)) return false;
   if (f.sections.length && !f.sections.includes(task.section)) return false;
@@ -152,8 +164,8 @@ export function matchesFilters(task: BoardTask, f: FilterState, now: Date = new 
   if (f.assignees.length && (!task.assignee || !f.assignees.includes(task.assignee))) return false;
   if (f.labels.length && !task.labels.some((l) => f.labels.includes(l))) return false;
   if (f.due.length && !f.due.includes(bucketToFilter(dueBucket(task.due, now)))) return false;
-  if (f.completion === 'complete' && task.status !== 'done') return false;
-  if (f.completion === 'incomplete' && task.status === 'done') return false;
+  if (f.completion === 'complete' && !isDone(task)) return false;
+  if (f.completion === 'incomplete' && isDone(task)) return false;
   if (f.excludeStatuses.length && f.excludeStatuses.includes(task.status)) return false;
   if (f.assignment === 'unassigned' && task.assignee?.trim()) return false;
   if (f.dueWithinDays != null) {
@@ -170,9 +182,10 @@ export function applyFilters(
   tasks: BoardTask[],
   f: FilterState,
   now: Date = new Date(),
+  isDone: IsDone = builtInIsDone,
 ): BoardTask[] {
   if (!hasActiveFilters(f)) return tasks;
-  return tasks.filter((t) => matchesFilters(t, f, now));
+  return tasks.filter((t) => matchesFilters(t, f, now, isDone));
 }
 
 export interface Facets {

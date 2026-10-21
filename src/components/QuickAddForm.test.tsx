@@ -3,12 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QuickAddForm } from './QuickAddForm';
+import { DEFAULT_STATUSES } from '../lib/statuses';
 
-const STATUS = [
-  { key: 'todo' as const, label: 'To Do' },
-  { key: 'doing' as const, label: 'In Progress' },
-  { key: 'done' as const, label: 'Done' },
-];
+const STATUS = [...DEFAULT_STATUSES];
 
 afterEach(cleanup);
 
@@ -18,7 +15,7 @@ function setup() {
   render(
     <QuickAddForm
       sections={['Build', 'Launch']}
-      statusColumns={STATUS}
+      statuses={STATUS}
       assigneeSuggestions={[]}
       labelSuggestions={[]}
       defaultSection="Launch"

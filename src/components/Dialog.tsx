@@ -8,6 +8,11 @@ interface DialogProps {
   size?: 'md' | 'lg';
   /** Element to focus first; defaults to the first focusable control. */
   initialFocus?: React.RefObject<HTMLElement | null>;
+  /**
+   * When false, Escape and backdrop clicks don't close the dialog: it stays
+   * until one of its own actions resolves what it asks for.
+   */
+  dismissible?: boolean;
 }
 
 const FOCUSABLE =
@@ -20,15 +25,22 @@ function activeElementOf(node: Node): Element | null {
 }
 
 /**
- * A modal dialog that traps focus, closes on Escape or backdrop click, and
- * restores focus to the element that opened it.
+ * A modal dialog that traps focus, closes on Escape or backdrop click (unless
+ * `dismissible` is false), and restores focus to the element that opened it.
  *
  * The board lives in a shadow root, where `document.activeElement` is just the
  * shadow host — so focus is always read from the dialog's own root node.
  * Keys are handled on the panel (not the document) so a nested popover, such
  * as an open autocomplete or date picker, can consume Escape first.
  */
-export function Dialog({ title, children, onClose, size = 'md', initialFocus }: DialogProps) {
+export function Dialog({
+  title,
+  children,
+  onClose,
+  size = 'md',
+  initialFocus,
+  dismissible = true,
+}: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -51,7 +63,7 @@ export function Dialog({ title, children, onClose, size = 'md', initialFocus }: 
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
-      onCloseRef.current();
+      if (dismissible) onCloseRef.current();
       return;
     }
     const panel = panelRef.current;
@@ -75,7 +87,7 @@ export function Dialog({ title, children, onClose, size = 'md', initialFocus }: 
   return (
     <div
       className="pdt-modal"
-      onMouseDown={(e) => e.target === e.currentTarget && onCloseRef.current()}
+      onMouseDown={(e) => dismissible && e.target === e.currentTarget && onCloseRef.current()}
     >
       <div
         className={`pdt-modal__panel pdt-modal__panel--${size}`}

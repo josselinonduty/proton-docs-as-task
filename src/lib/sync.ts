@@ -16,7 +16,7 @@ import {
   type BoardTask,
 } from './model';
 import { parseDocument } from './parser';
-import type { ParseResult } from './types';
+import type { ParseResult, StatusDef } from './types';
 
 /**
  * Reduce arbitrary document text to the canonical serialized form the board
@@ -56,17 +56,18 @@ const STATUS_TOKEN_RE = /@(?:status|s)[:(]/i;
  * omit (e.g. `- [ ] foo @status:done`), so writing the board back normalizes it.
  */
 export function hasRedundantStatus(result: ParseResult): boolean {
-  const { tasks } = fromParseResult(result);
+  const { tasks, statuses } = fromParseResult(result);
   return tasks.some(
     (task, i) =>
-      STATUS_TOKEN_RE.test(result.tasks[i]!.raw) && !STATUS_TOKEN_RE.test(serializeTaskLine(task)),
+      STATUS_TOKEN_RE.test(result.tasks[i]!.raw) &&
+      !STATUS_TOKEN_RE.test(serializeTaskLine(task, statuses)),
   );
 }
 
 /** Ways to recognize the same task across a re-parse, strictest first. */
-const IDENTITY_KEYS: Array<(task: BoardTask) => string | null> = [
-  (t) => `${t.section}\n${serializeTaskLine(t)}`,
-  (t) => serializeTaskLine(t),
+const IDENTITY_KEYS: Array<(task: BoardTask, statuses: readonly StatusDef[]) => string | null> = [
+  (t, statuses) => `${t.section}\n${serializeTaskLine(t, statuses)}`,
+  (t, statuses) => serializeTaskLine(t, statuses),
   (t) => (t.title.trim() ? `${t.section}\n${t.title}` : null),
   (t) => (t.title.trim() ? t.title : null),
 ];
@@ -82,13 +83,13 @@ export function reconcileIds(prev: BoardModel, next: BoardModel): BoardModel {
   for (const keyOf of IDENTITY_KEYS) {
     const available = new Map<string, string[]>();
     for (const task of prev.tasks) {
-      const key = keyOf(task);
+      const key = keyOf(task, prev.statuses);
       if (key === null || used.has(task.id)) continue;
       available.set(key, [...(available.get(key) ?? []), task.id]);
     }
     next.tasks.forEach((task, i) => {
       if (ids[i]) return;
-      const key = keyOf(task);
+      const key = keyOf(task, next.statuses);
       const id = key === null ? undefined : available.get(key)?.shift();
       if (id) {
         ids[i] = id;

@@ -7,12 +7,12 @@ import {
   type Facets,
   type FilterState,
 } from '../lib/filters';
-import type { Priority, StatusKey } from '../lib/types';
+import type { Priority, StatusDef } from '../lib/types';
 
 interface FilterPanelProps {
   filters: FilterState;
   facets: Facets;
-  statusColumns: { key: StatusKey; label: string }[];
+  statuses: StatusDef[];
   /** Lets the board's F shortcut open the panel by clicking the trigger. */
   triggerRef?: React.RefObject<HTMLButtonElement | null>;
   onChange: (next: FilterState) => void;
@@ -40,7 +40,7 @@ function toggle<T>(list: T[], value: T): T[] {
 export function FilterPanel({
   filters,
   facets,
-  statusColumns,
+  statuses,
   triggerRef,
   onChange,
   onClear,
@@ -84,7 +84,7 @@ export function FilterPanel({
       {open && (
         <div className="pdt-filter__panel" role="dialog" aria-label="Filters">
           <Group label="Status">
-            {statusColumns.map((c) => (
+            {statuses.map((c) => (
               <Check
                 key={c.key}
                 label={c.label}

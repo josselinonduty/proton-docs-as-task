@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from './parser';
-import { DEFAULT_COLUMNS, DEFAULT_MARKERS } from './defaults';
+import { DEFAULT_MARKERS } from './defaults';
 import {
   addSection,
+  addStatus,
   addTask,
   applyBulkAction,
+  canChangeStatusCategory,
   canLink,
+  canRemoveStatus,
+  canSetStatus,
   linksOf,
   linkTasks,
   openBlockers,
@@ -16,8 +20,12 @@ import {
   duplicateTask,
   fromParseResult,
   moveSection,
+  moveStatus,
+  moveTasksToStatus,
+  orphanStatuses,
   removeSection,
   removeSectionMovingTasks,
+  removeStatus,
   renameSection,
   reorderColumn,
   serializeModel,
@@ -25,6 +33,7 @@ import {
   setTaskStatus,
   setTitle,
   toggleDefaultSection,
+  updateStatus,
   updateTask,
   type BoardModel,
 } from './model';
@@ -92,7 +101,7 @@ describe('independent status and section', () => {
 
   it('projects the same tasks into workflow and section columns', () => {
     const model = build(SAMPLE);
-    const workflow = columnsForView(model, 'workflow', DEFAULT_COLUMNS);
+    const workflow = columnsForView(model, 'workflow');
     expect(workflow.map((c) => c.key)).toEqual(['todo', 'doing', 'done']);
     expect(workflow.find((c) => c.key === 'doing')!.tasks.map((t) => t.title)).toEqual([
       'Implement API',
@@ -101,20 +110,20 @@ describe('independent status and section', () => {
       'Publish announcement',
     ]);
 
-    const sections = columnsForView(model, 'sections', DEFAULT_COLUMNS);
+    const sections = columnsForView(model, 'sections');
     expect(sections.map((c) => c.key)).toEqual(['Build', 'Launch']);
   });
 
   it('projects every task into a single flat list column', () => {
     const model = build(SAMPLE);
-    const [list, ...rest] = columnsForView(model, 'list', DEFAULT_COLUMNS);
+    const [list, ...rest] = columnsForView(model, 'list');
     expect(rest).toEqual([]);
     expect(list!.tasks).toHaveLength(model.tasks.length);
   });
 
   it('limits the list to the @default section and round-trips the marker', () => {
     let model = toggleDefaultSection(build(SAMPLE), 'Launch');
-    const [list] = columnsForView(model, 'list', DEFAULT_COLUMNS);
+    const [list] = columnsForView(model, 'list');
     expect(list!.tasks.every((t) => t.section === 'Launch')).toBe(true);
     model = renameSection(model, 'Launch', 'Ship');
     expect(model.defaultSection).toBe('Ship');
@@ -404,5 +413,145 @@ describe('task relationships', () => {
     expect(setTaskStatus(unblocked, b, 'doing').tasks.find((t) => t.id === b)!.status).toBe(
       'doing',
     );
+  });
+});
+
+const STATUS_DOC = [
+  '#!tasks Flow',
+  '@settings status backlog "Backlog" @category:todo',
+  '@settings status review "In review" @category:doing @color:purple @bg:#efeaff',
+  '@settings status shipped "Shipped" @category:done',
+  '',
+  '## S',
+  '- [ ] Idea',
+  '- [ ] Patch @status:review',
+  '- [x] Release',
+].join('\n');
+
+describe('status serialization', () => {
+  it('writes the statuses right below the marker, in order', () => {
+    const lines = serializeModel(build(STATUS_DOC), MARKER).split('\n');
+    expect(lines.slice(0, 4)).toEqual([
+      '#!tasks Flow',
+      '@settings status backlog "Backlog" @category:todo',
+      '@settings status review "In review" @category:doing @color:purple @bg:#efeaff',
+      '@settings status shipped "Shipped" @category:done',
+    ]);
+  });
+
+  it('writes a status token only when the checkbox does not imply it', () => {
+    const text = serializeModel(build(STATUS_DOC), MARKER);
+    expect(text).toContain('- [ ] Idea\n- [ ] Patch @status:review\n- [x] Release');
+  });
+
+  it('ticks the checkbox for every Done status', () => {
+    let model = build(STATUS_DOC);
+    ({ model } = addStatus(model, { label: 'Archived', category: 'done' }));
+    model = setTaskStatus(model, model.tasks[0]!.id, 'archived');
+    expect(serializeModel(model, MARKER)).toContain('- [x] Idea @status:archived');
+  });
+
+  it('keeps a reference to an undefined status', () => {
+    const model = build('#!tasks\n- [ ] Lost @status:qa');
+    expect(serializeModel(model, MARKER)).toContain('- [ ] Lost @status:qa');
+    expect(orphanStatuses(model)).toEqual([{ key: 'qa', count: 1 }]);
+  });
+
+  it('round-trips statuses and their colours', () => {
+    const model = build(STATUS_DOC);
+    expect(roundTrip(model).statuses).toEqual(model.statuses);
+  });
+});
+
+describe('status management', () => {
+  it('adds a status keyed after a unique label', () => {
+    const base = build(STATUS_DOC);
+    const { model, key } = addStatus(base, { label: 'In review' });
+    expect(key).toBe('in-review-2');
+    expect(model.statuses.at(-1)).toEqual({
+      key: 'in-review-2',
+      label: 'In review 2',
+      category: 'doing',
+    });
+  });
+
+  it('renames without touching task lines and refuses duplicates', () => {
+    const base = build(STATUS_DOC);
+    const renamed = updateStatus(base, 'review', { label: 'QA' });
+    expect(renamed.statuses[1]!.label).toBe('QA');
+    expect(serializeModel(renamed, MARKER)).toContain('Patch @status:review');
+    expect(updateStatus(base, 'review', { label: 'backlog' })).toBe(base);
+    expect(updateStatus(base, 'review', { label: '  ' })).toBe(base);
+  });
+
+  it('clears a colour', () => {
+    const model = updateStatus(build(STATUS_DOC), 'review', { color: undefined });
+    expect(model.statuses[1]).not.toHaveProperty('color');
+    expect(model.statuses[1]!.bg).toBe('#efeaff');
+  });
+
+  it('never leaves the board without a Not started or Done status', () => {
+    const base = build(STATUS_DOC);
+    expect(canChangeStatusCategory(base, 'shipped', 'doing')).toBe(false);
+    expect(updateStatus(base, 'shipped', { category: 'doing' })).toBe(base);
+    expect(canRemoveStatus(base, 'backlog')).toBe(false);
+    expect(canRemoveStatus(base, 'review')).toBe(true);
+    expect(removeStatus(base, 'shipped', 'backlog')).toBe(base);
+  });
+
+  it('reorders statuses', () => {
+    const model = moveStatus(build(STATUS_DOC), 'shipped', -2);
+    expect(model.statuses.map((s) => s.key)).toEqual(['shipped', 'backlog', 'review']);
+    expect(columnsForView(model, 'workflow').map((c) => c.key)).toEqual([
+      'shipped',
+      'backlog',
+      'review',
+    ]);
+  });
+
+  it('deletes a status, moving its tasks first', () => {
+    const base = build(STATUS_DOC);
+    expect(removeStatus(base, 'review')).toBe(base);
+    const model = removeStatus(base, 'review', 'backlog');
+    expect(model.statuses.map((s) => s.key)).toEqual(['backlog', 'shipped']);
+    expect(model.tasks.map((t) => t.status)).toEqual(['backlog', 'backlog', 'shipped']);
+  });
+
+  it('deletes an empty status without a target', () => {
+    const { model: base } = addStatus(build(STATUS_DOC), { label: 'Spare' });
+    expect(removeStatus(base, 'spare').statuses.map((s) => s.key)).not.toContain('spare');
+  });
+
+  it('moves the tasks of a missing status to a defined one', () => {
+    const base = build('#!tasks\n- [ ] a @status:qa\n- [ ] b @status:qa\n- [ ] c');
+    const model = moveTasksToStatus(base, 'qa', 'doing');
+    expect(model.tasks.map((t) => t.status)).toEqual(['doing', 'doing', 'todo']);
+    expect(orphanStatuses(model)).toEqual([]);
+    expect(moveTasksToStatus(base, 'qa', 'nope')).toBe(base);
+  });
+
+  it('lets a blocked task only move between Not started statuses', () => {
+    let model = build(
+      [
+        '#!tasks',
+        '@settings status backlog "Backlog" @category:todo',
+        '@settings status ready "Ready" @category:todo',
+        '@settings status done "Done" @category:done',
+        '- [ ] Blocker @id:a @blocks:b',
+        '- [ ] Blocked @id:b',
+      ].join('\n'),
+    );
+    const blocked = model.tasks[1]!;
+    expect(canSetStatus(model, blocked, 'ready')).toBe(true);
+    expect(canSetStatus(model, blocked, 'done')).toBe(false);
+    model = setTaskStatus(model, model.tasks[0]!.id, 'done');
+    expect(canSetStatus(model, model.tasks[1]!, 'done')).toBe(true);
+  });
+
+  it('completes tasks into the first Done status and counts every Done status', () => {
+    let model = build(STATUS_DOC);
+    model = applyBulkAction(model, [model.tasks[0]!.id], { kind: 'complete' });
+    expect(model.tasks[0]!.status).toBe('shipped');
+    expect(countTasks(model)).toEqual({ total: 3, done: 2 });
   });
 });

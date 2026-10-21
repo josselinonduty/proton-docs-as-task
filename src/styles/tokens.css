@@ -80,6 +80,23 @@
   --pdt-signal-info-weak: #e9f5fa;
   --pdt-signal-info-text: #196f90;
 
+  /* ---------- Status swatches ----------
+   * Named colours a board can give its statuses (`@color:blue @bg:blue`).
+   * They alias the palette above, so they follow the dark theme and keep
+   * `-text` readable on `-bg`. */
+  --pdt-swatch-grey-text: var(--pdt-text-weak);
+  --pdt-swatch-grey-bg: var(--pdt-background-strong);
+  --pdt-swatch-purple-text: var(--pdt-primary-text);
+  --pdt-swatch-purple-bg: var(--pdt-primary-weak);
+  --pdt-swatch-blue-text: var(--pdt-signal-info-text);
+  --pdt-swatch-blue-bg: var(--pdt-signal-info-weak);
+  --pdt-swatch-green-text: var(--pdt-signal-success-text);
+  --pdt-swatch-green-bg: var(--pdt-signal-success-weak);
+  --pdt-swatch-orange-text: var(--pdt-signal-warning-text);
+  --pdt-swatch-orange-bg: var(--pdt-signal-warning-weak);
+  --pdt-swatch-red-text: var(--pdt-signal-danger-text);
+  --pdt-swatch-red-bg: var(--pdt-signal-danger-weak);
+
   /* ---------- Elevation ---------- */
   --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
   --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.1);

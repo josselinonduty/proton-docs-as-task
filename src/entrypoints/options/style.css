@@ -96,13 +96,6 @@ code {
   max-width: 220px;
 }
 
-.op-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--pdt-space-3);
-  margin-bottom: var(--pdt-space-3);
-}
-
 .op-actions {
   display: flex;
   gap: var(--pdt-space-2);

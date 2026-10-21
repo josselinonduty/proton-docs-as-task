@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_SETTINGS, getSettings, markersAreValid, setSettings } from '../../lib/settings';
-import type { CardFieldVisibility, Settings, StatusKey } from '../../lib/types';
-
-const STATUS_ORDER: StatusKey[] = ['todo', 'doing', 'done'];
+import type { CardFieldVisibility, Settings } from '../../lib/types';
 
 const CARD_FIELD_OPTIONS: { key: keyof CardFieldVisibility; label: string }[] = [
   { key: 'description', label: 'Description preview' },
@@ -47,17 +45,6 @@ export function App() {
     }
     setMarkerError('');
     void persist({ markers });
-  }
-
-  function updateColumnLabel(key: StatusKey, label: string) {
-    if (!settings) return;
-    const columns = settings.columns.map((c) => (c.key === key ? { ...c, label } : c));
-    setLocal({ ...settings, columns });
-  }
-
-  function saveColumns() {
-    if (!settings) return;
-    void persist({ columns: settings.columns });
   }
 
   if (!settings) return <div className="op-loading">Loading…</div>;
@@ -257,42 +244,6 @@ export function App() {
       </section>
 
       <section className="op-card pdt-card">
-        <h2>Workflow labels</h2>
-        <p className="op-hint">
-          Rename the status columns shown on the board. The internal keys stay <code>todo</code>,{' '}
-          <code>doing</code> and <code>done</code>, so renaming a label never changes any task's
-          status or metadata.
-        </p>
-        <div className="op-cols">
-          {STATUS_ORDER.map((key) => {
-            const col = settings.columns.find((c) => c.key === key);
-            return (
-              <label key={key} className="pdt-field">
-                <span className="pdt-field-label">{key}</span>
-                <input
-                  type="text"
-                  className="pdt-input"
-                  value={col?.label ?? ''}
-                  onChange={(e) => updateColumnLabel(key, e.target.value)}
-                />
-              </label>
-            );
-          })}
-        </div>
-        <div className="op-actions">
-          <button className="pdt-btn pdt-btn-primary" onClick={saveColumns}>
-            Save labels
-          </button>
-          <button
-            className="pdt-btn"
-            onClick={() => persist({ columns: DEFAULT_SETTINGS.columns })}
-          >
-            Reset to defaults
-          </button>
-        </div>
-      </section>
-
-      <section className="op-card pdt-card">
         <h2>Task syntax</h2>
         <p className="op-hint">
           Below the marker line, write your tasks as a checklist. The board updates live as you
@@ -308,7 +259,13 @@ export function App() {
             <code>## Heading</code> — a section (the Sections view groups by these)
           </li>
           <li>
-            <code>@status:doing</code> — todo · doing · done (also <code>@s:wip</code>)
+            <code>@settings status review "In review" @category:doing</code> — defines a status (one
+            line each, right below the marker). Manage them from the board's <em>Board settings</em>
+            ; a board without any uses To Do · In Progress · Done
+          </li>
+          <li>
+            <code>@status:review</code> — the task's status, by key (a ticked checkbox means the
+            first Done status; built-in shorthands like <code>@s:wip</code> still work)
           </li>
           <li>
             <code>@priority:high</code> — high · medium · low (also <code>!</code>/<code>!!</code>/
@@ -383,6 +340,9 @@ function Toggle({
 }
 
 const SYNTAX_EXAMPLE = `#!tasks Sprint 42
+@settings status todo "To Do" @category:todo
+@settings status doing "In Progress" @category:doing @color:blue @bg:blue
+@settings status done "Done" @category:done @color:green
 
 ## Backend
 - [x] Design the schema @who:sam

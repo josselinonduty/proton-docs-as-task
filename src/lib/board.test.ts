@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { groupBySection, groupByStatus, summarize } from './board';
 import { parseDocument } from './parser';
-import { DEFAULT_COLUMNS, DEFAULT_MARKERS } from './defaults';
+import { DEFAULT_MARKERS } from './defaults';
+import { DEFAULT_STATUSES } from './statuses';
 
 const doc = [
   '#!tasks',
@@ -16,7 +17,7 @@ const result = parseDocument(doc, DEFAULT_MARKERS);
 
 describe('groupByStatus', () => {
   it('places each task in its status column and keeps empty columns', () => {
-    const groups = groupByStatus(result.tasks, DEFAULT_COLUMNS);
+    const groups = groupByStatus(result.tasks, [...DEFAULT_STATUSES]);
     expect(groups.map((g) => g.key)).toEqual(['todo', 'doing', 'done']);
     expect(groups[0]!.tasks.map((t) => t.title)).toEqual(['ui']);
     expect(groups[1]!.tasks.map((t) => t.title)).toEqual(['api']);
@@ -42,6 +43,9 @@ describe('summarize', () => {
   });
 
   it('reports zero progress for an empty board', () => {
-    expect(summarize({ activated: true, tasks: [], sections: [] }).progress).toBe(0);
+    expect(
+      summarize({ activated: true, tasks: [], sections: [], statuses: [...DEFAULT_STATUSES] })
+        .progress,
+    ).toBe(0);
   });
 });

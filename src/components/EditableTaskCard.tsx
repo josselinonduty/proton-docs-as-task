@@ -6,14 +6,15 @@ import type {
   CardDensity,
   CardFieldVisibility,
   DateFormat,
-  StatusKey,
+  StatusDef,
 } from '../lib/types';
+import { findStatus } from '../lib/statuses';
 import { Icon } from './Icon';
 import { PRIORITY_ICON, priorityLabel } from './taskFields';
 
 interface EditableTaskCardProps {
   task: BoardTask;
-  statusColumns: { key: StatusKey; label: string }[];
+  statuses: StatusDef[];
   density: CardDensity;
   showDescriptionPreview: boolean;
   cardFields: CardFieldVisibility;
@@ -55,7 +56,7 @@ interface EditableTaskCardProps {
 export function EditableTaskCard(props: EditableTaskCardProps) {
   const {
     task,
-    statusColumns,
+    statuses,
     density,
     showDescriptionPreview,
     cardFields,
@@ -80,9 +81,10 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
   } = props;
 
   const articleRef = useRef<HTMLElement>(null);
-  const done = task.status === 'done';
+  const status = findStatus(statuses, task.status);
+  const done = status?.category === 'done';
   const state = dueState(task.due, now, done);
-  const statusLabel = statusColumns.find((c) => c.key === task.status)?.label ?? task.status;
+  const statusLabel = status?.label ?? task.status;
 
   useEffect(() => {
     if (focus && articleRef.current) {
@@ -133,7 +135,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
       ref={articleRef}
       className={[
         'pdt-taskcard',
-        `pdt-taskcard--${task.status}`,
+        `pdt-taskcard--${status?.category ?? 'todo'}`,
         density === 'compact' ? 'pdt-taskcard--compact' : '',
         done ? 'is-done' : '',
         selection?.selected ? 'is-selected' : '',

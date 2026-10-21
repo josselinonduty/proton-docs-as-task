@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { parseDocument } from '../lib/parser';
+import { defaultStatus, isDoneStatus } from '../lib/statuses';
 import type { EditorClient } from '../lib/editorClient';
 import type { EditorStateMessage } from '../lib/bridgeProtocol';
 import {
@@ -103,11 +104,12 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   );
   const sessionReady = useRef(false);
 
-  const seedCollapsed = useCallback(
-    () =>
-      settings.completedDisplay === 'collapse' || settings.collapseDoneByDefault ? ['done'] : [],
-    [settings.completedDisplay, settings.collapseDoneByDefault],
-  );
+  // Every Done-category column of the document, when completed tasks start collapsed.
+  const seedCollapsed = useCallback(() => {
+    if (settings.completedDisplay !== 'collapse' && !settings.collapseDoneByDefault) return [];
+    const { statuses } = parseDocument(docLines.current.join('\n'), settings.markers);
+    return statuses.filter((s) => s.category === 'done').map((s) => s.key);
+  }, [settings.completedDisplay, settings.collapseDoneByDefault, settings.markers]);
 
   // Load stored preferences once (per document key, else start from defaults).
   useEffect(() => {
@@ -409,7 +411,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
       const targetSection =
         section && base.sections.includes(section) ? section : (base.sections[0] ?? 'Tasks');
       const { model: withTask, taskId } = addTaskToModel(base, targetSection, {
-        status: 'todo',
+        status: defaultStatus(base.statuses, false),
         title: clean,
         atTop: settings.newCardsAtTop,
       });
@@ -442,7 +444,9 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   // Respond to popup commands. Only this (editor) frame registers a listener.
   useEffect(() => {
     const counts = model ? countTasks(model) : { total: result.tasks.length, done: 0 };
-    const doneCount = model ? counts.done : result.tasks.filter((t) => t.status === 'done').length;
+    const doneCount = model
+      ? counts.done
+      : result.tasks.filter((t) => isDoneStatus(result.statuses, t.status)).length;
     const status = (): StatusResponse => ({
       ok: true,
       activated: result.activated,
@@ -518,7 +522,9 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
 
   // Activated document, board closed → floating button to reopen it.
   if (result.activated) {
-    const pendingCount = result.tasks.filter((t) => t.status !== 'done').length;
+    const pendingCount = result.tasks.filter(
+      (t) => !isDoneStatus(result.statuses, t.status),
+    ).length;
     return (
       <button
         className="pdt-btn pdt-btn-pill pdt-fab"

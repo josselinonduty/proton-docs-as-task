@@ -4,6 +4,10 @@ interface SectionNameInputProps {
   name: string;
   /** Names of the other sections, to reject a rename that would merge two. */
   otherNames: string[];
+  /** What is being named, for messages and labels (default `section`). */
+  noun?: string;
+  /** Compare names case-insensitively when rejecting duplicates. */
+  ignoreCase?: boolean;
   /** Grab focus once (e.g. after a rename re-keyed the column). */
   autoFocus?: boolean;
   onFocusHandled?: () => void;
@@ -13,7 +17,7 @@ interface SectionNameInputProps {
 }
 
 /**
- * Inline editor for a section heading. Edits are kept as a local draft and
+ * Inline editor for a section heading (or another column name, via `noun`). Edits are kept as a local draft and
  * written once — on Enter or blur — instead of on every keystroke: renaming a
  * section rewrites a document heading and re-keys its column, so per-keystroke
  * writes would churn the document and drop focus mid-word. Escape reverts.
@@ -21,6 +25,8 @@ interface SectionNameInputProps {
 export function SectionNameInput({
   name,
   otherNames,
+  noun = 'section',
+  ignoreCase = false,
   autoFocus,
   onFocusHandled,
   onRename,
@@ -43,8 +49,9 @@ export function SectionNameInput({
   }, [autoFocus, onFocusHandled]);
 
   const clean = draft.trim();
-  const duplicate = clean !== name && otherNames.includes(clean);
-  const error = !clean ? 'A section needs a name' : duplicate ? `“${clean}” already exists` : '';
+  const same = (a: string) => (ignoreCase ? a.toLowerCase() === clean.toLowerCase() : a === clean);
+  const duplicate = clean !== name && otherNames.some(same);
+  const error = !clean ? `A ${noun} needs a name` : duplicate ? `“${clean}” already exists` : '';
 
   const commit = () => {
     setEditing(false);
@@ -65,9 +72,9 @@ export function SectionNameInput({
       ref={inputRef}
       className="pdt-column__name-input"
       value={draft}
-      aria-label={`Section name: ${name}`}
+      aria-label={`${noun[0]!.toUpperCase()}${noun.slice(1)} name: ${name}`}
       aria-invalid={error ? true : undefined}
-      title={error || 'Rename section'}
+      title={error || `Rename ${noun}`}
       onFocus={() => {
         viaKeyboard.current = false;
         setEditing(true);

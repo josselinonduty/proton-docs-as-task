@@ -49,9 +49,9 @@ describe('extractMeta', () => {
     expect(m.title).toBe('Call vendor');
   });
 
-  it('maps synonyms and short forms', () => {
+  it('maps short forms and keeps the raw status value', () => {
     const m = extractMeta('Task @s:wip @p:m');
-    expect(m.status).toBe('doing');
+    expect(m.status).toBe('wip');
     expect(m.priority).toBe('medium');
   });
 
@@ -178,5 +178,60 @@ describe('@default section marker', () => {
     ]);
     expect(result.sections).toEqual(['Inbox', 'Later']);
     expect(result.defaultSection).toBe('Inbox');
+  });
+});
+
+describe('per-document statuses', () => {
+  const parse = (...lines: string[]) =>
+    parseDocument(['#!tasks', ...lines].join('\n'), DEFAULT_MARKERS);
+  const SETTINGS = [
+    '@settings status backlog "Backlog" @category:todo',
+    '@settings status review "In review" @category:doing @color:purple',
+    '@settings status shipped "Shipped" @category:done @bg:green',
+    '@settings status archived "Archived" @category:done',
+  ];
+
+  it('uses the built-in statuses when the document defines none', () => {
+    expect(parse('- [ ] a').statuses.map((s) => s.key)).toEqual(['todo', 'doing', 'done']);
+  });
+
+  it('reads @settings status lines in order and never treats them as tasks', () => {
+    const r = parse(...SETTINGS, '## S', '- [ ] a');
+    expect(r.statuses.map((s) => s.key)).toEqual(['backlog', 'review', 'shipped', 'archived']);
+    expect(r.statuses[1]).toMatchObject({ label: 'In review', color: 'purple' });
+    expect(r.tasks.map((t) => t.title)).toEqual(['a']);
+  });
+
+  it('resolves tasks against the document statuses', () => {
+    const r = parse(
+      ...SETTINGS,
+      '- [ ] plain',
+      '- [ ] waiting @status:review',
+      '- [x] ticked',
+      '- [x] gone @status:archived',
+      '- [ ] shipped already @status:shipped',
+    );
+    expect(r.tasks.map((t) => [t.status, t.checked])).toEqual([
+      ['backlog', false],
+      ['review', false],
+      ['shipped', true],
+      ['archived', true],
+      ['shipped', true],
+    ]);
+  });
+
+  it('lets a ticked checkbox win over a status of another category', () => {
+    expect(parse(...SETTINGS, '- [x] a @status:review').tasks[0]!.status).toBe('shipped');
+  });
+
+  it('maps built-in shorthands only to a status with that key', () => {
+    expect(parse('- [ ] a @s:wip').tasks[0]!.status).toBe('doing');
+    expect(parse(...SETTINGS, '- [ ] a @s:wip').tasks[0]!.status).toBe('wip');
+  });
+
+  it('keeps a reference to an undefined status instead of moving the task', () => {
+    const task = parse(...SETTINGS, '- [ ] a @status:qa').tasks[0]!;
+    expect(task.status).toBe('qa');
+    expect(task.checked).toBe(false);
   });
 });

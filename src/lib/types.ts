@@ -6,8 +6,28 @@ import type { DateFormat } from './dates';
 
 export type { DateFormat };
 
-/** Canonical task status keys used internally. */
-export type StatusKey = 'todo' | 'doing' | 'done';
+/** Key of one of the board's statuses, as written in `@status:key`. */
+export type StatusKey = string;
+
+/**
+ * What a status means to the board: Not started, In progress or Done. A Done
+ * status ticks the task's checkbox and counts as completed; a blocked task may
+ * not leave a Not started status.
+ */
+export type StatusCategory = 'todo' | 'doing' | 'done';
+
+/** A workflow status defined by the document (`@settings status …`). */
+export interface StatusDef {
+  /** Stable reference written on task lines; never changes once created. */
+  key: StatusKey;
+  /** Display name; renaming never touches task lines. */
+  label: string;
+  category: StatusCategory;
+  /** Text colour: a swatch name (`blue`) or `#rrggbb`. */
+  color?: string;
+  /** Background colour: a swatch name or `#rrggbb`. */
+  bg?: string;
+}
 
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -17,7 +37,11 @@ export interface Task {
   id: string;
   /** Human-readable title (metadata tokens stripped out). */
   title: string;
-  /** Resolved status. */
+  /**
+   * Resolved status key. May name a status the document doesn't define when a
+   * task line references one that was removed; the board then asks the user
+   * to move those tasks.
+   */
   status: StatusKey;
   /** True when the source checkbox was ticked (`- [x]`). */
   checked: boolean;
@@ -62,12 +86,8 @@ export interface ParseResult {
   sections: string[];
   /** Section whose heading carries `@default`; the only one the List view shows. */
   defaultSection?: string;
-}
-
-/** A board column definition. */
-export interface ColumnDef {
-  key: StatusKey;
-  label: string;
+  /** The document's statuses, in column order (built-in defaults when it defines none). */
+  statuses: StatusDef[];
 }
 
 /**
@@ -115,8 +135,6 @@ export interface Settings {
    * trimmed, starts with any of these (case-insensitive).
    */
   markers: string[];
-  /** Status column definitions (renameable labels), in display order. */
-  columns: ColumnDef[];
   /** Default board view. */
   defaultView: BoardView;
   /** Whether the board should be opened automatically on activation. */

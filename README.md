@@ -16,9 +16,10 @@ its checklist is parsed straight into a live board on top of the editor.
 A task's **status** (its workflow stage) and its **section** (the `## Heading`
 it lives under) are independent. The board shows the same tasks in two layouts:
 
-- **Workflow** — Kanban columns for _To Do_, _In Progress_ and _Done_. Moving a
-  card changes its status (and ticks/unticks its Markdown checkbox); its section
-  is untouched.
+- **Workflow** — Kanban columns for the board's statuses (_To Do_, _In
+  Progress_ and _Done_ unless you [define your own](#statuses)). Moving a card
+  changes its status (and ticks/unticks its Markdown checkbox); its section is
+  untouched.
 - **Sections** — columns for the document's `## Headings`. Moving a card changes
   its section; its status is untouched. You can add, rename, reorder and delete
   sections here.
@@ -59,7 +60,8 @@ exists is refused rather than silently merging two sections.
 ### Quick capture
 
 - **Add task** in the board header opens a compact form — only the title is
-  required; status defaults to _To Do_ and the section to the one you used last.
+  required; status defaults to the first _Not started_ status and the section to
+  the one you used last.
   `Cmd`/`Ctrl`+`Enter` (or `Enter` in the title) creates it; the new card is
   briefly highlighted, and if active filters would hide it you’re told and
   offered **Clear filters**. Every column keeps its own **+ Add task** too.
@@ -206,18 +208,55 @@ board title after the marker.
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `- [ ]` / `- [x]`                      | An open / done task (plain `- bullets` work too)                                                         |
 | `## Heading`                           | A section — the Sections view groups by these                                                            |
-| `@status:doing`                        | Status: `todo` · `doing` · `done` (aliases: `@s:wip`, `backlog`, `in-progress`, …)                       |
+| `@status:doing`                        | Status, by key (built-in shorthands like `@s:wip` or `in-progress` map to a status with that key)        |
 | `@priority:high`                       | Priority: `high` · `medium` · `low` (or `!` / `!!` / `!!!`)                                              |
 | `@due:2026-09-10`                      | A due date (`@due(next friday)` also works)                                                              |
 | `@who:alex` / `@@alex`                 | An assignee                                                                                              |
-| `@id:key` `@blocks:key,key` `@rel:key` | Task links, managed from the task panel (a blocked task can't leave _To do_ until its blockers are done) |
+| `@id:key` `@blocks:key,key` `@rel:key` | Task links, managed from the task panel (a blocked task stays _Not started_ until its blockers are done) |
 | `@desc(free text)`                     | A hidden single-line description (managed from the board, escaped to round-trip)                         |
 | `#label`                               | One or more labels                                                                                       |
 
-A ticked checkbox always resolves to **done**; otherwise an explicit `@status`
-applies, and everything else is **todo**. See
-[`examples/sample-board.md`](examples/sample-board.md) for a fuller example, and
-the extension's **options page** for an in-app syntax guide.
+A ticked checkbox always resolves to a **Done** status; otherwise an explicit
+`@status` applies, and everything else gets the first **Not started** status.
+See [`examples/sample-board.md`](examples/sample-board.md) for a fuller example,
+and the extension's **options page** for an in-app syntax guide.
+
+### Statuses
+
+Each board defines its own statuses, stored in the document right below the
+activation marker — one `@settings status` line each, in column order:
+
+```text
+#!tasks Sprint 42
+@settings status todo "To Do" @category:todo
+@settings status doing "In Progress" @category:doing @color:blue @bg:blue
+@settings status review "In review" @category:doing @color:#6d4aff @bg:#efeaff
+@settings status done "Done" @category:done @color:green
+```
+
+- The **key** (`review`) is what task lines reference (`@status:review`). It's
+  set once, from the label, so **renaming** a status never rewrites a task.
+- The **category** gives a status its meaning: `todo` (_Not started_), `doing`
+  (_In progress_) or `done`. Any Done status ticks the task's checkbox and
+  counts as completed; the first Done status is what ticking a checkbox
+  picks, and the first Not started one is where new tasks land. A board always
+  keeps at least one of each.
+- **Colours** are optional: `@color` for the text, `@bg` for the background,
+  either a theme-aware swatch (`grey`, `purple`, `blue`, `green`, `orange`,
+  `red`) or a hex value. They colour the column header and tint the column.
+
+Manage them from **Board settings** (the board's ⋮ menu or the command
+palette): add, rename, change category or colours, reorder (drag and drop or
+`Alt`+`↑`/`↓`) and delete — deleting a status that still has tasks asks where
+to move them. Workflow column headers offer the same rename, reorder, colour
+and delete controls, plus an **Add status** column.
+
+A board without `@settings status` lines uses _To Do_ / _In Progress_ /
+_Done_; those are written into the document with the board's first edit, never
+just by opening it. If a task references a status the board doesn't define
+(removed elsewhere, or typed by hand), the board shows a blocking dialog until
+those tasks are moved to an existing status — or the status is created again
+from Board settings.
 
 ## Install from a release
 
@@ -379,12 +418,11 @@ or the "Settings & syntax guide" link in the popup) to:
 - set **display preferences** — which fields cards show, how completed tasks are
   presented (shown / Done collapsed / hidden), the date format, and your own name
   for the _My open tasks_ filter,
-- rename the workflow labels (the internal keys stay `todo` / `doing` / `done`,
-  so renaming never changes a task's status),
 - customize the activation markers (an empty marker list is rejected).
 
 Settings are stored in `browser.storage.sync`, and a v0.4 or v0.5 board opens
-with no manual migration.
+with no manual migration. Statuses aren't an extension setting: each board
+keeps its own in the document (see [Statuses](#statuses)).
 
 ## Project layout
 
