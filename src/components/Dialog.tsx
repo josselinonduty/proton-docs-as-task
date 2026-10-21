@@ -3,16 +3,15 @@ import { useEffect, useRef } from 'react';
 interface DialogProps {
   title: string;
   children: React.ReactNode;
-  onClose: () => void;
+  /**
+   * Called on Escape or a backdrop click. Without it the dialog can't be
+   * dismissed: it stays until one of its own actions resolves what it asks for.
+   */
+  onClose?: () => void;
   /** Panel width: `md` (default) for confirmations, `lg` for forms. */
   size?: 'md' | 'lg';
   /** Element to focus first; defaults to the first focusable control. */
   initialFocus?: React.RefObject<HTMLElement | null>;
-  /**
-   * When false, Escape and backdrop clicks don't close the dialog: it stays
-   * until one of its own actions resolves what it asks for.
-   */
-  dismissible?: boolean;
 }
 
 const FOCUSABLE =
@@ -25,22 +24,15 @@ function activeElementOf(node: Node): Element | null {
 }
 
 /**
- * A modal dialog that traps focus, closes on Escape or backdrop click (unless
- * `dismissible` is false), and restores focus to the element that opened it.
+ * A modal dialog that traps focus, closes on Escape or backdrop click (when
+ * it has `onClose`), and restores focus to the element that opened it.
  *
  * The board lives in a shadow root, where `document.activeElement` is just the
  * shadow host — so focus is always read from the dialog's own root node.
  * Keys are handled on the panel (not the document) so a nested popover, such
  * as an open autocomplete or date picker, can consume Escape first.
  */
-export function Dialog({
-  title,
-  children,
-  onClose,
-  size = 'md',
-  initialFocus,
-  dismissible = true,
-}: DialogProps) {
+export function Dialog({ title, children, onClose, size = 'md', initialFocus }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -63,7 +55,7 @@ export function Dialog({
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
-      if (dismissible) onCloseRef.current();
+      onCloseRef.current?.();
       return;
     }
     const panel = panelRef.current;
@@ -87,7 +79,7 @@ export function Dialog({
   return (
     <div
       className="pdt-modal"
-      onMouseDown={(e) => dismissible && e.target === e.currentTarget && onCloseRef.current()}
+      onMouseDown={(e) => e.target === e.currentTarget && onCloseRef.current?.()}
     >
       <div
         className={`pdt-modal__panel pdt-modal__panel--${size}`}

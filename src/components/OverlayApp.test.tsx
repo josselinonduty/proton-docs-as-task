@@ -20,14 +20,10 @@ vi.mock('wxt/browser', () => ({
     },
   },
 }));
-vi.mock('../lib/settings', async () => {
-  const defaults = await import('../lib/defaults');
-  return {
-    settingsItem: { watch: () => () => {} },
-    setSettings: vi.fn(),
-    withDefaults: defaults.withDefaults,
-  };
-});
+vi.mock('../lib/settings', () => ({
+  settingsItem: { watch: () => () => {} },
+  setSettings: vi.fn(),
+}));
 vi.mock('../lib/sessionStore', async () => {
   const session = await import('../lib/session');
   return {

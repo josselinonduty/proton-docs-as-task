@@ -1,18 +1,23 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { colorCss, isSwatch, normalizeColor, STATUS_SWATCHES } from '../lib/statuses';
+import {
+  colorCss,
+  isSwatch,
+  normalizeColor,
+  STATUS_SWATCHES,
+  type ColorRole,
+} from '../lib/statuses';
 import type { StatusDef } from '../lib/types';
 import { Icon } from './Icon';
+import { useDismiss } from './useDismiss';
 
 /** Expose a status's colours to CSS as `--pdt-status-text` / `--pdt-status-bg`. */
 export function statusStyle(status: Pick<StatusDef, 'color' | 'bg'>): React.CSSProperties {
   return {
     '--pdt-status-text': colorCss(status.color, 'text'),
     '--pdt-status-bg': colorCss(status.bg, 'bg'),
-  } as React.CSSProperties;
+  };
 }
-
-type ColorRole = 'text' | 'bg';
 
 interface ColorSwatchesProps {
   /** Accessible name of the group, e.g. "Text colour". */
@@ -32,9 +37,14 @@ export function ColorSwatches({ label, role, value, onChange }: ColorSwatchesPro
   const { t } = useTranslation();
   const custom = value && !isSwatch(value) ? value : undefined;
   const [hex, setHex] = useState(custom ?? '');
+  const [syncedCustom, setSyncedCustom] = useState(custom);
   const hexId = useId();
 
-  useEffect(() => setHex(custom ?? ''), [custom]);
+  // Reset the draft whenever the stored colour changes.
+  if (custom !== syncedCustom) {
+    setSyncedCustom(custom);
+    setHex(custom ?? '');
+  }
 
   const commitHex = () => {
     const next = normalizeColor(hex);
@@ -105,20 +115,11 @@ interface StatusColorPickerProps extends ColorSwatchesProps {
 }
 
 /** A compact trigger that opens {@link ColorSwatches} in a popover. */
-export function StatusColorPicker(props: StatusColorPickerProps) {
-  const { label, role, value, pairedValue } = props;
+export function StatusColorPicker({ pairedValue, ...swatches }: StatusColorPickerProps) {
+  const { label, role, value } = swatches;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  // `composedPath` sees through the shadow root the board renders in.
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (rootRef.current && !e.composedPath().includes(rootRef.current)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, [open]);
+  useDismiss(open, [rootRef], () => setOpen(false));
 
   const text = role === 'text' ? value : pairedValue;
   const bg = role === 'bg' ? value : pairedValue;
@@ -155,7 +156,7 @@ export function StatusColorPicker(props: StatusColorPickerProps) {
       </button>
       {open && (
         <div className="pdt-colorpicker__panel" role="dialog" aria-label={label}>
-          <ColorSwatches {...props} />
+          <ColorSwatches {...swatches} />
         </div>
       )}
     </div>

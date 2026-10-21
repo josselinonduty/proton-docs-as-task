@@ -1,19 +1,18 @@
 import { useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { canChangeStatusCategory, updateStatus, type BoardModel } from '../lib/model';
+import { hasLowContrast } from '../lib/statuses';
 import {
-  addStatus,
-  canChangeStatusCategory,
-  canRemoveStatus,
-  moveStatus,
-  updateStatus,
-  type BoardModel,
-} from '../lib/model';
-import { hasLowContrast, STATUS_CATEGORIES } from '../lib/statuses';
-import type { StatusCategory, StatusDef, StatusKey } from '../lib/types';
+  STATUS_CATEGORIES,
+  type StatusCategory,
+  type StatusDef,
+  type StatusKey,
+} from '../lib/types';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { SectionNameInput } from './SectionNameInput';
 import { StatusColorPicker, statusStyle } from './StatusColorPicker';
+import { useStatusActions } from './useStatusActions';
 
 interface BoardSettingsDialogProps {
   model: BoardModel;
@@ -41,11 +40,10 @@ export function BoardSettingsDialog({
   const [dragKey, setDragKey] = useState<StatusKey | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const { statuses } = model;
+  const actions = useStatusActions({ model, onChange, announce });
 
   const move = (status: StatusDef, delta: number) => {
-    const next = moveStatus(model, status.key, delta);
-    if (next === model) return;
-    onChange(next, t('settings.undo.moved', { label: status.label }));
+    if (!actions.move(status, delta)) return;
     announce(t(delta < 0 ? 'settings.movedUp' : 'settings.movedDown', { label: status.label }));
   };
 
@@ -55,13 +53,6 @@ export function BoardSettingsDialog({
     setDragKey(null);
     if (from < 0 || to < 0 || from === to) return;
     move(statuses[from]!, to - from);
-  };
-
-  const add = () => {
-    const { model: next, key } = addStatus(model);
-    onChange(next, t('settings.undo.added'));
-    setFocusKey(key);
-    announce(t('settings.added'));
   };
 
   return (
@@ -82,7 +73,6 @@ export function BoardSettingsDialog({
         <ul className="pdt-statuslist">
           {statuses.map((status, i) => {
             const count = model.tasks.filter((task) => task.status === status.key).length;
-            const removable = canRemoveStatus(model, status.key);
             return (
               <li
                 key={status.key}
@@ -125,13 +115,7 @@ export function BoardSettingsDialog({
                         otherNames={statuses.filter((s) => s !== status).map((s) => s.label)}
                         autoFocus={focusKey === status.key}
                         onFocusHandled={() => setFocusKey(null)}
-                        onRename={(label) => {
-                          onChange(
-                            updateStatus(model, status.key, { label }),
-                            t('settings.undo.renamed', { label }),
-                          );
-                          announce(t('settings.renamed', { label }));
-                        }}
+                        onRename={(label) => actions.rename(status, label)}
                         onInvalid={announce}
                       />
                     </span>
@@ -146,7 +130,7 @@ export function BoardSettingsDialog({
                         {t('settings.categoryOf', { label: status.label })}
                       </span>
                       <select
-                        className="pdt-select"
+                        className="pdt-select pdt-select-sm"
                         value={status.category}
                         title={t('settings.category')}
                         onChange={(e) => {
@@ -157,13 +141,13 @@ export function BoardSettingsDialog({
                           );
                         }}
                       >
-                        {STATUS_CATEGORIES.map((c) => (
+                        {STATUS_CATEGORIES.map((category) => (
                           <option
-                            key={c.key}
-                            value={c.key}
-                            disabled={!canChangeStatusCategory(model, status.key, c.key)}
+                            key={category}
+                            value={category}
+                            disabled={!canChangeStatusCategory(model, status.key, category)}
                           >
-                            {t(`statusCategory.${c.key}`)}
+                            {t(`statusCategory.${category}`)}
                           </option>
                         ))}
                       </select>
@@ -226,14 +210,8 @@ export function BoardSettingsDialog({
                     type="button"
                     className="pdt-btn pdt-btn-icon pdt-btn-sm"
                     aria-label={t('settings.delete', { label: status.label })}
-                    title={
-                      removable
-                        ? t('settings.deleteStatus')
-                        : t('settings.needOne', {
-                            category: t(`statusCategory.${status.category}`),
-                          })
-                    }
-                    disabled={!removable}
+                    title={actions.removeHint(status)}
+                    disabled={!actions.canRemove(status)}
                     onClick={() => onRequestDelete(status.key)}
                   >
                     <Icon name="trash" />
@@ -244,7 +222,11 @@ export function BoardSettingsDialog({
           })}
         </ul>
 
-        <button type="button" className="pdt-btn pdt-btn-sm" onClick={add}>
+        <button
+          type="button"
+          className="pdt-btn pdt-btn-sm"
+          onClick={() => setFocusKey(actions.add())}
+        >
           <Icon name="plus" size={14} />
           {t('settings.add')}
         </button>

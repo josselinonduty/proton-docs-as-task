@@ -18,7 +18,7 @@ export default defineContentScript({
     if (!ctx.isValid) return;
 
     const settings = await getSettings();
-    await syncLanguage().then((stop) => ctx.onInvalidated(stop));
+    ctx.onInvalidated(await syncLanguage());
 
     const ui = await createShadowRootUi(ctx, {
       name: 'proton-docs-as-task',

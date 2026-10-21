@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   activeFilterCount,
@@ -9,6 +9,7 @@ import {
   type FilterState,
 } from '../lib/filters';
 import type { Priority, StatusDef } from '../lib/types';
+import { useDismiss } from './useDismiss';
 
 interface FilterPanelProps {
   filters: FilterState;
@@ -42,24 +43,7 @@ export function FilterPanel({
   const wrapRef = useRef<HTMLDivElement>(null);
   const count = activeFilterCount(filters) - (filters.search.trim() ? 1 : 0);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDocKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    const onDocClick = (e: MouseEvent) => {
-      // Use the composed path so clicks inside the shadow-root panel are
-      // recognised — `e.target` is retargeted to the shadow host at the
-      // document level, which would otherwise read as an outside click.
-      if (wrapRef.current && !e.composedPath().includes(wrapRef.current)) setOpen(false);
-    };
-    document.addEventListener('keydown', onDocKey);
-    document.addEventListener('mousedown', onDocClick);
-    return () => {
-      document.removeEventListener('keydown', onDocKey);
-      document.removeEventListener('mousedown', onDocClick);
-    };
-  }, [open]);
+  useDismiss(open, [wrapRef], () => setOpen(false), { escape: true });
 
   return (
     <div className="pdt-filter" ref={wrapRef}>

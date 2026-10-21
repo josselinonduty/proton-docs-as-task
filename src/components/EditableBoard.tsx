@@ -1,13 +1,11 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { t } from '../i18n';
+import type { TFunction } from 'i18next';
 import {
   addSection,
-  addStatus,
   addTask,
   applyBulkAction,
   canLink,
-  canRemoveStatus,
   canSetStatus,
   isTaskDone,
   linksOf,
@@ -18,7 +16,6 @@ import {
   countTasks,
   duplicateTask,
   moveSection,
-  moveStatus,
   moveTasksToStatus,
   orphanStatuses,
   toggleDefaultSection,
@@ -58,7 +55,14 @@ import {
 import { defaultStatus, findStatus } from '../lib/statuses';
 import { buildAssigneeIndex, buildLabelIndex } from '../lib/suggestions';
 import { modLabel } from '../lib/platform';
-import type { BoardView, SaveState, Settings, StatusDef, StatusKey } from '../lib/types';
+import {
+  BOARD_VIEWS,
+  type BoardView,
+  type SaveState,
+  type Settings,
+  type StatusDef,
+  type StatusKey,
+} from '../lib/types';
 import { EditableTaskCard } from './EditableTaskCard';
 import { TaskDetailsPanel, type DetailsFocus } from './TaskDetailsPanel';
 import { SectionNameInput } from './SectionNameInput';
@@ -74,6 +78,8 @@ import { Icon } from './Icon';
 import { BoardSettingsDialog } from './BoardSettingsDialog';
 import { ColorSwatches, statusStyle } from './StatusColorPicker';
 import { MissingStatusDialog, StatusDeleteDialog } from './StatusDialogs';
+import { useDismiss } from './useDismiss';
+import { useStatusActions } from './useStatusActions';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -105,9 +111,6 @@ interface EditableBoardProps {
 
 type PendingSectionDelete = { name: string; count: number };
 type PendingStatusDelete = { key: StatusKey; count: number };
-
-/** Order in which the V shortcut cycles through views. */
-const VIEW_ORDER: BoardView[] = ['workflow', 'sections', 'swimlane', 'list'];
 
 export function EditableBoard(props: EditableBoardProps) {
   const {
@@ -141,6 +144,7 @@ export function EditableBoard(props: EditableBoardProps) {
   const { t } = useTranslation();
   const taskName = (task: BoardTask) => task.title || t('board.task');
   const { statuses } = model;
+  const statusActions = useStatusActions({ model, onChange, announce });
   const isDone = (task: BoardTask) => isTaskDone(model, task);
   const now = new Date();
   const facets = collectFacets(model);
@@ -203,57 +207,31 @@ export function EditableBoard(props: EditableBoardProps) {
     boardRef.current?.focus();
   }, []);
 
-  // Close the overflow menu on outside click / Escape. `composedPath` is used
-  // because the click's target is retargeted to the shadow host at the
-  // document level, which would otherwise always read as an outside click.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (menuRef.current && !e.composedPath().includes(menuRef.current)) setMenuOpen(false);
-    };
-    const onDocKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', onDocClick);
-    document.addEventListener('keydown', onDocKey);
-    return () => {
-      document.removeEventListener('mousedown', onDocClick);
-      document.removeEventListener('keydown', onDocKey);
-    };
-  }, [menuOpen]);
-
-  // Close a column's colour menu on outside click (see the overflow menu above).
-  useEffect(() => {
-    if (!colorMenuFor) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (colorMenuRef.current && !e.composedPath().includes(colorMenuRef.current))
-        setColorMenuFor(null);
-    };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, [colorMenuFor]);
+  useDismiss(menuOpen, [menuRef], () => setMenuOpen(false), { escape: true });
+  useDismiss(colorMenuFor !== null, [colorMenuRef], () => setColorMenuFor(null));
 
   // The task shown in the details panel was deleted (here or elsewhere).
   useEffect(() => {
-    if (details && !model.tasks.some((t) => t.id === details.id)) setDetails(null);
+    if (details && !model.tasks.some((task) => task.id === details.id)) setDetails(null);
   }, [details, model]);
 
   useEffect(() => {
     if (!blockedNotice) return;
-    const t = setTimeout(() => setBlockedNotice(null), 4000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setBlockedNotice(null), 4000);
+    return () => clearTimeout(timer);
   }, [blockedNotice]);
 
   // Clear the new-task highlight after a moment.
   useEffect(() => {
     if (!highlightId) return;
-    const t = setTimeout(() => setHighlightId(null), 1600);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setHighlightId(null), 1600);
+    return () => clearTimeout(timer);
   }, [highlightId]);
 
   // Selection is only meaningful over currently-visible cards.
-  const passesView = (t: BoardTask) =>
-    (!filtersActive || matchesFilters(t, filters, now, isDone)) && !(hideCompleted && isDone(t));
+  const passesView = (task: BoardTask) =>
+    (!filtersActive || matchesFilters(task, filters, now, isDone)) &&
+    !(hideCompleted && isDone(task));
 
   // ---- Card mutations -----------------------------------------------------
   const patchTask = (id: string, patch: Partial<Omit<BoardTask, 'id' | 'order'>>) =>
@@ -297,7 +275,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   const moveWithin = (colTasks: BoardTask[], label: string, task: BoardTask, delta: number) => {
     if (sortActive) return; // manual reordering is disabled while sorted
-    const ids = colTasks.map((t) => t.id);
+    const ids = colTasks.map((colTask) => colTask.id);
     const i = ids.indexOf(task.id);
     const j = i + delta;
     if (i < 0 || j < 0 || j >= ids.length) return;
@@ -374,12 +352,12 @@ export function EditableBoard(props: EditableBoardProps) {
     const beforeId = dropTarget?.key === col.key ? dropTarget.beforeId : null;
     endDrag();
     if (!id || sortActive) return;
-    const dragged = model.tasks.find((t) => t.id === id);
+    const dragged = model.tasks.find((task) => task.id === id);
     if (!dragged) return;
     const inThisColumn =
       view === 'workflow' ? dragged.status === col.status : dragged.section === col.section;
     if (inThisColumn) {
-      const ids = col.tasks.map((t) => t.id).filter((x) => x !== id);
+      const ids = col.tasks.map((task) => task.id).filter((x) => x !== id);
       let at = beforeId ? ids.indexOf(beforeId) : ids.length;
       if (at < 0) at = ids.length;
       ids.splice(at, 0, id);
@@ -401,7 +379,7 @@ export function EditableBoard(props: EditableBoardProps) {
     const id = draggedId.current;
     endDrag();
     if (!id || sortActive) return;
-    const dragged = model.tasks.find((t) => t.id === id);
+    const dragged = model.tasks.find((task) => task.id === id);
     if (!dragged) return;
     if (dragged.status !== status && !allowStatus(dragged, status)) return;
     let next = model;
@@ -454,7 +432,7 @@ export function EditableBoard(props: EditableBoardProps) {
     setHighlightId(taskId);
     announce(t('board.added', { title: payload.title }));
 
-    const created = next.tasks.find((t) => t.id === taskId);
+    const created = next.tasks.find((task) => task.id === taskId);
     const hiddenByFilters = created
       ? filtersActive && !matchesFilters(created, filters, now, isDone)
       : false;
@@ -462,12 +440,12 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   // ---- Bulk actions -------------------------------------------------------
-  const bulkIds = () => [...selected].filter((id) => model.tasks.some((t) => t.id === id));
+  const bulkIds = () => [...selected].filter((id) => model.tasks.some((task) => task.id === id));
 
   const runBulk = (action: BulkAction) => {
     const ids = bulkIds();
     if (ids.length === 0) return;
-    const label = bulkActionLabel(action, ids.length);
+    const label = bulkActionLabel(t, action, ids.length);
     const next = applyBulkAction(model, ids, action);
     onChange(next, label);
     announce(label);
@@ -477,7 +455,7 @@ export function EditableBoard(props: EditableBoardProps) {
     const skipped =
       action.kind === 'complete' || target
         ? ids.filter((id) => {
-            const task = next.tasks.find((t) => t.id === id);
+            const task = next.tasks.find((candidate) => candidate.id === id);
             return task && !reached(task);
           }).length
         : 0;
@@ -492,7 +470,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   const selectAllVisible = () => {
     const ids = new Set<string>();
-    for (const t of model.tasks) if (passesView(t)) ids.add(t.id);
+    for (const task of model.tasks) if (passesView(task)) ids.add(task.id);
     setSelected(ids);
     setSelectionMode(true);
     announce(t('board.selectedCount', { count: ids.size }));
@@ -533,7 +511,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
   // ---- Section management -------------------------------------------------
   const requestSectionDelete = (name: string) => {
-    const count = model.tasks.filter((t) => t.section === name).length;
+    const count = model.tasks.filter((task) => task.section === name).length;
     if (count === 0) {
       // Nothing to lose and the toast offers Undo — no confirmation needed.
       onChange(removeSection(model, name), t('board.undo.sectionDeleted', { name }));
@@ -547,24 +525,17 @@ export function EditableBoard(props: EditableBoardProps) {
   const requestStatusDelete = (key: StatusKey) => {
     const status = findStatus(statuses, key);
     if (!status) return;
-    if (!canRemoveStatus(model, key)) {
-      announce(t('settings.needOne', { category: t(`statusCategory.${status.category}`) }));
+    if (!statusActions.canRemove(status)) {
+      announce(statusActions.removeHint(status));
       return;
     }
-    const count = model.tasks.filter((t) => t.status === key).length;
+    const count = model.tasks.filter((task) => task.status === key).length;
     if (count === 0) {
       onChange(removeStatus(model, key), t('board.undo.statusDeleted', { label: status.label }));
       announce(t('board.statusDeleted', { label: status.label }));
       return;
     }
     setPendingStatusDelete({ key, count });
-  };
-
-  const addStatusColumn = () => {
-    const { model: next, key } = addStatus(model);
-    onChange(next, t('settings.undo.added'));
-    setFocusStatus(key);
-    announce(t('settings.added'));
   };
 
   const setStatusColors = (status: StatusDef, patch: Pick<StatusDef, 'color' | 'bg'>) =>
@@ -605,8 +576,8 @@ export function EditableBoard(props: EditableBoardProps) {
   const clearFocusStatus = useCallback(() => setFocusStatus(null), []);
 
   const cycleView = () => {
-    const i = VIEW_ORDER.indexOf(view);
-    const nextView = VIEW_ORDER[(i + 1) % VIEW_ORDER.length]!;
+    const i = BOARD_VIEWS.indexOf(view);
+    const nextView = BOARD_VIEWS[(i + 1) % BOARD_VIEWS.length]!;
     onViewChange(nextView);
     announce(t('board.viewAnnounce', { view: t(`views.${nextView}.label`) }));
   };
@@ -641,12 +612,12 @@ export function EditableBoard(props: EditableBoardProps) {
 
   /** Follow a link: open the task in the panel, remembering where we came from. */
   const openLinked = (id: string) => {
-    if (details) setTrail((t) => [...t, details.id]);
+    if (details) setTrail((prev) => [...prev, details.id]);
     setDetails((d) => ({ id, focus: 'panel', nonce: (d?.nonce ?? 0) + 1 }));
   };
 
   const goBack = () => {
-    const rest = trail.filter((id) => model.tasks.some((t) => t.id === id));
+    const rest = trail.filter((id) => model.tasks.some((task) => task.id === id));
     const id = rest.pop();
     setTrail(rest);
     if (id) setDetails((d) => ({ id, focus: 'panel', nonce: (d?.nonce ?? 0) + 1 }));
@@ -770,31 +741,31 @@ export function EditableBoard(props: EditableBoardProps) {
         break;
       case 'x':
       case 'X': {
-        const t = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
-        if (t) {
+        const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
+        if (task) {
           e.preventDefault();
-          toggleDone(t);
+          toggleDone(task);
         }
         break;
       }
       case ' ': {
         const meta = cardId ? cardMetaRef.current.get(cardId) : undefined;
-        const t = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
-        if (t && meta) {
+        const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
+        if (task && meta) {
           e.preventDefault();
-          toggleSelect(t, meta.colKey, meta.ids, false);
+          toggleSelect(task, meta.colKey, meta.ids, false);
         }
         break;
       }
       case 'Delete':
       case 'Backspace': {
-        const t = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
+        const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
         if (selectionMode && selected.size > 0) {
           e.preventDefault();
           setPendingBulkDelete(true);
-        } else if (t) {
+        } else if (task) {
           e.preventDefault();
-          requestDelete(t);
+          requestDelete(task);
         }
         break;
       }
@@ -815,7 +786,7 @@ export function EditableBoard(props: EditableBoardProps) {
   navOrderRef.current = [];
   cardMetaRef.current = new Map();
 
-  const commands = buildCommands({
+  const commands = buildCommands(t, {
     filtersActive,
     saveState,
     hideCompleted,
@@ -837,7 +808,8 @@ export function EditableBoard(props: EditableBoardProps) {
 
   const mod = modLabel();
   const progress = countTasks(model);
-  const detailsTask = details ? model.tasks.find((t) => t.id === details.id) : undefined;
+  const statusToDelete = pendingStatusDelete && findStatus(statuses, pendingStatusDelete.key);
+  const detailsTask = details ? model.tasks.find((task) => task.id === details.id) : undefined;
   // Read after the columns render (they fill `cardMetaRef`), so it's current.
   const positionOf = (id: string) => {
     const meta = cardMetaRef.current.get(id);
@@ -953,7 +925,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
         <div className="pdt-board__row pdt-board__row--tools">
           <div className="pdt-segment" role="tablist" aria-label={t('board.viewLabel')}>
-            {VIEW_ORDER.map((v) => (
+            {BOARD_VIEWS.map((v) => (
               <button
                 key={v}
                 role="tab"
@@ -1104,7 +1076,7 @@ export function EditableBoard(props: EditableBoardProps) {
             links={linksOf(model, detailsTask)}
             openBlockers={openBlockers(model, detailsTask).length}
             linkCandidates={(kind) =>
-              model.tasks.filter((t) => canLink(model, detailsTask.id, t.id, kind))
+              model.tasks.filter((task) => canLink(model, detailsTask.id, task.id, kind))
             }
             onBack={trail.length ? goBack : undefined}
             onOpenLinked={openLinked}
@@ -1226,14 +1198,14 @@ export function EditableBoard(props: EditableBoardProps) {
         />
       )}
 
-      {pendingStatusDelete && findStatus(statuses, pendingStatusDelete.key) && (
+      {statusToDelete && (
         <StatusDeleteDialog
-          status={findStatus(statuses, pendingStatusDelete.key)!}
-          count={pendingStatusDelete.count}
-          targets={statuses.filter((st) => st.key !== pendingStatusDelete.key)}
+          status={statusToDelete}
+          count={pendingStatusDelete!.count}
+          targets={statuses.filter((st) => st !== statusToDelete)}
           onCancel={() => setPendingStatusDelete(null)}
           onConfirm={(target) => {
-            const status = findStatus(statuses, pendingStatusDelete.key)!;
+            const status = statusToDelete;
             const label = findStatus(statuses, target)?.label ?? target;
             onChange(
               removeStatus(model, status.key, target),
@@ -1291,7 +1263,7 @@ export function EditableBoard(props: EditableBoardProps) {
         focus={focusTaskId === task.id}
         active={details?.id === task.id}
         blockedBy={openBlockers(model, task).length}
-        blocking={linksOf(model, task).blocks.filter((t) => !isDone(t)).length}
+        blocking={linksOf(model, task).blocks.filter((blocked) => !isDone(blocked)).length}
         highlight={highlightId === task.id}
         selection={
           selectionMode
@@ -1316,8 +1288,8 @@ export function EditableBoard(props: EditableBoardProps) {
 
   function visibleOf(col: BoardColumn): BoardTask[] {
     let list = sortActive ? sortTasks(col.tasks, sort) : col.tasks;
-    if (filtersActive) list = list.filter((t) => matchesFilters(t, filters, now, isDone));
-    if (hideCompleted) list = list.filter((t) => !isDone(t));
+    if (filtersActive) list = list.filter((task) => matchesFilters(task, filters, now, isDone));
+    if (hideCompleted) list = list.filter((task) => !isDone(task));
     return list;
   }
 
@@ -1329,7 +1301,7 @@ export function EditableBoard(props: EditableBoardProps) {
           const isDoneCol = status?.category === 'done';
           const collapsed = collapsedColumns.includes(col.key);
           const visibleTasks = visibleOf(col);
-          const visibleIds = visibleTasks.map((t) => t.id);
+          const visibleIds = visibleTasks.map((task) => task.id);
           return (
             <div
               className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''} ${status?.bg ? 'pdt-column--tinted' : ''} ${colorMenuFor === col.key ? 'pdt-column--menu-open' : ''}`}
@@ -1385,13 +1357,7 @@ export function EditableBoard(props: EditableBoardProps) {
                       otherNames={statuses.filter((x) => x !== status).map((x) => x.label)}
                       autoFocus={focusStatus === status.key}
                       onFocusHandled={clearFocusStatus}
-                      onRename={(label) => {
-                        onChange(
-                          updateStatus(model, status.key, { label }),
-                          t('settings.undo.renamed', { label }),
-                        );
-                        announce(t('settings.renamed', { label }));
-                      }}
+                      onRename={(label) => statusActions.rename(status, label)}
                       onInvalid={announce}
                     />
                   </span>
@@ -1503,7 +1469,11 @@ export function EditableBoard(props: EditableBoardProps) {
 
         {view === 'workflow' && (
           <div className="pdt-column pdt-column--add">
-            <button type="button" className="pdt-add-column" onClick={addStatusColumn}>
+            <button
+              type="button"
+              className="pdt-add-column"
+              onClick={() => setFocusStatus(statusActions.add())}
+            >
               <Icon name="plus" size={14} />
               {t('settings.add')}
             </button>
@@ -1532,7 +1502,6 @@ export function EditableBoard(props: EditableBoardProps) {
   /** Workflow column controls: reorder, colours and delete, like a section's. */
   function renderStatusOps(status: StatusDef) {
     const index = statuses.indexOf(status);
-    const removable = canRemoveStatus(model, status.key);
     return (
       <div className="pdt-column__ops">
         <button
@@ -1541,7 +1510,7 @@ export function EditableBoard(props: EditableBoardProps) {
           aria-label={t('board.moveLeft', { label: status.label })}
           title={t('board.moveLeftShort')}
           disabled={index === 0}
-          onClick={() => onChange(moveStatus(model, status.key, -1))}
+          onClick={() => statusActions.move(status, -1)}
         >
           <Icon name="chevron-left" />
         </button>
@@ -1551,7 +1520,7 @@ export function EditableBoard(props: EditableBoardProps) {
           aria-label={t('board.moveRight', { label: status.label })}
           title={t('board.moveRightShort')}
           disabled={index === statuses.length - 1}
-          onClick={() => onChange(moveStatus(model, status.key, 1))}
+          onClick={() => statusActions.move(status, 1)}
         >
           <Icon name="chevron-right" />
         </button>
@@ -1604,12 +1573,8 @@ export function EditableBoard(props: EditableBoardProps) {
           type="button"
           className="pdt-btn pdt-btn-icon pdt-btn-sm"
           aria-label={t('settings.delete', { label: status.label })}
-          title={
-            removable
-              ? t('settings.deleteStatus')
-              : t('settings.needOne', { category: t(`statusCategory.${status.category}`) })
-          }
-          disabled={!removable}
+          title={statusActions.removeHint(status)}
+          disabled={!statusActions.canRemove(status)}
           onClick={() => requestStatusDelete(status.key)}
         >
           <Icon name="trash" />
@@ -1624,7 +1589,7 @@ export function EditableBoard(props: EditableBoardProps) {
         <div
           className="pdt-swimlane__head"
           role="row"
-          style={{ '--pdt-swimlane-cols': statuses.length } as React.CSSProperties}
+          style={{ '--pdt-swimlane-cols': statuses.length }}
         >
           <div className="pdt-swimlane__corner" role="columnheader">
             {t('quickAdd.section')}
@@ -1643,13 +1608,13 @@ export function EditableBoard(props: EditableBoardProps) {
 
         {model.sections.map((section) => {
           const rowCollapsed = collapsedRows.includes(section);
-          const rowCount = model.tasks.filter((t) => t.section === section).length;
+          const rowCount = model.tasks.filter((task) => task.section === section).length;
           return (
             <div
               key={section}
               className="pdt-swimlane__row"
               role="row"
-              style={{ '--pdt-swimlane-cols': statuses.length } as React.CSSProperties}
+              style={{ '--pdt-swimlane-cols': statuses.length }}
             >
               <div className="pdt-swimlane__rowhead" role="rowheader">
                 <button
@@ -1675,10 +1640,12 @@ export function EditableBoard(props: EditableBoardProps) {
                       label: `${section} / ${c.label}`,
                       status: c.key,
                       section,
-                      tasks: model.tasks.filter((t) => t.section === section && t.status === c.key),
+                      tasks: model.tasks.filter(
+                        (task) => task.section === section && task.status === c.key,
+                      ),
                     };
                     const visibleTasks = visibleOf(cellCol);
-                    const visibleIds = visibleTasks.map((t) => t.id);
+                    const visibleIds = visibleTasks.map((task) => task.id);
                     return (
                       <div
                         key={c.key}
@@ -1725,7 +1692,7 @@ function DropPlaceholder() {
 }
 
 /** Human label for a bulk action, for the undo toast + announcement. */
-function bulkActionLabel(action: BulkAction, count: number): string {
+function bulkActionLabel(t: TFunction, action: BulkAction, count: number): string {
   const n = t('count.tasks', { count });
   switch (action.kind) {
     case 'complete':
@@ -1768,7 +1735,7 @@ interface BuildCommandsArgs {
   retry: () => void;
 }
 
-function buildCommands(a: BuildCommandsArgs): Command[] {
+function buildCommands(t: TFunction, a: BuildCommandsArgs): Command[] {
   return [
     { id: 'add', title: t('quickAdd.add'), hint: 'N', run: () => a.setQuickAddOpen(true) },
     { id: 'search', title: t('board.search'), hint: '/', keywords: 'find', run: a.focusSearch },
@@ -1958,7 +1925,7 @@ function SectionDeleteDialog({
           <label className="pdt-field pdt-field--grow">
             <span className="pdt-field-label">{t('statusDialog.moveTo')}</span>
             <select
-              className="pdt-input"
+              className="pdt-select"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
             >

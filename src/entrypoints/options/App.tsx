@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { LANGUAGES } from '../../i18n';
+import { LANGUAGE_SETTINGS, LANGUAGES } from '../../i18n/languages';
+import { DATE_FORMATS } from '../../lib/dates';
+import { DEFAULT_MARKERS } from '../../lib/defaults';
+import { getSettings, setSettings } from '../../lib/settings';
 import {
-  DEFAULT_SETTINGS,
-  getSettings,
-  markersAreValid,
-  setSettings,
-  syncLanguage,
-} from '../../lib/settings';
-import type { CardFieldVisibility, Settings } from '../../lib/types';
+  BOARD_VIEWS,
+  CARD_DENSITIES,
+  COMPLETED_DISPLAYS,
+  THEMES,
+  type CardFieldVisibility,
+  type Settings,
+} from '../../lib/types';
 
 const CARD_FIELDS: (keyof CardFieldVisibility)[] = [
   'description',
@@ -20,29 +23,36 @@ const CARD_FIELDS: (keyof CardFieldVisibility)[] = [
   'statusInSections',
 ];
 
+const NEW_CARD_POSITIONS = ['bottom', 'top'] as const;
+
+const SAVED_BADGE_MS = 1500;
+
 export function App() {
   const { t } = useTranslation();
   const [settings, setLocal] = useState<Settings | null>(null);
   const [markersText, setMarkersText] = useState('');
   const [markerError, setMarkerError] = useState('');
-  const [saved, setSaved] = useState(false);
+  const [savedAt, setSavedAt] = useState(0);
 
   useEffect(() => {
-    const unwatch = syncLanguage();
-    void (async () => {
-      const s = await getSettings();
+    void getSettings().then((s) => {
       setLocal(s);
       setMarkersText(s.markers.join('\n'));
-    })();
-    return () => void unwatch.then((stop) => stop());
+    });
   }, []);
 
-  async function persist(patch: Partial<Settings>) {
-    const next = await setSettings(patch);
-    setLocal(next);
-    setMarkersText(next.markers.join('\n'));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+  useEffect(() => {
+    if (!savedAt) return;
+    const timer = setTimeout(() => setSavedAt(0), SAVED_BADGE_MS);
+    return () => clearTimeout(timer);
+  }, [savedAt]);
+
+  function persist(patch: Partial<Settings>) {
+    void setSettings(patch).then((next) => {
+      setLocal(next);
+      setMarkersText(next.markers.join('\n'));
+      setSavedAt(Date.now());
+    });
   }
 
   function saveMarkers() {
@@ -50,12 +60,12 @@ export function App() {
       .split('\n')
       .map((m) => m.trim())
       .filter(Boolean);
-    if (!markersAreValid(markers)) {
+    if (markers.length === 0) {
       setMarkerError(t('options.markers.error'));
       return;
     }
     setMarkerError('');
-    void persist({ markers });
+    persist({ markers });
   }
 
   if (!settings) return <div className="op-loading">{t('common.loading')}</div>;
@@ -68,7 +78,7 @@ export function App() {
           <h1>Proton Docs as Task</h1>
           <p className="op-sub">{t('options.subtitle')}</p>
         </div>
-        {saved && (
+        {savedAt > 0 && (
           <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success op-saved">
             {t('options.saved')}
           </span>
@@ -81,119 +91,89 @@ export function App() {
           label={t('options.enabled')}
           hint={t('options.enabledHint')}
           checked={settings.enabled}
-          onChange={(v) => persist({ enabled: v })}
+          onChange={(enabled) => persist({ enabled })}
         />
         <Toggle
           label={t('options.autoShow')}
           hint={t('options.autoShowHint')}
           checked={settings.autoShow}
-          onChange={(v) => persist({ autoShow: v })}
+          onChange={(autoShow) => persist({ autoShow })}
         />
-
         <Row label={t('options.defaultView')} hint={t('options.defaultViewHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.defaultView}
-            onChange={(e) => persist({ defaultView: e.target.value as Settings['defaultView'] })}
-          >
-            <option value="workflow">{t('options.view.workflow')}</option>
-            <option value="sections">{t('options.view.sections')}</option>
-            <option value="swimlane">{t('options.view.swimlane')}</option>
-            <option value="list">{t('options.view.list')}</option>
-          </select>
+            options={BOARD_VIEWS}
+            optionLabel={(view) => t(`options.views.${view}`)}
+            onChange={(defaultView) => persist({ defaultView })}
+          />
         </Row>
-
         <Row label={t('options.language')} hint={t('options.languageHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.language}
-            onChange={(e) => persist({ language: e.target.value as Settings['language'] })}
-          >
-            <option value="auto">{t('options.languageAuto')}</option>
-            {Object.entries(LANGUAGES).map(([code, name]) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
+            options={LANGUAGE_SETTINGS}
+            optionLabel={(code) => (code === 'auto' ? t('options.languageAuto') : LANGUAGES[code])}
+            onChange={(language) => persist({ language })}
+          />
         </Row>
-
         <Row label={t('options.theme')} hint={t('options.themeHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.theme}
-            onChange={(e) => persist({ theme: e.target.value as Settings['theme'] })}
-          >
-            <option value="system">{t('options.themeSystem')}</option>
-            <option value="light">{t('options.themeLight')}</option>
-            <option value="dark">{t('options.themeDark')}</option>
-          </select>
+            options={THEMES}
+            optionLabel={(theme) => t(`options.themes.${theme}`)}
+            onChange={(theme) => persist({ theme })}
+          />
         </Row>
-
         <Row label={t('options.density')} hint={t('options.densityHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.density}
-            onChange={(e) => persist({ density: e.target.value as Settings['density'] })}
-          >
-            <option value="comfortable">{t('options.comfortable')}</option>
-            <option value="compact">{t('options.compact')}</option>
-          </select>
+            options={CARD_DENSITIES}
+            optionLabel={(density) => t(`options.densities.${density}`)}
+            onChange={(density) => persist({ density })}
+          />
         </Row>
       </section>
 
       <section className="op-card pdt-card">
         <h2>{t('options.behavior')}</h2>
         <Row label={t('options.newCards')} hint={t('options.newCardsHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.newCardsAtTop ? 'top' : 'bottom'}
-            onChange={(e) => persist({ newCardsAtTop: e.target.value === 'top' })}
-          >
-            <option value="bottom">{t('options.bottom')}</option>
-            <option value="top">{t('options.top')}</option>
-          </select>
+            options={NEW_CARD_POSITIONS}
+            optionLabel={(position) => t(`options.newCardPositions.${position}`)}
+            onChange={(position) => persist({ newCardsAtTop: position === 'top' })}
+          />
         </Row>
         <Toggle
           label={t('options.descPreview')}
           hint={t('options.descPreviewHint')}
           checked={settings.showDescriptionPreview}
-          onChange={(v) => persist({ showDescriptionPreview: v })}
+          onChange={(showDescriptionPreview) => persist({ showDescriptionPreview })}
         />
         <Row label={t('options.completed')} hint={t('options.completedHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.completedDisplay}
-            onChange={(e) =>
-              persist({ completedDisplay: e.target.value as Settings['completedDisplay'] })
-            }
-          >
-            <option value="show">{t('options.completedShow')}</option>
-            <option value="collapse">{t('options.completedCollapse')}</option>
-            <option value="hide">{t('options.completedHide')}</option>
-          </select>
+            options={COMPLETED_DISPLAYS}
+            optionLabel={(display) => t(`options.completedDisplays.${display}`)}
+            onChange={(completedDisplay) => persist({ completedDisplay })}
+          />
         </Row>
         <Toggle
           label={t('options.confirmDelete')}
           hint={t('options.confirmDeleteHint')}
           checked={settings.confirmDelete}
-          onChange={(v) => persist({ confirmDelete: v })}
+          onChange={(confirmDelete) => persist({ confirmDelete })}
         />
       </section>
 
       <section className="op-card pdt-card">
         <h2>{t('options.display')}</h2>
         <Row label={t('options.dateFormat')} hint={t('options.dateFormatHint')}>
-          <select
-            className="pdt-select"
+          <Select
             value={settings.dateFormat}
-            onChange={(e) => persist({ dateFormat: e.target.value as Settings['dateFormat'] })}
-          >
-            <option value="iso">{t('options.dateIso')}</option>
-            <option value="medium">{t('options.dateMedium')}</option>
-            <option value="us">{t('options.dateUs')}</option>
-            <option value="euro">{t('options.dateEuro')}</option>
-          </select>
+            options={DATE_FORMATS}
+            optionLabel={(format) => t(`options.dateFormats.${format}`)}
+            onChange={(dateFormat) => persist({ dateFormat })}
+          />
         </Row>
 
         <Row label={t('options.name')} hint={t('options.nameHint')}>
@@ -256,7 +236,7 @@ export function App() {
             className="pdt-btn"
             onClick={() => {
               setMarkerError('');
-              void persist({ markers: DEFAULT_SETTINGS.markers });
+              persist({ markers: DEFAULT_MARKERS });
             }}
           >
             {t('options.markers.reset')}
@@ -311,39 +291,32 @@ export function App() {
   );
 }
 
-function Row({
-  label,
-  hint,
-  children,
-}: {
+interface RowProps {
   label: string;
   hint: string;
   children: React.ReactNode;
-}) {
+}
+
+function Row({ label, hint, children }: RowProps) {
   return (
     <label className="op-row">
-      <div>
-        <div className="op-row__label">{label}</div>
-        <div className="op-row__hint">{hint}</div>
-      </div>
+      <span>
+        <span className="op-row__label">{label}</span>
+        <span className="op-row__hint">{hint}</span>
+      </span>
       {children}
     </label>
   );
 }
 
-function Toggle({
-  label,
-  hint,
-  checked,
-  onChange,
-}: {
-  label: string;
-  hint: string;
+interface ToggleProps extends Omit<RowProps, 'children'> {
   checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+  onChange: (checked: boolean) => void;
+}
+
+function Toggle({ checked, onChange, ...row }: ToggleProps) {
   return (
-    <Row label={label} hint={hint}>
+    <Row {...row}>
       <input
         type="checkbox"
         className="pdt-native-check"
@@ -351,6 +324,25 @@ function Toggle({
         onChange={(e) => onChange(e.target.checked)}
       />
     </Row>
+  );
+}
+
+interface SelectProps<T extends string> {
+  value: T;
+  options: readonly T[];
+  optionLabel: (option: T) => string;
+  onChange: (value: T) => void;
+}
+
+function Select<T extends string>({ value, options, optionLabel, onChange }: SelectProps<T>) {
+  return (
+    <select className="pdt-select" value={value} onChange={(e) => onChange(e.target.value as T)}>
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {optionLabel(option)}
+        </option>
+      ))}
+    </select>
   );
 }
 
