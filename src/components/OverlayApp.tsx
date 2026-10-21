@@ -20,7 +20,8 @@ import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
 import { MANUAL_SORT, type SortState } from '../lib/sorting';
 import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '../lib/session';
 import { readDocPrefs, writeDocPrefs } from '../lib/sessionStore';
-import { settingsItem, setSettings as persistSettings, withDefaults } from '../lib/settings';
+import { withDefaults } from '../lib/defaults';
+import { settingsItem, setSettings as persistSettings } from '../lib/settings';
 import type { BoardView, SaveState, Settings } from '../lib/types';
 import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
@@ -59,7 +60,7 @@ interface UndoEntry {
  */
 export function OverlayApp({ client, initialState, host, initialSettings }: OverlayAppProps) {
   // Re-render on language changes; strings come from the shared `t`, which callbacks can use without deps.
-  useTranslation();
+  const { i18n } = useTranslation();
   const [settings, setSettings] = useState(initialSettings);
   const [docState, setDocState] = useState(initialState);
   const [visible, setVisible] = useState(false);
@@ -95,11 +96,14 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     return () => unwatch();
   }, []);
 
-  // Apply the chosen theme to the shadow host.
+  // Apply the chosen theme and language to the shadow host.
   useEffect(() => {
     if (settings.theme === 'system') host.removeAttribute('data-theme');
     else host.setAttribute('data-theme', settings.theme);
   }, [host, settings.theme]);
+  useEffect(() => {
+    host.lang = i18n.language;
+  }, [host, i18n.language]);
 
   // Per-document session preferences (view, sort, filters, collapsed sets).
   const docKey = useMemo(
@@ -110,10 +114,10 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
 
   // Every Done-category column of the document, when completed tasks start collapsed.
   const seedCollapsed = useCallback(() => {
-    if (settings.completedDisplay !== 'collapse' && !settings.collapseDoneByDefault) return [];
+    if (settings.completedDisplay !== 'collapse') return [];
     const { statuses } = parseDocument(docLines.current.join('\n'), settings.markers);
     return statuses.filter((s) => s.category === 'done').map((s) => s.key);
-  }, [settings.completedDisplay, settings.collapseDoneByDefault, settings.markers]);
+  }, [settings.completedDisplay, settings.markers]);
 
   // Load stored preferences once (per document key, else start from defaults).
   useEffect(() => {
@@ -450,7 +454,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     const counts = model ? countTasks(model) : { total: result.tasks.length, done: 0 };
     const doneCount = model
       ? counts.done
-      : result.tasks.filter((t) => isDoneStatus(result.statuses, t.status)).length;
+      : result.tasks.filter((task) => isDoneStatus(result.statuses, task.status)).length;
     const status = (): StatusResponse => ({
       ok: true,
       activated: result.activated,
@@ -527,11 +531,11 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   // Activated document, board closed → floating button to reopen it.
   if (result.activated) {
     const pendingCount = result.tasks.filter(
-      (t) => !isDoneStatus(result.statuses, t.status),
+      (task) => !isDoneStatus(result.statuses, task.status),
     ).length;
     return (
       <button
-        className="pdt-btn pdt-btn-pill pdt-fab"
+        className="pdt-btn pdt-fab"
         onClick={openBoard}
         title={t('overlay.openTitle')}
         aria-label={t('overlay.openAria', { count: pendingCount })}
@@ -539,7 +543,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
         <Icon name="kanban" size={16} />
         <span>{t('overlay.open')}</span>
         {pendingCount > 0 && (
-          <span className="pdt-fab__badge" aria-hidden="true">
+          <span className="pdt-badge pdt-badge-primary" aria-hidden="true">
             {pendingCount}
           </span>
         )}

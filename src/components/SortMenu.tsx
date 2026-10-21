@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SORT_OPTIONS, describeSort, isActiveSort, type SortState } from '../lib/sorting';
 import { Icon } from './Icon';
+import { useDismiss } from './useDismiss';
 
 interface SortMenuProps {
   sort: SortState;
@@ -18,23 +19,7 @@ export function SortMenu({ sort, open, onOpenChange, onChange, onApplyToDocument
   const wrapRef = useRef<HTMLDivElement>(null);
   const active = isActiveSort(sort);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDocKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onOpenChange(false);
-    };
-    const onDocClick = (e: MouseEvent) => {
-      // composedPath crosses the shadow boundary; `e.target` at the document
-      // level is retargeted to the shadow host and would misread as outside.
-      if (wrapRef.current && !e.composedPath().includes(wrapRef.current)) onOpenChange(false);
-    };
-    document.addEventListener('keydown', onDocKey);
-    document.addEventListener('mousedown', onDocClick);
-    return () => {
-      document.removeEventListener('keydown', onDocKey);
-      document.removeEventListener('mousedown', onDocClick);
-    };
-  }, [open, onOpenChange]);
+  useDismiss(open, [wrapRef], () => onOpenChange(false), { escape: true });
 
   const option = SORT_OPTIONS.find((o) => o.key === sort.key);
 
