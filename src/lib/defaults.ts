@@ -1,9 +1,12 @@
-import type {
-  BoardView,
-  CardFieldVisibility,
-  CompletedDisplay,
-  DateFormat,
-  Settings,
+import { isLanguage } from '../i18n/languages';
+import { DATE_FORMATS } from './dates';
+import {
+  BOARD_VIEWS,
+  CARD_DENSITIES,
+  COMPLETED_DISPLAYS,
+  THEMES,
+  type CardFieldVisibility,
+  type Settings,
 } from './types';
 
 export const DEFAULT_CARD_FIELDS: CardFieldVisibility = {
@@ -32,7 +35,6 @@ export const DEFAULT_SETTINGS: Settings = {
   density: 'comfortable',
   newCardsAtTop: false,
   showDescriptionPreview: true,
-  collapseDoneByDefault: false,
   confirmDelete: true,
   cardFields: DEFAULT_CARD_FIELDS,
   completedDisplay: 'show',
@@ -40,54 +42,58 @@ export const DEFAULT_SETTINGS: Settings = {
   userAssignee: '',
 };
 
-/**
- * Merge stored settings over the defaults, guarding against empty/invalid
- * values. Also migrates the v0.4 `grouping` field to `defaultView`, and drops
- * the global status labels that statuses defined per document replaced.
- */
-export function withDefaults(
-  stored?: (Partial<Settings> & { grouping?: string; columns?: unknown }) | null,
-): Settings {
-  // `columns` (global status labels) predates per-document statuses; drop it.
-  const raw = { ...stored };
-  delete raw.columns;
-  const merged: Settings = { ...DEFAULT_SETTINGS, ...raw } as Settings;
-
-  // Never allow an empty marker configuration.
-  merged.markers = (merged.markers ?? []).map((m) => m.trim()).filter(Boolean);
-  if (merged.markers.length === 0) merged.markers = DEFAULT_MARKERS;
-
-  // Migrate the legacy `grouping` ('status' | 'section') → `defaultView`.
-  if (raw.defaultView == null && typeof raw.grouping === 'string') {
-    merged.defaultView = raw.grouping === 'section' ? 'sections' : 'workflow';
-  }
-  const validViews: BoardView[] = ['workflow', 'sections', 'swimlane', 'list'];
-  if (!validViews.includes(merged.defaultView)) merged.defaultView = 'workflow';
-
-  if (!['system', 'light', 'dark'].includes(merged.theme)) merged.theme = 'system';
-  if (!['comfortable', 'compact'].includes(merged.density)) merged.density = 'comfortable';
-
-  // Card field visibility: merge stored booleans over the defaults.
-  merged.cardFields = { ...DEFAULT_CARD_FIELDS, ...(raw.cardFields ?? {}) };
-
-  // Completed display: honor an explicit stored choice; otherwise migrate the
-  // legacy `collapseDoneByDefault` flag.
-  const completed: CompletedDisplay[] = ['show', 'collapse', 'hide'];
-  if (!completed.includes(raw.completedDisplay as CompletedDisplay)) {
-    merged.completedDisplay = raw.collapseDoneByDefault ? 'collapse' : 'show';
-  }
-  // Keep the legacy flag consistent for any code still reading it.
-  merged.collapseDoneByDefault = merged.completedDisplay === 'collapse';
-
-  const formats: DateFormat[] = ['iso', 'medium', 'us', 'euro'];
-  if (!formats.includes(merged.dateFormat)) merged.dateFormat = 'iso';
-
-  merged.userAssignee = typeof merged.userAssignee === 'string' ? merged.userAssignee.trim() : '';
-
-  return merged;
+function oneOf<T extends string>(options: readonly T[], value: unknown, fallback: T): T {
+  return options.includes(value as T) ? (value as T) : fallback;
 }
 
-/** True when a candidate markers list is non-empty after trimming. */
-export function markersAreValid(markers: string[]): boolean {
-  return markers.some((m) => m.trim() !== '');
+/**
+ * Merge stored settings over the defaults, replacing invalid values and
+ * dropping unknown keys.
+ */
+export function withDefaults(stored?: Partial<Settings> | null): Settings {
+  const s = { ...DEFAULT_SETTINGS, ...stored };
+  const markers = (s.markers ?? []).map((m) => m.trim()).filter(Boolean);
+  return {
+    enabled: s.enabled,
+    markers: markers.length > 0 ? markers : DEFAULT_MARKERS,
+    defaultView: oneOf(BOARD_VIEWS, s.defaultView, DEFAULT_SETTINGS.defaultView),
+    autoShow: s.autoShow,
+    language: s.language === 'auto' || isLanguage(s.language) ? s.language : 'auto',
+    theme: oneOf(THEMES, s.theme, DEFAULT_SETTINGS.theme),
+    density: oneOf(CARD_DENSITIES, s.density, DEFAULT_SETTINGS.density),
+    newCardsAtTop: s.newCardsAtTop,
+    showDescriptionPreview: s.showDescriptionPreview,
+    confirmDelete: s.confirmDelete,
+    cardFields: { ...DEFAULT_CARD_FIELDS, ...stored?.cardFields },
+    completedDisplay: oneOf(
+      COMPLETED_DISPLAYS,
+      s.completedDisplay,
+      DEFAULT_SETTINGS.completedDisplay,
+    ),
+    dateFormat: oneOf(DATE_FORMATS, s.dateFormat, DEFAULT_SETTINGS.dateFormat),
+    userAssignee: typeof s.userAssignee === 'string' ? s.userAssignee.trim() : '',
+  };
+}
+
+/** Fields of v1 settings that later versions replaced. */
+export interface LegacySettings extends Partial<Settings> {
+  /** v0.4 view choice, replaced by `defaultView`. */
+  grouping?: 'status' | 'section';
+  /** Replaced by `completedDisplay: 'collapse'`. */
+  collapseDoneByDefault?: boolean;
+  /** Global status labels, replaced by statuses defined per document. */
+  columns?: unknown;
+}
+
+/** Storage migration v1 → v2: maps legacy fields onto their replacements. */
+export function migrateLegacySettings({
+  grouping,
+  collapseDoneByDefault,
+  ...stored
+}: LegacySettings): Settings {
+  return withDefaults({
+    ...stored,
+    defaultView: stored.defaultView ?? (grouping === 'section' ? 'sections' : undefined),
+    completedDisplay: stored.completedDisplay ?? (collapseDoneByDefault ? 'collapse' : undefined),
+  });
 }

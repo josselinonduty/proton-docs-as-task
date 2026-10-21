@@ -2,7 +2,7 @@
  * Shared domain types for Proton Docs as Task.
  */
 
-import type { LanguageSetting } from '../i18n';
+import type { LanguageSetting } from '../i18n/languages';
 import type { DateFormat } from './dates';
 
 export type { DateFormat };
@@ -15,7 +15,8 @@ export type StatusKey = string;
  * status ticks the task's checkbox and counts as completed; a blocked task may
  * not leave a Not started status.
  */
-export type StatusCategory = 'todo' | 'doing' | 'done';
+export const STATUS_CATEGORIES = ['todo', 'doing', 'done'] as const;
+export type StatusCategory = (typeof STATUS_CATEGORIES)[number];
 
 /** A workflow status defined by the document (`@settings status …`). */
 export interface StatusDef {
@@ -92,17 +93,22 @@ export interface ParseResult {
 }
 
 /**
- * The board layouts. Workflow groups by status, Sections by heading, and
- * Swimlane crosses the two (status columns × section rows). List is a single
- * flat checklist.
+ * The board layouts, in the order the V shortcut cycles through them. Workflow
+ * groups by status, Sections by heading, and Swimlane crosses the two (status
+ * columns × section rows). List is a single flat checklist.
  */
-export type BoardView = 'workflow' | 'sections' | 'swimlane' | 'list';
+export const BOARD_VIEWS = ['workflow', 'sections', 'swimlane', 'list'] as const;
+export type BoardView = (typeof BOARD_VIEWS)[number];
 
-export type Theme = 'system' | 'light' | 'dark';
-export type CardDensity = 'comfortable' | 'compact';
+export const THEMES = ['system', 'light', 'dark'] as const;
+export type Theme = (typeof THEMES)[number];
+
+export const CARD_DENSITIES = ['comfortable', 'compact'] as const;
+export type CardDensity = (typeof CARD_DENSITIES)[number];
 
 /** How completed tasks are presented (never removed from the document). */
-export type CompletedDisplay = 'show' | 'collapse' | 'hide';
+export const COMPLETED_DISPLAYS = ['show', 'collapse', 'hide'] as const;
+export type CompletedDisplay = (typeof COMPLETED_DISPLAYS)[number];
 
 /**
  * Which optional fields a card shows. The title and completion control are
@@ -150,8 +156,6 @@ export interface Settings {
   newCardsAtTop: boolean;
   /** Show a short description preview on collapsed cards. */
   showDescriptionPreview: boolean;
-  /** Start the Done column collapsed in Workflow view. */
-  collapseDoneByDefault: boolean;
   /** Ask for confirmation before deleting a card. */
   confirmDelete: boolean;
   /** Which optional fields cards display. */

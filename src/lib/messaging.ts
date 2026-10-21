@@ -34,3 +34,8 @@ export interface AddTaskResponse {
    */
   error?: 'empty' | 'not-a-board' | 'read-only' | 'write-failed';
 }
+
+/** The response the content script sends back for a given message. */
+export type ResponseTo<M extends ContentMessage> = M extends { type: 'add-task' }
+  ? AddTaskResponse
+  : StatusResponse;
