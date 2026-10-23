@@ -470,11 +470,17 @@ describe('sub-tasks', () => {
 
   it('ignores self references and cycles typed in the document', () => {
     const m = build(
-      '#!tasks\n- [ ] a @id:ka @parent:kb\n- [ ] b @id:kb @parent:ka\n- [ ] c @id:kc @parent:kc',
+      '#!tasks\n- [ ] a @id:ka @parent:kb\n- [ ] b @id:kb @parent:ka\n- [ ] c @id:kc @parent:kc\n- [ ] d @parent:ka',
     );
-    expect(titles(descendantsOf(m, task(m, 'a')))).toEqual(['b']);
+    expect(parentOf(m, task(m, 'a'))).toBeUndefined();
     expect(parentOf(m, task(m, 'c'))).toBeUndefined();
-    expect(serializeModel(m, MARKER)).not.toMatch(/@parent:kc/);
+    // A task hanging off a cycle still has its parent.
+    expect(parentOf(m, task(m, 'd'))?.title).toBe('a');
+    expect(titles(descendantsOf(m, task(m, 'a')))).toEqual(['d']);
+    expect(canSetStatus(m, task(m, 'b'), 'done')).toBe(true);
+    const text = serializeModel(m, MARKER);
+    expect(text).not.toMatch(/@parent:kb|@parent:kc/);
+    expect(text).toMatch(/- \[ \] d @parent:ka$/);
   });
 
   it('keeps a parent from reaching Done while a sub-task at any depth is open', () => {
