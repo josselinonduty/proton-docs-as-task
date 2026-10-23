@@ -538,7 +538,7 @@ function pruneLinks(model: BoardModel): BoardModel {
     ...t,
     blocks: live(t.blocks),
     related: live(t.related),
-    parent: t.parent && t.parent !== t.key && known.has(t.parent) ? t.parent : undefined,
+    parent: parentOf(model, t) ? t.parent : undefined,
   }));
   const referenced = new Set(
     linked.flatMap((t) => [
@@ -577,6 +577,18 @@ export function unlinkTasks(model: BoardModel, aId: string, bId: string): BoardM
 
 /** The task `task` is a sub-task of, if it still exists. */
 export function parentOf(model: BoardModel, task: BoardTask): BoardTask | undefined {
+  const parent = linkedParent(model, task);
+  // A parent link that leads back to `task` (typed by hand) is ignored.
+  const seen = new Set<BoardTask>();
+  for (let up = parent; up && !seen.has(up); up = linkedParent(model, up)) {
+    if (up === task) return undefined;
+    seen.add(up);
+  }
+  return parent;
+}
+
+/** The task `task.parent` names, cycles included. */
+function linkedParent(model: BoardModel, task: BoardTask): BoardTask | undefined {
   if (!task.parent) return undefined;
   return model.tasks.find((t) => t !== task && hasKey(t, task.parent));
 }
@@ -584,10 +596,10 @@ export function parentOf(model: BoardModel, task: BoardTask): BoardTask | undefi
 /** Direct sub-tasks of `task`, in board order. */
 export function subtasksOf(model: BoardModel, task: BoardTask): BoardTask[] {
   if (!task.key) return [];
-  return model.tasks.filter((t) => t !== task && t.parent === task.key);
+  return model.tasks.filter((t) => t.parent === task.key && parentOf(model, t) === task);
 }
 
-/** Every sub-task below `task`, at any depth (each listed once, cycle-safe). */
+/** Every sub-task below `task`, at any depth, each listed once. */
 export function descendantsOf(model: BoardModel, task: BoardTask): BoardTask[] {
   const seen = new Set<BoardTask>([task]);
   const result: BoardTask[] = [];
