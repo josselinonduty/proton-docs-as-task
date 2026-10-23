@@ -79,6 +79,7 @@ interface Meta {
   key?: string;
   blocks: string[];
   related: string[];
+  parent?: string;
   labels: string[];
   title: string;
 }
@@ -160,6 +161,8 @@ export function extractMeta(input: string): Meta {
   text = blocks.text;
   const related = extractFirst(text, [/@rel:(\S+)/i]);
   text = related.text;
+  const parent = extractFirst(text, [/@parent:(\S+)/i]);
+  text = parent.text;
 
   const priorityValue = prio.value ? PRIORITY_SYNONYMS[prio.value.toLowerCase()] : bangPriority;
 
@@ -172,6 +175,7 @@ export function extractMeta(input: string): Meta {
     key: key.value,
     blocks: splitKeys(blocks.value),
     related: splitKeys(related.value),
+    parent: parent.value || undefined,
     labels,
     title: text.replace(/\s+/g, ' ').trim(),
   };
@@ -305,6 +309,7 @@ export function parseDocument(text: string, markers: string[]): ParseResult {
       key: meta.key,
       blocks: meta.blocks,
       related: meta.related,
+      parent: meta.parent,
       labels: meta.labels,
       section: currentSection,
       order: tasks.length,

@@ -181,6 +181,24 @@
     "matching": "Tareas coincidentes",
     "none": "No se encontró ninguna tarea vinculable"
   },
+  "subtasks": {
+    "title": "Subtareas",
+    "progress": "{{done}} de {{count}} completadas",
+    "parent": "Tarea principal",
+    "parentPlaceholder": "Buscar una tarea principal…",
+    "parentSearch": "Buscar una tarea principal",
+    "noParent": "Ninguna tarea puede ser la principal",
+    "removeParent": "Quitar tarea principal",
+    "removeParentAria": "Quitar la tarea principal {{title}}",
+    "markDone": "Marcar {{title}} como completada",
+    "markNotDone": "Marcar {{title}} como no completada",
+    "detach": "Desvincular (conserva la tarea)",
+    "detachAria": "Desvincular la subtarea {{title}}",
+    "delete": "Eliminar subtarea",
+    "deleteAria": "Eliminar la subtarea {{title}}",
+    "add": "Añadir una subtarea",
+    "addPlaceholder": "Añadir una subtarea…"
+  },
   "card": {
     "untitled": "Tarea sin título",
     "highPriority": "Prioridad alta",
@@ -205,7 +223,10 @@
     "dueTitle": "{{state}}: {{date}}",
     "labelTitle": "Etiqueta: {{label}}",
     "note": "Nota",
-    "assigneeTitle": "Responsable: {{assignee}}"
+    "assigneeTitle": "Responsable: {{assignee}}",
+    "subtasksDone_one": "{{done}} de {{count}} subtarea completada",
+    "subtasksDone_other": "{{done}} de {{count}} subtareas completadas",
+    "subtaskOf": "Subtarea de {{title}}"
   },
   "bulk": {
     "region": "Acciones en lote",
@@ -322,7 +343,9 @@
     "moveUp": "Subir",
     "moveDown": "Bajar",
     "position": "{{index}} de {{count}}",
-    "delete": "Eliminar tarea"
+    "delete": "Eliminar tarea",
+    "openSubtasks_one": "{{count}} subtarea abierta. Termínala para completar esta tarea.",
+    "openSubtasks_other": "{{count}} subtareas abiertas. Termínalas para completar esta tarea."
   },
   "overlay": {
     "updated": "Tablero actualizado con los cambios del documento",
@@ -356,7 +379,11 @@
       "button": "Deshacer",
       "sectionMoved": "Sección eliminada",
       "sectionAll": "Sección y tareas eliminadas",
-      "sectionRenamed": "Sección renombrada a «{{name}}»"
+      "sectionRenamed": "Sección renombrada a «{{name}}»",
+      "subtaskAdded": "Subtarea añadida",
+      "subtaskDetached": "Subtarea desvinculada",
+      "parentSet": "Tarea principal definida",
+      "parentRemoved": "Tarea principal quitada"
     },
     "reopened": "{{title}} reabierta",
     "completed": "{{title}} completada",
@@ -441,7 +468,13 @@
     "pausedTitle": "Proton Docs ha pausado la edición (cargando, sin conexión o solo lectura). Tus cambios se guardarán en cuanto se reanude.",
     "waiting": "Esperando para guardar",
     "addTo": "Añadir una tarea a {{label}}…",
-    "addToAria": "Añadir una tarea a {{label}}"
+    "addToAria": "Añadir una tarea a {{label}}",
+    "openSubtasks_one": "La subtarea {{names}} sigue abierta. Termínala primero.",
+    "openSubtasks_other": "Las subtareas {{names}} siguen abiertas. Termínalas primero.",
+    "subtaskAdded": "Subtarea {{title}} añadida a {{parent}}",
+    "subtaskDetached": "Subtarea desvinculada",
+    "parentSet": "Tarea principal definida",
+    "parentRemoved": "Tarea principal quitada"
   },
   "views": {
     "workflow": {
@@ -583,7 +616,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low (también <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — una fecha límite",
       "who": "<code>@who:alex</code> o <code>@@alex</code> — un responsable",
-      "label": "<code>#label</code> — una o más etiquetas"
+      "label": "<code>#label</code> — una o más etiquetas",
+      "parent": "<code>@parent:clave</code> — convierte la tarea en subtarea de la marcada con <code>@id:clave</code> (se gestiona desde el panel de la tarea); una tarea no puede completarse mientras tenga una subtarea abierta"
     }
   },
   "popup": {

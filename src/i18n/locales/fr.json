@@ -181,6 +181,24 @@
     "matching": "Tâches correspondantes",
     "none": "Aucune tâche à lier trouvée"
   },
+  "subtasks": {
+    "title": "Sous-tâches",
+    "progress": "{{done}} sur {{count}} terminées",
+    "parent": "Tâche parente",
+    "parentPlaceholder": "Rechercher une tâche parente…",
+    "parentSearch": "Rechercher une tâche parente",
+    "noParent": "Aucune tâche ne peut être parente",
+    "removeParent": "Retirer le parent",
+    "removeParentAria": "Retirer le parent {{title}}",
+    "markDone": "Marquer {{title}} comme terminée",
+    "markNotDone": "Marquer {{title}} comme non terminée",
+    "detach": "Détacher (conserve la tâche)",
+    "detachAria": "Détacher la sous-tâche {{title}}",
+    "delete": "Supprimer la sous-tâche",
+    "deleteAria": "Supprimer la sous-tâche {{title}}",
+    "add": "Ajouter une sous-tâche",
+    "addPlaceholder": "Ajouter une sous-tâche…"
+  },
   "card": {
     "untitled": "Tâche sans titre",
     "highPriority": "Priorité haute",
@@ -205,7 +223,10 @@
     "dueTitle": "{{state}} : {{date}}",
     "labelTitle": "Étiquette : {{label}}",
     "note": "Note",
-    "assigneeTitle": "Assignée à : {{assignee}}"
+    "assigneeTitle": "Assignée à : {{assignee}}",
+    "subtasksDone_one": "{{done}} sur {{count}} sous-tâche terminée",
+    "subtasksDone_other": "{{done}} sur {{count}} sous-tâches terminées",
+    "subtaskOf": "Sous-tâche de {{title}}"
   },
   "bulk": {
     "region": "Actions groupées",
@@ -322,7 +343,9 @@
     "moveUp": "Monter",
     "moveDown": "Descendre",
     "position": "{{index}} sur {{count}}",
-    "delete": "Supprimer la tâche"
+    "delete": "Supprimer la tâche",
+    "openSubtasks_one": "{{count}} sous-tâche ouverte. Terminez-la pour terminer cette tâche.",
+    "openSubtasks_other": "{{count}} sous-tâches ouvertes. Terminez-les pour terminer cette tâche."
   },
   "overlay": {
     "updated": "Tableau mis à jour avec les modifications du document",
@@ -356,7 +379,11 @@
       "button": "Annuler",
       "sectionMoved": "Section supprimée",
       "sectionAll": "Section et tâches supprimées",
-      "sectionRenamed": "Section renommée en « {{name}} »"
+      "sectionRenamed": "Section renommée en « {{name}} »",
+      "subtaskAdded": "Sous-tâche ajoutée",
+      "subtaskDetached": "Sous-tâche détachée",
+      "parentSet": "Tâche parente définie",
+      "parentRemoved": "Tâche parente retirée"
     },
     "reopened": "{{title}} rouverte",
     "completed": "{{title}} terminée",
@@ -441,7 +468,13 @@
     "pausedTitle": "Proton Docs a suspendu la modification (chargement en cours, hors ligne ou lecture seule). Vos modifications seront enregistrées dès la reprise.",
     "waiting": "En attente d’enregistrement",
     "addTo": "Ajouter une tâche à {{label}}…",
-    "addToAria": "Ajouter une tâche à {{label}}"
+    "addToAria": "Ajouter une tâche à {{label}}",
+    "openSubtasks_one": "La sous-tâche {{names}} est encore ouverte. Terminez-la d’abord.",
+    "openSubtasks_other": "Les sous-tâches {{names}} sont encore ouvertes. Terminez-les d’abord.",
+    "subtaskAdded": "Sous-tâche {{title}} ajoutée à {{parent}}",
+    "subtaskDetached": "Sous-tâche détachée",
+    "parentSet": "Tâche parente définie",
+    "parentRemoved": "Tâche parente retirée"
   },
   "views": {
     "workflow": {
@@ -583,7 +616,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low (aussi <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — une échéance",
       "who": "<code>@who:alex</code> ou <code>@@alex</code> — un assigné",
-      "label": "<code>#label</code> — une ou plusieurs étiquettes"
+      "label": "<code>#label</code> — une ou plusieurs étiquettes",
+      "parent": "<code>@parent:clé</code> — fait de la tâche une sous-tâche de celle marquée <code>@id:clé</code> (géré depuis le panneau de la tâche) ; une tâche ne peut pas être terminée tant qu’une sous-tâche est ouverte"
     }
   },
   "popup": {

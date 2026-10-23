@@ -169,6 +169,14 @@ describe('relationship tokens', () => {
       ['x'],
     ]);
   });
+
+  it('parses @parent', () => {
+    const r = parseDocument('#!tasks\n- [ ] a @id:k1\n- [ ] b @parent:k1', DEFAULT_MARKERS);
+    expect(r.tasks.map((t) => [t.title, t.parent])).toEqual([
+      ['a', undefined],
+      ['b', 'k1'],
+    ]);
+  });
 });
 
 describe('@default section marker', () => {

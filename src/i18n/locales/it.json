@@ -181,6 +181,24 @@
     "matching": "Attività corrispondenti",
     "none": "Nessuna attività collegabile trovata"
   },
+  "subtasks": {
+    "title": "Sottoattività",
+    "progress": "{{done}} di {{count}} completate",
+    "parent": "Attività principale",
+    "parentPlaceholder": "Cerca un’attività principale…",
+    "parentSearch": "Cerca un’attività principale",
+    "noParent": "Nessuna attività può essere principale",
+    "removeParent": "Rimuovi principale",
+    "removeParentAria": "Rimuovi l’attività principale {{title}}",
+    "markDone": "Segna {{title}} come completata",
+    "markNotDone": "Segna {{title}} come non completata",
+    "detach": "Scollega (mantiene l’attività)",
+    "detachAria": "Scollega la sottoattività {{title}}",
+    "delete": "Elimina sottoattività",
+    "deleteAria": "Elimina la sottoattività {{title}}",
+    "add": "Aggiungi una sottoattività",
+    "addPlaceholder": "Aggiungi una sottoattività…"
+  },
   "card": {
     "untitled": "Attività senza titolo",
     "highPriority": "Priorità alta",
@@ -205,7 +223,10 @@
     "dueTitle": "{{state}}: {{date}}",
     "labelTitle": "Etichetta: {{label}}",
     "note": "Nota",
-    "assigneeTitle": "Assegnatario: {{assignee}}"
+    "assigneeTitle": "Assegnatario: {{assignee}}",
+    "subtasksDone_one": "{{done}} di {{count}} sottoattività completata",
+    "subtasksDone_other": "{{done}} di {{count}} sottoattività completate",
+    "subtaskOf": "Sottoattività di {{title}}"
   },
   "bulk": {
     "region": "Azioni di gruppo",
@@ -322,7 +343,9 @@
     "moveUp": "Sposta in alto",
     "moveDown": "Sposta in basso",
     "position": "{{index}} di {{count}}",
-    "delete": "Elimina attività"
+    "delete": "Elimina attività",
+    "openSubtasks_one": "{{count}} sottoattività aperta. Completala per completare questa attività.",
+    "openSubtasks_other": "{{count}} sottoattività aperte. Completale per completare questa attività."
   },
   "overlay": {
     "updated": "Bacheca aggiornata con le modifiche del documento",
@@ -356,7 +379,11 @@
       "button": "Annulla",
       "sectionMoved": "Sezione eliminata",
       "sectionAll": "Sezione e attività eliminate",
-      "sectionRenamed": "Sezione rinominata in «{{name}}»"
+      "sectionRenamed": "Sezione rinominata in «{{name}}»",
+      "subtaskAdded": "Sottoattività aggiunta",
+      "subtaskDetached": "Sottoattività scollegata",
+      "parentSet": "Attività principale impostata",
+      "parentRemoved": "Attività principale rimossa"
     },
     "reopened": "{{title}} riaperta",
     "completed": "{{title}} completata",
@@ -441,7 +468,13 @@
     "pausedTitle": "Proton Docs ha sospeso la modifica (caricamento in corso, offline o sola lettura). Le tue modifiche verranno salvate appena riprenderà.",
     "waiting": "In attesa di salvare",
     "addTo": "Aggiungi un’attività a {{label}}…",
-    "addToAria": "Aggiungi un’attività a {{label}}"
+    "addToAria": "Aggiungi un’attività a {{label}}",
+    "openSubtasks_one": "La sottoattività {{names}} è ancora aperta. Completala prima.",
+    "openSubtasks_other": "Le sottoattività {{names}} sono ancora aperte. Completale prima.",
+    "subtaskAdded": "Sottoattività {{title}} aggiunta a {{parent}}",
+    "subtaskDetached": "Sottoattività scollegata",
+    "parentSet": "Attività principale impostata",
+    "parentRemoved": "Attività principale rimossa"
   },
   "views": {
     "workflow": {
@@ -583,7 +616,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low (anche <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — una scadenza",
       "who": "<code>@who:alex</code> o <code>@@alex</code> — un assegnatario",
-      "label": "<code>#label</code> — una o più etichette"
+      "label": "<code>#label</code> — una o più etichette",
+      "parent": "<code>@parent:chiave</code> — rende l’attività una sottoattività di quella con <code>@id:chiave</code> (gestito dal pannello dell’attività); un’attività non può essere completata finché una sottoattività è aperta"
     }
   },
   "popup": {

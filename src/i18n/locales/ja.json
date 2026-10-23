@@ -178,6 +178,24 @@
     "matching": "一致するタスク",
     "none": "リンクできるタスクが見つかりません"
   },
+  "subtasks": {
+    "title": "サブタスク",
+    "progress": "{{count}}件中{{done}}件完了",
+    "parent": "親タスク",
+    "parentPlaceholder": "親タスクを検索…",
+    "parentSearch": "親タスクを検索",
+    "noParent": "親にできるタスクがありません",
+    "removeParent": "親を解除",
+    "removeParentAria": "親タスク{{title}}を解除",
+    "markDone": "{{title}}を完了にする",
+    "markNotDone": "{{title}}を未完了にする",
+    "detach": "切り離す（タスクは残ります）",
+    "detachAria": "サブタスク{{title}}を切り離す",
+    "delete": "サブタスクを削除",
+    "deleteAria": "サブタスク{{title}}を削除",
+    "add": "サブタスクを追加",
+    "addPlaceholder": "サブタスクを追加…"
+  },
   "card": {
     "untitled": "無題のタスク",
     "highPriority": "優先度: 高",
@@ -200,7 +218,9 @@
     "dueTitle": "{{state}}: {{date}}",
     "labelTitle": "ラベル: {{label}}",
     "note": "メモ",
-    "assigneeTitle": "担当者: {{assignee}}"
+    "assigneeTitle": "担当者: {{assignee}}",
+    "subtasksDone_other": "サブタスク{{count}}件中{{done}}件完了",
+    "subtaskOf": "{{title}}のサブタスク"
   },
   "bulk": {
     "region": "一括操作",
@@ -316,7 +336,8 @@
     "moveUp": "上へ移動",
     "moveDown": "下へ移動",
     "position": "{{index}} / {{count}}",
-    "delete": "タスクを削除"
+    "delete": "タスクを削除",
+    "openSubtasks_other": "未完了のサブタスクが{{count}}件あります。完了するとこのタスクを完了できます。"
   },
   "overlay": {
     "updated": "ドキュメントの変更をボードに反映しました",
@@ -348,7 +369,11 @@
       "button": "元に戻す",
       "sectionMoved": "セクションを削除しました",
       "sectionAll": "セクションとタスクを削除しました",
-      "sectionRenamed": "セクション名を「{{name}}」に変更しました"
+      "sectionRenamed": "セクション名を「{{name}}」に変更しました",
+      "subtaskAdded": "サブタスクを追加",
+      "subtaskDetached": "サブタスクを切り離し",
+      "parentSet": "親タスクを設定",
+      "parentRemoved": "親タスクを解除"
     },
     "reopened": "{{title}}を再開しました",
     "completed": "{{title}}を完了しました",
@@ -430,7 +455,12 @@
     "pausedTitle": "Proton Docsが編集を一時停止しています（読み込み中、オフライン、または閲覧専用）。編集が再開されると、変更は自動的に保存されます。",
     "waiting": "保存待ち",
     "addTo": "{{label}}にタスクを追加…",
-    "addToAria": "{{label}}にタスクを追加"
+    "addToAria": "{{label}}にタスクを追加",
+    "openSubtasks_other": "サブタスク{{names}}がまだ未完了です。先に完了してください。",
+    "subtaskAdded": "サブタスク{{title}}を{{parent}}に追加しました",
+    "subtaskDetached": "サブタスクを切り離しました",
+    "parentSet": "親タスクを設定しました",
+    "parentRemoved": "親タスクを解除しました"
   },
   "views": {
     "workflow": {
@@ -571,7 +601,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low（<code>!</code>/<code>!!</code>/<code>!!!</code> も使えます）",
       "due": "<code>@due:2026-09-10</code> — 期限",
       "who": "<code>@who:alex</code> または <code>@@alex</code> — 担当者",
-      "label": "<code>#label</code> — 1つ以上のラベル"
+      "label": "<code>#label</code> — 1つ以上のラベル",
+      "parent": "<code>@parent:キー</code> — <code>@id:キー</code>が付いたタスクのサブタスクにします（タスクパネルで管理）。未完了のサブタスクがある間はタスクを完了できません"
     }
   },
   "popup": {
