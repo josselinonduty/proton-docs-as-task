@@ -309,7 +309,11 @@ export function TaskDetailsPanel({
           />
         </label>
 
-        <TaskSubtasks {...subtasks} isDone={(sub) => isDoneStatus(statuses, sub.status)} />
+        <TaskSubtasks
+          key={task.id}
+          {...subtasks}
+          isDone={(sub) => isDoneStatus(statuses, sub.status)}
+        />
 
         <TaskRelations
           links={links}
