@@ -3,14 +3,20 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
   addSection,
+  addSubtask,
   addTask,
   applyBulkAction,
   canLink,
+  canSetParent,
   canSetStatus,
   isTaskDone,
   linksOf,
   linkTasks,
   openBlockers,
+  openSubtasks,
+  parentOf,
+  setParent,
+  subtasksOf,
   unlinkTasks,
   columnsForView,
   countTasks,
@@ -146,6 +152,16 @@ export function EditableBoard(props: EditableBoardProps) {
   const { statuses } = model;
   const statusActions = useStatusActions({ model, onChange, announce });
   const isDone = (task: BoardTask) => isTaskDone(model, task);
+  const subtaskProgress = (task: BoardTask) => {
+    const subs = subtasksOf(model, task);
+    return subs.length
+      ? {
+          done: subs.filter(isDone).length,
+          total: subs.length,
+          open: openSubtasks(model, task).length,
+        }
+      : undefined;
+  };
   const now = new Date();
   const facets = collectFacets(model);
   const filtersActive = hasActiveFilters(filters);
@@ -240,8 +256,14 @@ export function EditableBoard(props: EditableBoardProps) {
   /** True when `task` may take `status`; otherwise explains which tasks stand in the way. */
   const allowStatus = (task: BoardTask, status: StatusKey) => {
     if (canSetStatus(model, task, status)) return true;
-    const names = openBlockers(model, task).map((b) => `“${b.title || t('card.untitled')}”`);
-    const message = t('board.blocked', { names: names.join(', '), count: names.length });
+    const blockers = openBlockers(model, task);
+    const names = (blockers.length ? blockers : openSubtasks(model, task)).map(
+      (b) => `“${b.title || t('card.untitled')}”`,
+    );
+    const message = t(blockers.length ? 'board.blocked' : 'board.openSubtasks', {
+      names: names.join(', '),
+      count: names.length,
+    });
     setBlockedNotice(message);
     announce(message);
     return false;
@@ -1078,6 +1100,38 @@ export function EditableBoard(props: EditableBoardProps) {
             linkCandidates={(kind) =>
               model.tasks.filter((task) => canLink(model, detailsTask.id, task.id, kind))
             }
+            openSubtasks={openSubtasks(model, detailsTask).length}
+            subtasks={{
+              parent: parentOf(model, detailsTask),
+              subtasks: subtasksOf(model, detailsTask),
+              parentCandidates: () =>
+                model.tasks.filter((task) => canSetParent(model, detailsTask.id, task.id)),
+              onOpen: openLinked,
+              onAdd: (title) => {
+                const { model: next } = addSubtask(model, detailsTask.id, title);
+                onChange(next, t('board.undo.subtaskAdded'));
+                announce(t('board.subtaskAdded', { title, parent: taskName(detailsTask) }));
+              },
+              onToggleDone: (id) => {
+                const sub = model.tasks.find((task) => task.id === id);
+                if (sub) toggleDone(sub);
+              },
+              onDetach: (id) => {
+                onChange(setParent(model, id, undefined), t('board.undo.subtaskDetached'));
+                announce(t('board.subtaskDetached'));
+              },
+              onDelete: (id) => {
+                const sub = model.tasks.find((task) => task.id === id);
+                if (sub) requestDelete(sub);
+              },
+              onSetParent: (id) => {
+                onChange(
+                  setParent(model, detailsTask.id, id),
+                  t(id ? 'board.undo.parentSet' : 'board.undo.parentRemoved'),
+                );
+                announce(t(id ? 'board.parentSet' : 'board.parentRemoved'));
+              },
+            }}
             onBack={trail.length ? goBack : undefined}
             onOpenLinked={openLinked}
             onLink={(kind, id) => {
@@ -1264,6 +1318,8 @@ export function EditableBoard(props: EditableBoardProps) {
         active={details?.id === task.id}
         blockedBy={openBlockers(model, task).length}
         blocking={linksOf(model, task).blocks.filter((blocked) => !isDone(blocked)).length}
+        subtasks={subtaskProgress(task)}
+        parentTitle={parentOf(model, task)?.title}
         highlight={highlightId === task.id}
         selection={
           selectionMode

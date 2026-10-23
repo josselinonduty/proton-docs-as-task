@@ -62,6 +62,8 @@ export interface Task {
   blocks: string[];
   /** Keys of loosely related tasks (`@rel:a,b`). */
   related: string[];
+  /** Key of the task this one is a sub-task of (`@parent:key`). */
+  parent?: string;
   /** Section heading this task lives under (default "Tasks"). */
   section: string;
   /**

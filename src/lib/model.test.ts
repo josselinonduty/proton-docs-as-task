@@ -3,6 +3,14 @@ import { parseDocument } from './parser';
 import { DEFAULT_MARKERS } from './defaults';
 import {
   addSection,
+  addSubtask,
+  canSetParent,
+  descendantsOf,
+  openSubtasks,
+  parentOf,
+  removeTask,
+  setParent,
+  subtasksOf,
   addStatus,
   addTask,
   applyBulkAction,
@@ -413,6 +421,107 @@ describe('task relationships', () => {
     expect(setTaskStatus(unblocked, b, 'doing').tasks.find((t) => t.id === b)!.status).toBe(
       'doing',
     );
+  });
+});
+
+describe('sub-tasks', () => {
+  const doc = '#!tasks\n## A\n- [ ] parent\n- [ ] other\n## B\n- [ ] elsewhere';
+  const task = (model: BoardModel, title: string) => model.tasks.find((t) => t.title === title)!;
+  const titles = (tasks: { title: string }[]) => tasks.map((t) => t.title);
+
+  it('creates a sub-task in the parent section, right after the parent', () => {
+    const m = build(doc);
+    const { model, taskId } = addSubtask(m, task(m, 'parent').id, '  child  ');
+    const child = model.tasks.find((t) => t.id === taskId)!;
+    expect([child.title, child.section, child.status]).toEqual(['child', 'A', 'todo']);
+    expect(parentOf(model, child)?.title).toBe('parent');
+    expect(titles(model.tasks)).toEqual(['parent', 'child', 'other', 'elsewhere']);
+    const next = addSubtask(model, task(model, 'parent').id, 'second').model;
+    expect(titles(next.tasks)).toEqual(['parent', 'child', 'second', 'other', 'elsewhere']);
+    expect(titles(subtasksOf(next, task(next, 'parent')))).toEqual(['child', 'second']);
+  });
+
+  it('round-trips through the document as @parent', () => {
+    const m = build(doc);
+    const linked = setParent(m, task(m, 'elsewhere').id, task(m, 'parent').id);
+    const text = serializeModel(linked, MARKER);
+    expect(text).toMatch(/- \[ \] parent @id:\w{4}\n/);
+    expect(text).toMatch(/- \[ \] elsewhere @parent:\w{4}$/);
+    const back = build(text);
+    expect(parentOf(back, task(back, 'elsewhere'))?.title).toBe('parent');
+    expect(task(back, 'elsewhere').section).toBe('B');
+  });
+
+  it('nests to any depth and refuses cycles', () => {
+    const m = build(doc);
+    const [p, o, e] = ['parent', 'other', 'elsewhere'].map((title) => task(m, title).id) as [
+      string,
+      string,
+      string,
+    ];
+    const nested = setParent(setParent(m, o, p), e, o);
+    expect(titles(descendantsOf(nested, task(nested, 'parent')))).toEqual(['other', 'elsewhere']);
+    expect(canSetParent(nested, p, e)).toBe(false);
+    expect(canSetParent(nested, p, p)).toBe(false);
+    expect(canSetParent(nested, o, p)).toBe(false);
+    expect(canSetParent(nested, e, p)).toBe(true);
+    expect(setParent(nested, p, e)).toBe(nested);
+  });
+
+  it('ignores self references and cycles typed in the document', () => {
+    const m = build(
+      '#!tasks\n- [ ] a @id:ka @parent:kb\n- [ ] b @id:kb @parent:ka\n- [ ] c @id:kc @parent:kc',
+    );
+    expect(titles(descendantsOf(m, task(m, 'a')))).toEqual(['b']);
+    expect(parentOf(m, task(m, 'c'))).toBeUndefined();
+    expect(serializeModel(m, MARKER)).not.toMatch(/@parent:kc/);
+  });
+
+  it('keeps a parent from reaching Done while a sub-task at any depth is open', () => {
+    const m = build(doc);
+    const [p, o, e] = ['parent', 'other', 'elsewhere'].map((title) => task(m, title).id) as [
+      string,
+      string,
+      string,
+    ];
+    const nested = setParent(setParent(m, o, p), e, o);
+    expect(titles(openSubtasks(nested, task(nested, 'parent')))).toEqual(['other', 'elsewhere']);
+    expect(canSetStatus(nested, task(nested, 'parent'), 'done')).toBe(false);
+    expect(canSetStatus(nested, task(nested, 'parent'), 'doing')).toBe(true);
+    expect(setTaskStatus(nested, p, 'done')).toBe(nested);
+    expect(applyBulkAction(nested, [p], { kind: 'complete' }).tasks[0]!.status).toBe('todo');
+    // Completing the child alone is not enough: the grandchild is still open.
+    const childDone = setTaskStatus(nested, o, 'done');
+    expect(childDone).toBe(nested);
+    const allDone = setTaskStatus(setTaskStatus(nested, e, 'done'), o, 'done');
+    expect(setTaskStatus(allDone, p, 'done').tasks[0]!.status).toBe('done');
+  });
+
+  it('detaches a sub-task without touching the parent', () => {
+    const m = build(doc);
+    const linked = setParent(m, task(m, 'other').id, task(m, 'parent').id);
+    const detached = setParent(linked, task(linked, 'other').id, undefined);
+    expect(parentOf(detached, task(detached, 'other'))).toBeUndefined();
+    expect(serializeModel(detached, MARKER)).not.toMatch(/@parent|@id/);
+  });
+
+  it('keeps sub-tasks, detached, when their parent is deleted', () => {
+    const m = build(doc);
+    const linked = setParent(m, task(m, 'other').id, task(m, 'parent').id);
+    for (const next of [
+      removeTask(linked, task(linked, 'parent').id),
+      applyBulkAction(linked, [task(linked, 'parent').id], { kind: 'delete' }),
+    ]) {
+      expect(titles(next.tasks)).toEqual(['other', 'elsewhere']);
+      expect(task(next, 'other').parent).toBeUndefined();
+    }
+  });
+
+  it('duplicates a sub-task as a sibling', () => {
+    const m = build(doc);
+    const linked = setParent(m, task(m, 'other').id, task(m, 'parent').id);
+    const { model } = duplicateTask(linked, task(linked, 'other').id);
+    expect(titles(subtasksOf(model, task(model, 'parent')))).toEqual(['other', 'other']);
   });
 });
 

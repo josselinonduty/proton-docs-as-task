@@ -10,6 +10,7 @@ import { DueDateControl } from './DueDateControl';
 import { Icon } from './Icon';
 import { PRIORITY_OPTIONS, priorityOptionLabel } from './taskFields';
 import { TaskRelations } from './TaskRelations';
+import { TaskSubtasks, type TaskSubtasksProps } from './TaskSubtasks';
 
 /** Which control to focus when the panel opens (E → title, M → section). */
 export type DetailsFocus = 'panel' | 'title' | 'section';
@@ -31,6 +32,10 @@ interface TaskDetailsPanelProps {
   /** Number of unfinished tasks standing in the way of this one. */
   openBlockers: number;
   linkCandidates: (kind: LinkKind) => BoardTask[];
+  /** The task's parent and sub-tasks, and their actions. */
+  subtasks: Omit<TaskSubtasksProps, 'isDone'>;
+  /** Number of unfinished sub-tasks (at any depth) keeping this one from Done. */
+  openSubtasks: number;
   /** Present when the panel was reached through a link. */
   onBack?: () => void;
   onOpenLinked: (id: string) => void;
@@ -66,6 +71,8 @@ export function TaskDetailsPanel({
   links,
   openBlockers,
   linkCandidates,
+  subtasks,
+  openSubtasks,
   onBack,
   onOpenLinked,
   onLink,
@@ -86,6 +93,7 @@ export function TaskDetailsPanel({
   const sectionRef = useRef<HTMLSelectElement>(null);
   const done = isDoneStatus(statuses, task.status);
   const blocked = openBlockers > 0;
+  const hasOpenSubtasks = openSubtasks > 0;
 
   useEffect(() => {
     const target =
@@ -141,7 +149,7 @@ export function TaskDetailsPanel({
           type="button"
           className={`pdt-btn pdt-btn-sm ${done ? 'pdt-btn-selected' : ''}`}
           aria-pressed={done}
-          disabled={blocked && !done}
+          disabled={(blocked || hasOpenSubtasks) && !done}
           onClick={onToggleDone}
         >
           <Icon name="checkmark" size={14} />
@@ -184,6 +192,12 @@ export function TaskDetailsPanel({
             {t('details.blocked', { count: openBlockers })}
           </p>
         )}
+        {hasOpenSubtasks && !done && (
+          <p className="pdt-rel__blocked" role="status">
+            <Icon name="subtasks" size={14} />
+            {t('details.openSubtasks', { count: openSubtasks })}
+          </p>
+        )}
         <textarea
           ref={titleRef}
           className={`pdt-details__title ${done ? 'pdt-card__title--done' : ''}`}
@@ -212,7 +226,11 @@ export function TaskDetailsPanel({
                 <option
                   key={c.key}
                   value={c.key}
-                  disabled={blocked && c.category !== 'todo' && c.key !== task.status}
+                  disabled={
+                    c.key !== task.status &&
+                    ((blocked && c.category !== 'todo') ||
+                      (hasOpenSubtasks && c.category === 'done'))
+                  }
                 >
                   {c.label}
                 </option>
@@ -290,6 +308,8 @@ export function TaskDetailsPanel({
             onChange={(e) => onPatch({ description: e.target.value || undefined })}
           />
         </label>
+
+        <TaskSubtasks {...subtasks} isDone={(sub) => isDoneStatus(statuses, sub.status)} />
 
         <TaskRelations
           links={links}

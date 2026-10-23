@@ -275,6 +275,9 @@ export function App() {
           <li>
             <Trans i18nKey="options.syntax.label" components={{ code: <code /> }} />
           </li>
+          <li>
+            <Trans i18nKey="options.syntax.parent" components={{ code: <code /> }} />
+          </li>
         </ul>
       </section>
 

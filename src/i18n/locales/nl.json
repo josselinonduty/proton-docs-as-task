@@ -181,6 +181,24 @@
     "matching": "Overeenkomende taken",
     "none": "Geen koppelbare taak gevonden"
   },
+  "subtasks": {
+    "title": "Subtaken",
+    "progress": "{{done}} van {{count}} klaar",
+    "parent": "Bovenliggende taak",
+    "parentPlaceholder": "Zoek een bovenliggende taak…",
+    "parentSearch": "Zoek een bovenliggende taak",
+    "noParent": "Geen taak kan bovenliggend zijn",
+    "removeParent": "Bovenliggende verwijderen",
+    "removeParentAria": "Bovenliggende taak {{title}} verwijderen",
+    "markDone": "{{title}} markeren als klaar",
+    "markNotDone": "{{title}} markeren als niet klaar",
+    "detach": "Loskoppelen (taak blijft bestaan)",
+    "detachAria": "Subtaak {{title}} loskoppelen",
+    "delete": "Subtaak verwijderen",
+    "deleteAria": "Subtaak {{title}} verwijderen",
+    "add": "Subtaak toevoegen",
+    "addPlaceholder": "Subtaak toevoegen…"
+  },
   "card": {
     "untitled": "Taak zonder titel",
     "highPriority": "Hoge prioriteit",
@@ -205,7 +223,10 @@
     "dueTitle": "{{state}}: {{date}}",
     "labelTitle": "Label: {{label}}",
     "note": "Notitie",
-    "assigneeTitle": "Toegewezen aan: {{assignee}}"
+    "assigneeTitle": "Toegewezen aan: {{assignee}}",
+    "subtasksDone_one": "{{done}} van {{count}} subtaak klaar",
+    "subtasksDone_other": "{{done}} van {{count}} subtaken klaar",
+    "subtaskOf": "Subtaak van {{title}}"
   },
   "bulk": {
     "region": "Bulkacties",
@@ -322,7 +343,9 @@
     "moveUp": "Omhoog",
     "moveDown": "Omlaag",
     "position": "{{index}} van {{count}}",
-    "delete": "Taak verwijderen"
+    "delete": "Taak verwijderen",
+    "openSubtasks_one": "{{count}} open subtaak. Rond die af om deze taak te voltooien.",
+    "openSubtasks_other": "{{count}} open subtaken. Rond die af om deze taak te voltooien."
   },
   "overlay": {
     "updated": "Bord bijgewerkt met wijzigingen uit het document",
@@ -356,7 +379,11 @@
       "button": "Ongedaan maken",
       "sectionMoved": "Sectie verwijderd",
       "sectionAll": "Sectie en taken verwijderd",
-      "sectionRenamed": "Sectie hernoemd naar ‘{{name}}’"
+      "sectionRenamed": "Sectie hernoemd naar ‘{{name}}’",
+      "subtaskAdded": "Subtaak toegevoegd",
+      "subtaskDetached": "Subtaak losgekoppeld",
+      "parentSet": "Bovenliggende taak ingesteld",
+      "parentRemoved": "Bovenliggende taak verwijderd"
     },
     "reopened": "{{title}} heropend",
     "completed": "{{title}} voltooid",
@@ -441,7 +468,13 @@
     "pausedTitle": "Proton Docs heeft het bewerken gepauzeerd (nog aan het laden, offline of alleen-lezen). Je wijzigingen worden opgeslagen zodra bewerken weer mogelijk is.",
     "waiting": "Wachten op opslaan",
     "addTo": "Een taak toevoegen aan {{label}}…",
-    "addToAria": "Een taak toevoegen aan {{label}}"
+    "addToAria": "Een taak toevoegen aan {{label}}",
+    "openSubtasks_one": "Subtaak {{names}} staat nog open. Rond die eerst af.",
+    "openSubtasks_other": "Subtaken {{names}} staan nog open. Rond die eerst af.",
+    "subtaskAdded": "Subtaak {{title}} toegevoegd aan {{parent}}",
+    "subtaskDetached": "Subtaak losgekoppeld",
+    "parentSet": "Bovenliggende taak ingesteld",
+    "parentRemoved": "Bovenliggende taak verwijderd"
   },
   "views": {
     "workflow": {
@@ -583,7 +616,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low (ook <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — een deadline",
       "who": "<code>@who:alex</code> of <code>@@alex</code> — een toegewezen persoon",
-      "label": "<code>#label</code> — een of meer labels"
+      "label": "<code>#label</code> — een of meer labels",
+      "parent": "<code>@parent:sleutel</code> — maakt de taak een subtaak van de taak met <code>@id:sleutel</code> (beheerd vanuit het taakpaneel); een taak kan niet worden voltooid zolang een subtaak openstaat"
     }
   },
   "popup": {

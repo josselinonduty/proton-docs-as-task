@@ -213,6 +213,7 @@ board title after the marker.
 | `@due:2026-09-10`                      | A due date (`@due(next friday)` also works)                                                              |
 | `@who:alex` / `@@alex`                 | An assignee                                                                                              |
 | `@id:key` `@blocks:key,key` `@rel:key` | Task links, managed from the task panel (a blocked task stays _Not started_ until its blockers are done) |
+| `@parent:key`                          | Makes the task a sub-task of the one marked `@id:key` (see [Sub-tasks](#sub-tasks))                      |
 | `@desc(free text)`                     | A hidden single-line description (managed from the board, escaped to round-trip)                         |
 | `#label`                               | One or more labels                                                                                       |
 
@@ -220,6 +221,37 @@ A ticked checkbox always resolves to a **Done** status; otherwise an explicit
 `@status` applies, and everything else gets the first **Not started** status.
 See [`examples/sample-board.md`](examples/sample-board.md) for a fuller example,
 and the extension's **options page** for an in-app syntax guide.
+
+### Sub-tasks
+
+Any task can be broken down into **sub-tasks**. A sub-task is an ordinary task
+— its own card, status, section, priority and everything else — that points at
+its parent with `@parent:key`; the parent carries the matching `@id:key`:
+
+```text
+## Backend
+- [ ] Ship the API @id:k3p9
+- [x] Design endpoints @parent:k3p9
+- [ ] Write handlers @parent:k3p9 @id:x8m2
+- [ ] Pagination @parent:x8m2
+```
+
+- **Create** a sub-task from the parent's details panel (_Add a sub-task…_,
+  `Enter`): it lands in the parent's section, right after its siblings, in
+  the first _Not started_ status.
+- **Read** it on the board: a parent card shows its progress (`1/2`), a
+  sub-task card names its parent, and the details panel lists both.
+- **Update** it like any other task — open it from the list, tick it in place,
+  or move it under another parent (_Parent task_ search) or detach it.
+- **Delete** it from the parent's list (with the usual confirmation), or
+  **detach** it to keep it as a standalone task. Deleting a parent keeps its
+  sub-tasks and simply detaches them.
+
+Nesting has no depth limit, and a move that would make a task its own
+ancestor is refused. **A parent can't be completed while any sub-task below
+it, at any depth, is still open** — the Done statuses and checkbox are
+disabled and the board explains which sub-tasks are in the way. Keys are
+written and cleaned up by the board; you never type them yourself.
 
 ### Statuses
 

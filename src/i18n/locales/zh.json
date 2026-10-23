@@ -178,6 +178,24 @@
     "matching": "匹配的任务",
     "none": "没有找到可关联的任务"
   },
+  "subtasks": {
+    "title": "子任务",
+    "progress": "已完成 {{done}}/{{count}}",
+    "parent": "父任务",
+    "parentPlaceholder": "搜索父任务…",
+    "parentSearch": "搜索父任务",
+    "noParent": "没有可作为父任务的任务",
+    "removeParent": "移除父任务",
+    "removeParentAria": "移除父任务 {{title}}",
+    "markDone": "将 {{title}} 标记为完成",
+    "markNotDone": "将 {{title}} 标记为未完成",
+    "detach": "分离（保留任务）",
+    "detachAria": "分离子任务 {{title}}",
+    "delete": "删除子任务",
+    "deleteAria": "删除子任务 {{title}}",
+    "add": "添加子任务",
+    "addPlaceholder": "添加子任务…"
+  },
   "card": {
     "untitled": "无标题任务",
     "highPriority": "高优先级",
@@ -200,7 +218,9 @@
     "dueTitle": "{{state}}：{{date}}",
     "labelTitle": "标签：{{label}}",
     "note": "备注",
-    "assigneeTitle": "负责人：{{assignee}}"
+    "assigneeTitle": "负责人：{{assignee}}",
+    "subtasksDone_other": "已完成 {{done}}/{{count}} 个子任务",
+    "subtaskOf": "{{title}} 的子任务"
   },
   "bulk": {
     "region": "批量操作",
@@ -316,7 +336,8 @@
     "moveUp": "上移",
     "moveDown": "下移",
     "position": "第 {{index}} 个，共 {{count}} 个",
-    "delete": "删除任务"
+    "delete": "删除任务",
+    "openSubtasks_other": "还有 {{count}} 个未完成的子任务。完成后才能完成此任务。"
   },
   "overlay": {
     "updated": "看板已根据文档中的更改更新",
@@ -348,7 +369,11 @@
       "button": "撤销",
       "sectionMoved": "已删除分组",
       "sectionAll": "已删除分组及其任务",
-      "sectionRenamed": "分组已重命名为“{{name}}”"
+      "sectionRenamed": "分组已重命名为“{{name}}”",
+      "subtaskAdded": "已添加子任务",
+      "subtaskDetached": "已分离子任务",
+      "parentSet": "已设置父任务",
+      "parentRemoved": "已移除父任务"
     },
     "reopened": "已重新打开{{title}}",
     "completed": "已完成{{title}}",
@@ -430,7 +455,12 @@
     "pausedTitle": "Proton Docs 已暂停编辑（仍在加载、已离线或为只读）。恢复编辑后，你的更改会立即保存。",
     "waiting": "等待保存",
     "addTo": "向{{label}}添加任务…",
-    "addToAria": "向{{label}}添加任务"
+    "addToAria": "向{{label}}添加任务",
+    "openSubtasks_other": "子任务 {{names}} 尚未完成。请先完成。",
+    "subtaskAdded": "已将子任务 {{title}} 添加到 {{parent}}",
+    "subtaskDetached": "已分离子任务",
+    "parentSet": "已设置父任务",
+    "parentRemoved": "已移除父任务"
   },
   "views": {
     "workflow": {
@@ -571,7 +601,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low（也可用 <code>!</code>/<code>!!</code>/<code>!!!</code>）",
       "due": "<code>@due:2026-09-10</code> — 截止日期",
       "who": "<code>@who:alex</code> 或 <code>@@alex</code> — 负责人",
-      "label": "<code>#label</code> — 一个或多个标签"
+      "label": "<code>#label</code> — 一个或多个标签",
+      "parent": "<code>@parent:键</code> — 使该任务成为标记为 <code>@id:键</code> 的任务的子任务（在任务面板中管理）；有未完成的子任务时无法完成该任务"
     }
   },
   "popup": {
