@@ -181,6 +181,24 @@
     "matching": "Passende Aufgaben",
     "none": "Keine verknüpfbare Aufgabe gefunden"
   },
+  "subtasks": {
+    "title": "Unteraufgaben",
+    "progress": "{{done}} von {{count}} erledigt",
+    "parent": "Übergeordnete Aufgabe",
+    "parentPlaceholder": "Übergeordnete Aufgabe suchen…",
+    "parentSearch": "Übergeordnete Aufgabe suchen",
+    "noParent": "Keine Aufgabe kann übergeordnet sein",
+    "removeParent": "Übergeordnete entfernen",
+    "removeParentAria": "Übergeordnete Aufgabe {{title}} entfernen",
+    "markDone": "{{title}} als erledigt markieren",
+    "markNotDone": "{{title}} als nicht erledigt markieren",
+    "detach": "Lösen (Aufgabe bleibt erhalten)",
+    "detachAria": "Unteraufgabe {{title}} lösen",
+    "delete": "Unteraufgabe löschen",
+    "deleteAria": "Unteraufgabe {{title}} löschen",
+    "add": "Unteraufgabe hinzufügen",
+    "addPlaceholder": "Unteraufgabe hinzufügen…"
+  },
   "card": {
     "untitled": "Aufgabe ohne Titel",
     "highPriority": "Hohe Priorität",
@@ -205,7 +223,10 @@
     "dueTitle": "{{state}}: {{date}}",
     "labelTitle": "Label: {{label}}",
     "note": "Notiz",
-    "assigneeTitle": "Zuständig: {{assignee}}"
+    "assigneeTitle": "Zuständig: {{assignee}}",
+    "subtasksDone_one": "{{done}} von {{count}} Unteraufgabe erledigt",
+    "subtasksDone_other": "{{done}} von {{count}} Unteraufgaben erledigt",
+    "subtaskOf": "Unteraufgabe von {{title}}"
   },
   "bulk": {
     "region": "Sammelaktionen",
@@ -322,7 +343,9 @@
     "moveUp": "Nach oben",
     "moveDown": "Nach unten",
     "position": "{{index}} von {{count}}",
-    "delete": "Aufgabe löschen"
+    "delete": "Aufgabe löschen",
+    "openSubtasks_one": "{{count}} offene Unteraufgabe. Erledige sie, um diese Aufgabe abzuschließen.",
+    "openSubtasks_other": "{{count}} offene Unteraufgaben. Erledige sie, um diese Aufgabe abzuschließen."
   },
   "overlay": {
     "updated": "Board mit Änderungen aus dem Dokument aktualisiert",
@@ -356,7 +379,11 @@
       "button": "Rückgängig",
       "sectionMoved": "Abschnitt gelöscht",
       "sectionAll": "Abschnitt und Aufgaben gelöscht",
-      "sectionRenamed": "Abschnitt in „{{name}}“ umbenannt"
+      "sectionRenamed": "Abschnitt in „{{name}}“ umbenannt",
+      "subtaskAdded": "Unteraufgabe hinzugefügt",
+      "subtaskDetached": "Unteraufgabe gelöst",
+      "parentSet": "Übergeordnete Aufgabe festgelegt",
+      "parentRemoved": "Übergeordnete Aufgabe entfernt"
     },
     "reopened": "{{title}} wieder geöffnet",
     "completed": "{{title}} erledigt",
@@ -441,7 +468,13 @@
     "pausedTitle": "Proton Docs hat das Bearbeiten pausiert (lädt noch, offline oder schreibgeschützt). Ihre Änderungen werden gespeichert, sobald das Bearbeiten wieder möglich ist.",
     "waiting": "Warten auf Speichern",
     "addTo": "Aufgabe zu {{label}} hinzufügen…",
-    "addToAria": "Aufgabe zu {{label}} hinzufügen"
+    "addToAria": "Aufgabe zu {{label}} hinzufügen",
+    "openSubtasks_one": "Unteraufgabe {{names}} ist noch offen. Erledige sie zuerst.",
+    "openSubtasks_other": "Unteraufgaben {{names}} sind noch offen. Erledige sie zuerst.",
+    "subtaskAdded": "Unteraufgabe {{title}} zu {{parent}} hinzugefügt",
+    "subtaskDetached": "Unteraufgabe gelöst",
+    "parentSet": "Übergeordnete Aufgabe festgelegt",
+    "parentRemoved": "Übergeordnete Aufgabe entfernt"
   },
   "views": {
     "workflow": {
@@ -583,7 +616,8 @@
       "priority": "<code>@priority:high</code> — high · medium · low (auch <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — ein Fälligkeitsdatum",
       "who": "<code>@who:alex</code> oder <code>@@alex</code> — eine zuständige Person",
-      "label": "<code>#label</code> — ein oder mehrere Labels"
+      "label": "<code>#label</code> — ein oder mehrere Labels",
+      "parent": "<code>@parent:schlüssel</code> — macht die Aufgabe zur Unteraufgabe der mit <code>@id:schlüssel</code> markierten (wird im Aufgabenbereich verwaltet); eine Aufgabe kann nicht abgeschlossen werden, solange eine Unteraufgabe offen ist"
     }
   },
   "popup": {

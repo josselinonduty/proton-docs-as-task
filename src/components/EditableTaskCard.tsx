@@ -28,6 +28,10 @@ interface EditableTaskCardProps {
   /** Unfinished tasks blocking this one, and tasks it blocks. */
   blockedBy?: number;
   blocking?: number;
+  /** Direct sub-tasks done / total, and open ones at any depth (absent without sub-tasks). */
+  subtasks?: { done: number; total: number; open: number };
+  /** Title of the task this one is a sub-task of. */
+  parentTitle?: string;
   /** True while this card's details are open in the side panel. */
   active?: boolean;
   /** Bulk-selection state; when non-null the card shows a selection checkbox. */
@@ -68,6 +72,8 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
     active,
     blockedBy = 0,
     blocking = 0,
+    subtasks,
+    parentTitle,
     selection,
     dragDisabled,
     dragging,
@@ -120,6 +126,10 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
   if (task.priority === 'high' && !done) stateWords.push(t('card.highPriority'));
   if (blockedBy && !done) stateWords.push(t('card.blockedByCount', { count: blockedBy }));
   if (blocking) stateWords.push(t('card.blocksCount', { count: blocking }));
+  if (subtasks)
+    stateWords.push(t('card.subtasksDone', { done: subtasks.done, count: subtasks.total }));
+  if (parentTitle !== undefined)
+    stateWords.push(t('card.subtaskOf', { title: parentTitle || t('card.untitled') }));
   const ariaLabel = [
     t('card.aria', {
       title: task.title || t('card.untitled'),
@@ -190,7 +200,7 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
             type="button"
             className={`pdt-check ${done ? 'pdt-check--on' : ''}`}
             onClick={onToggleDone}
-            aria-disabled={blockedBy > 0 && !done}
+            aria-disabled={(blockedBy > 0 || (subtasks?.open ?? 0) > 0) && !done}
             aria-pressed={done}
             aria-label={done ? t('card.markNotDone') : t('card.markDone')}
             title={done ? t('card.markNotDoneKey') : t('card.markDoneKey')}
@@ -220,6 +230,24 @@ export function EditableTaskCard(props: EditableTaskCardProps) {
           <span className="pdt-tag" title={t('card.blocksTasks', { count: blocking })}>
             <Icon name="link" size={12} />
             {t('card.blocksCount', { count: blocking })}
+          </span>
+        )}
+        {subtasks && (
+          <span
+            className={`pdt-tag ${subtasks.done === subtasks.total ? 'pdt-tag--complete' : ''}`}
+            title={t('card.subtasksDone', { done: subtasks.done, count: subtasks.total })}
+          >
+            <Icon name="subtasks" size={12} />
+            {subtasks.done}/{subtasks.total}
+          </span>
+        )}
+        {parentTitle !== undefined && (
+          <span
+            className="pdt-tag pdt-tag--parent"
+            title={t('card.subtaskOf', { title: parentTitle || t('card.untitled') })}
+          >
+            <Icon name="arrow-up" size={12} />
+            <span className="pdt-tag__text">{parentTitle || t('card.untitled')}</span>
           </span>
         )}
         {showSection && (

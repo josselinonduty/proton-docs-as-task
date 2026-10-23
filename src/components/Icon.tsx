@@ -40,7 +40,8 @@ export type IconName =
   | 'kanban'
   | 'palette'
   | 'link'
-  | 'lock';
+  | 'lock'
+  | 'subtasks';
 
 /** Outline icons drawn with a 1.4px stroke on the same 16×16 grid. */
 function Stroke({ children }: { children: ReactNode }) {
@@ -104,6 +105,13 @@ const ICONS: Record<IconName, ReactNode> = {
       <circle cx="2.75" cy="4" r=".6" fill="currentColor" />
       <circle cx="2.75" cy="8" r=".6" fill="currentColor" />
       <circle cx="2.75" cy="12" r=".6" fill="currentColor" />
+    </Stroke>
+  ),
+  subtasks: (
+    <Stroke>
+      <path d="M3.5 2v8.75c0 .69.56 1.25 1.25 1.25H8.5M3.5 6.5h5" />
+      <rect x="8.5" y="4.75" width="5" height="3.5" rx="1" />
+      <rect x="8.5" y="10.25" width="5" height="3.5" rx="1" />
     </Stroke>
   ),
   pen: (

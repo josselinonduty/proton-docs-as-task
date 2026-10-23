@@ -60,6 +60,8 @@ export interface BoardTask {
   blocks?: string[];
   /** Keys of loosely related tasks. */
   related?: string[];
+  /** Key of the parent task when this is a sub-task. */
+  parent?: string;
   /** Ordering rank; kept in sync with the array index by {@link reindex}. */
   order: number;
 }
@@ -147,6 +149,7 @@ function toBoardTask(task: Task, order: number): BoardTask {
     key: task.key,
     blocks: task.blocks.length ? task.blocks : undefined,
     related: task.related.length ? task.related : undefined,
+    parent: task.parent,
     order,
   };
 }
@@ -333,7 +336,18 @@ export function updateTask(
 }
 
 export function removeTask(model: BoardModel, taskId: string): BoardModel {
-  return reindex({ ...model, tasks: model.tasks.filter((t) => t.id !== taskId) });
+  return removeTasks(model, new Set([taskId]));
+}
+
+/** Remove tasks; their sub-tasks stay on the board, detached from them. */
+function removeTasks(model: BoardModel, ids: ReadonlySet<string>): BoardModel {
+  const gone = new Set(
+    model.tasks.filter((t) => ids.has(t.id) && t.key).map((t) => t.key as string),
+  );
+  const tasks = model.tasks
+    .filter((t) => !ids.has(t.id))
+    .map((t) => (t.parent && gone.has(t.parent) ? { ...t, parent: undefined } : t));
+  return reindex({ ...model, tasks });
 }
 
 /** Insert a copy of a task directly after it. Returns the new task id too. */
@@ -443,13 +457,16 @@ export function openBlockers(model: BoardModel, task: BoardTask): BoardTask[] {
   return linksOf(model, task).blockedBy.filter((t) => !isTaskDone(model, t));
 }
 
-/** A blocked task may not leave Not started until every blocker is done. */
+/**
+ * A blocked task may not leave Not started until every blocker is done, and a
+ * parent task may not reach Done while any of its sub-tasks is still open.
+ */
 export function canSetStatus(model: BoardModel, task: BoardTask, status: StatusKey): boolean {
-  return (
-    status === task.status ||
-    findStatus(model.statuses, status)?.category === 'todo' ||
-    openBlockers(model, task).length === 0
-  );
+  if (status === task.status) return true;
+  const category = findStatus(model.statuses, status)?.category;
+  if (category === 'todo') return true;
+  if (openBlockers(model, task).length > 0) return false;
+  return category !== 'done' || openSubtasks(model, task).length === 0;
 }
 
 /** True when following `blocks` links from `fromKey` reaches `targetKey`. */
@@ -478,13 +495,10 @@ export function canLink(model: BoardModel, aId: string, bId: string, kind: LinkK
   return !(blocked.key && blocker.key && reaches(model, blocked.key, blocker.key));
 }
 
-/** Link `aId` to `bId` ("a blocks b", "a is blocked by b" or "a relates to b"). */
-export function linkTasks(model: BoardModel, aId: string, bId: string, kind: LinkKind): BoardModel {
-  if (!canLink(model, aId, bId, kind)) return model;
-  const [ownerId, targetId] = kind === 'blockedBy' ? [bId, aId] : [aId, bId];
-  const field = kind === 'related' ? 'related' : 'blocks';
+/** Returns a function giving a task's key, inventing a fresh unique one when it has none. */
+function keyAssigner(model: BoardModel): (id: string) => string {
   const taken = new Set(model.tasks.map((t) => t.key));
-  const keyFor = (id: string) => {
+  return (id) => {
     const existing = model.tasks.find((t) => t.id === id)!.key;
     if (existing) return existing;
     let key: string;
@@ -493,6 +507,14 @@ export function linkTasks(model: BoardModel, aId: string, bId: string, kind: Lin
     taken.add(key);
     return key;
   };
+}
+
+/** Link `aId` to `bId` ("a blocks b", "a is blocked by b" or "a relates to b"). */
+export function linkTasks(model: BoardModel, aId: string, bId: string, kind: LinkKind): BoardModel {
+  if (!canLink(model, aId, bId, kind)) return model;
+  const [ownerId, targetId] = kind === 'blockedBy' ? [bId, aId] : [aId, bId];
+  const field = kind === 'related' ? 'related' : 'blocks';
+  const keyFor = keyAssigner(model);
   const ownerKey = keyFor(ownerId);
   const targetKey = keyFor(targetId);
   return {
@@ -516,8 +538,15 @@ function pruneLinks(model: BoardModel): BoardModel {
     ...t,
     blocks: live(t.blocks),
     related: live(t.related),
+    parent: t.parent && t.parent !== t.key && known.has(t.parent) ? t.parent : undefined,
   }));
-  const referenced = new Set(linked.flatMap((t) => [...(t.blocks ?? []), ...(t.related ?? [])]));
+  const referenced = new Set(
+    linked.flatMap((t) => [
+      ...(t.blocks ?? []),
+      ...(t.related ?? []),
+      ...(t.parent ? [t.parent] : []),
+    ]),
+  );
   return {
     ...model,
     tasks: linked.map((t) => (t.key && !referenced.has(t.key) ? { ...t, key: undefined } : t)),
@@ -538,6 +567,105 @@ export function unlinkTasks(model: BoardModel, aId: string, bId: string): BoardM
     ...model,
     tasks: model.tasks.map((t) => (t === a ? strip(a, b) : t === b ? strip(b, a) : t)),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Sub-tasks. A sub-task is an ordinary task that names its parent by key
+// (`@parent:key`), so it keeps its own status, section and card. Nesting has
+// no depth limit; cycles are refused when linking and ignored when reading.
+// ---------------------------------------------------------------------------
+
+/** The task `task` is a sub-task of, if it still exists. */
+export function parentOf(model: BoardModel, task: BoardTask): BoardTask | undefined {
+  if (!task.parent) return undefined;
+  return model.tasks.find((t) => t !== task && hasKey(t, task.parent));
+}
+
+/** Direct sub-tasks of `task`, in board order. */
+export function subtasksOf(model: BoardModel, task: BoardTask): BoardTask[] {
+  if (!task.key) return [];
+  return model.tasks.filter((t) => t !== task && t.parent === task.key);
+}
+
+/** Every sub-task below `task`, at any depth (each listed once, cycle-safe). */
+export function descendantsOf(model: BoardModel, task: BoardTask): BoardTask[] {
+  const seen = new Set<BoardTask>([task]);
+  const result: BoardTask[] = [];
+  const stack = subtasksOf(model, task);
+  while (stack.length) {
+    const next = stack.shift()!;
+    if (seen.has(next)) continue;
+    seen.add(next);
+    result.push(next);
+    stack.push(...subtasksOf(model, next));
+  }
+  return result;
+}
+
+/** Unfinished sub-tasks, at any depth, keeping `task` from reaching Done. */
+export function openSubtasks(model: BoardModel, task: BoardTask): BoardTask[] {
+  return descendantsOf(model, task).filter((t) => !isTaskDone(model, t));
+}
+
+/** Whether `childId` may become a sub-task of `parentId` without creating a cycle. */
+export function canSetParent(model: BoardModel, childId: string, parentId: string): boolean {
+  const child = model.tasks.find((t) => t.id === childId);
+  const parent = model.tasks.find((t) => t.id === parentId);
+  if (!child || !parent || child === parent) return false;
+  if (parentOf(model, child) === parent) return false;
+  return !descendantsOf(model, child).includes(parent);
+}
+
+/**
+ * Make `childId` a sub-task of `parentId`, or detach it from its parent when
+ * `parentId` is undefined. Moves that would create a cycle are refused.
+ */
+export function setParent(
+  model: BoardModel,
+  childId: string,
+  parentId: string | undefined,
+): BoardModel {
+  if (parentId === undefined) {
+    return {
+      ...model,
+      tasks: model.tasks.map((t) => (t.id === childId ? { ...t, parent: undefined } : t)),
+    };
+  }
+  if (!canSetParent(model, childId, parentId)) return model;
+  const parentKey = keyAssigner(model)(parentId);
+  return {
+    ...model,
+    tasks: model.tasks.map((t) => {
+      if (t.id === parentId) return { ...t, key: parentKey };
+      return t.id === childId ? { ...t, parent: parentKey } : t;
+    }),
+  };
+}
+
+/**
+ * Create a sub-task of `parentId` in the parent's section, in the first Not
+ * started status, right after the parent's last sub-task in that section.
+ */
+export function addSubtask(
+  model: BoardModel,
+  parentId: string,
+  title: string,
+): { model: BoardModel; taskId?: string } {
+  const parent = model.tasks.find((t) => t.id === parentId);
+  if (!parent) return { model };
+  const parentKey = keyAssigner(model)(parentId);
+  const task: BoardTask = {
+    ...createTask(parent.section, defaultStatus(model.statuses, false), title.trim()),
+    parent: parentKey,
+  };
+  const siblings = new Set([parent, ...subtasksOf(model, parent)]);
+  let at = 0;
+  model.tasks.forEach((t, i) => {
+    if (siblings.has(t) && t.section === parent.section) at = i + 1;
+  });
+  const keyed = model.tasks.map((t) => (t.id === parentId ? { ...t, key: parentKey } : t));
+  const tasks = [...keyed.slice(0, at), task, ...keyed.slice(at)];
+  return { model: reindex({ ...model, tasks }), taskId: task.id };
 }
 
 // ---------------------------------------------------------------------------
@@ -626,10 +754,8 @@ export function applyBulkAction(
         labels: t.labels.filter((l) => l.toLowerCase() !== lower),
       }));
     }
-    case 'delete': {
-      const set = ids instanceof Set ? ids : new Set(ids);
-      return reindex({ ...model, tasks: model.tasks.filter((t) => !set.has(t.id)) });
-    }
+    case 'delete':
+      return removeTasks(model, ids instanceof Set ? ids : new Set(ids));
   }
 }
 
@@ -807,6 +933,7 @@ export function serializeTaskLine(task: BoardTask, statuses: readonly StatusDef[
   if (task.key) parts.push(`@id:${task.key}`);
   if (task.blocks?.length) parts.push(`@blocks:${task.blocks.join(',')}`);
   if (task.related?.length) parts.push(`@rel:${task.related.join(',')}`);
+  if (task.parent) parts.push(`@parent:${task.parent}`);
   const description = task.description ? encodeDescription(task.description) : '';
   if (description) parts.push(`@desc(${description})`);
 

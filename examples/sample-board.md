@@ -20,7 +20,9 @@ to activate.
 
 ## Build
 
-- [ ] API: tasks endpoint @priority:high @due:2026-09-12 #backend @@jo
+- [ ] API: tasks endpoint @priority:high @due:2026-09-12 #backend @@jo @id:api1
+- [x] Schema migration @parent:api1 #backend
+- [ ] Pagination @parent:api1 #backend
 - [ ] Board overlay @status:review #frontend
 - [ ] Options page #frontend
 - [ ] Empty + error states #frontend !
