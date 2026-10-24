@@ -97,7 +97,7 @@ code {
   display: block;
   font-weight: var(--pdt-font-weight-medium);
 }
-.op-row__control {
+.op-row--hinted .op-row__control {
   grid-row: span 2;
 }
 .op-row__hint {
@@ -107,7 +107,7 @@ code {
   color: var(--pdt-text-weak);
 }
 .op-row select {
-  max-width: 240px;
+  max-width: 320px;
 }
 .op-row--switch {
   grid-template-columns: minmax(0, 1fr);
@@ -123,11 +123,18 @@ code {
   padding-right: 54px;
 }
 @media (max-width: 520px) {
+  .op-head {
+    flex-wrap: wrap;
+  }
+  .op-head__aside {
+    width: 100%;
+    margin-left: 0;
+  }
   .op-row {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--pdt-space-2);
   }
-  .op-row__control {
+  .op-row--hinted .op-row__control {
     grid-row: auto;
   }
   .op-row select {
@@ -136,7 +143,11 @@ code {
   }
 }
 
-/* Saved confirmation; the live region stays mounted so it is announced. */
+/* Saved confirmation; the live region stays mounted so it is announced, but
+ * takes no room while empty. */
+.op-saved:empty {
+  position: absolute;
+}
 .op-saved .pdt-badge {
   gap: 4px;
 }
