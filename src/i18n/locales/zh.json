@@ -513,14 +513,17 @@
   },
   "options": {
     "subtitle": "将 Proton Docs 文档变成交互式任务看板。",
-    "saved": "已保存 ✓",
-    "general": "通用",
+    "groups": {
+      "board": "看板",
+      "appearance": "外观",
+      "cards": "卡片",
+      "behavior": "行为"
+    },
+    "saved": "已保存",
     "enabled": "启用扩展",
-    "enabledHint": "开启或关闭整个看板。",
     "autoShow": "自动打开已激活的看板",
-    "autoShowHint": "文档一旦激活就打开看板。",
-    "defaultView": "默认视图",
-    "defaultViewHint": "看板打开时使用的布局。",
+    "openIn": "看板打开方式",
+    "openInHint": "沿用你在看板上最后使用的视图。",
     "views": {
       "workflow": "工作流（按状态）",
       "sections": "分组（按标题）",
@@ -528,22 +531,18 @@
       "list": "列表（简单清单）"
     },
     "language": "语言",
-    "languageHint": "看板、弹出窗口和此页面使用的语言。",
     "languageAuto": "自动（浏览器语言）",
     "theme": "主题",
-    "themeHint": "跟随系统，或强制使用浅色 / 深色。",
     "themes": {
       "system": "跟随系统",
       "light": "浅色",
       "dark": "深色"
     },
     "density": "卡片密度",
-    "densityHint": "卡片排列的紧凑程度。",
     "densities": {
       "comfortable": "舒适",
       "compact": "紧凑"
     },
-    "behavior": "看板行为",
     "newCards": "新卡片",
     "newCardsHint": "快速添加的卡片在列中的位置。",
     "newCardPositions": {
@@ -551,7 +550,6 @@
       "top": "顶部"
     },
     "descPreview": "显示描述预览",
-    "descPreviewHint": "在折叠的卡片上显示描述的简短片段。",
     "completed": "已完成的任务",
     "completedHint": "已完成任务的显示方式（不会从文档中删除）。",
     "completedDisplays": {
@@ -563,9 +561,7 @@
     "confirmDeleteHint": "删除卡片前先询问（你随时可以撤销）。",
     "closePopupAfterAdd": "添加任务后关闭弹出窗口",
     "closePopupAfterAddHint": "添加任务后关闭弹出窗口。关闭此选项时，窗口保持打开并显示添加确认。",
-    "display": "显示偏好",
     "dateFormat": "日期格式",
-    "dateFormatHint": "卡片上截止日期的书写方式。",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "中等 (2026年9月10日)",
@@ -578,7 +574,7 @@
     "fields": "可见的卡片字段",
     "fieldsHint": "任务标题和完成控件始终显示。",
     "field": {
-      "description": "描述预览",
+      "description": "描述",
       "priority": "优先级",
       "due": "截止日期",
       "assignee": "负责人",
@@ -591,20 +587,21 @@
       "help": "当文档的<strong>第一个非空行</strong>以下列标记之一开头时，它就会变成任务看板（每行一个，不区分大小写）。可以在标记后添加标题，例如 <code>#!tasks Sprint 42</code>。",
       "error": "请至少添加一个激活标记——不允许使用空列表。",
       "save": "保存标记",
-      "reset": "恢复默认值"
+      "reset": "恢复默认值",
+      "unsaved": "有未保存的更改",
+      "resetConfirm": "用默认值替换你的标记？"
     },
     "syntax": {
       "title": "任务语法",
       "intro": "在标记行下方，以清单的形式编写任务。看板会随着输入实时更新。状态和分组相互独立：任务的 <code>@status</code> 是它的工作流阶段，而它的 <code>## 标题</code> 是它所属的分组。",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — 未完成或已完成的任务",
       "section": "<code>## 标题</code> — 一个分组（分组视图按它们分组）",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — 定义一个状态（每行一个，紧跟在标记下方）。可在看板的<em>看板设置</em>中管理；没有定义状态的看板使用 To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — 通过键指定任务的状态（勾选复选框对应第一个已完成状态；<code>@s:wip</code> 等内置简写仍然有效）",
       "priority": "<code>@priority:high</code> — high · medium · low（也可用 <code>!</code>/<code>!!</code>/<code>!!!</code>）",
       "due": "<code>@due:2026-09-10</code> — 截止日期",
       "who": "<code>@who:alex</code> 或 <code>@@alex</code> — 负责人",
       "label": "<code>#label</code> — 一个或多个标签",
-      "parent": "<code>@parent:键</code> — 使该任务成为标记为 <code>@id:键</code> 的任务的子任务（在任务面板中管理）；有未完成的子任务时无法完成该任务"
+      "more": "完整语法说明"
     },
     "rerun": "重新运行设置向导",
     "statusFlow": "新看板的状态",

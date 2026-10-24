@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Convierte un documento de Proton Docs en un tablero de tareas interactivo.",
-    "saved": "Guardado ✓",
-    "general": "General",
+    "groups": {
+      "board": "Tablero",
+      "appearance": "Apariencia",
+      "cards": "Tarjetas",
+      "behavior": "Comportamiento"
+    },
+    "saved": "Guardado",
     "enabled": "Activar la extensión",
-    "enabledHint": "Activa o desactiva todo el tablero.",
     "autoShow": "Abrir automáticamente los tableros activados",
-    "autoShowHint": "Abre el tablero en cuanto se activa un documento.",
-    "defaultView": "Vista predeterminada",
-    "defaultViewHint": "En qué disposición se abre el tablero.",
+    "openIn": "Abrir los tableros en",
+    "openInHint": "Sigue la última vista usada en un tablero.",
     "views": {
       "workflow": "Flujo (por estado)",
       "sections": "Secciones (por encabezado)",
@@ -543,22 +546,18 @@
       "list": "Lista (lista de verificación sencilla)"
     },
     "language": "Idioma",
-    "languageHint": "El idioma del tablero, la ventana emergente y esta página.",
     "languageAuto": "Automático (idioma del navegador)",
     "theme": "Tema",
-    "themeHint": "Seguir el sistema o forzar claro / oscuro.",
     "themes": {
       "system": "Sistema",
       "light": "Claro",
       "dark": "Oscuro"
     },
     "density": "Densidad de las tarjetas",
-    "densityHint": "Qué tan juntas se muestran las tarjetas.",
     "densities": {
       "comfortable": "Cómoda",
       "compact": "Compacta"
     },
-    "behavior": "Comportamiento del tablero",
     "newCards": "Tarjetas nuevas",
     "newCardsHint": "Dónde queda en su columna una tarjeta añadida rápidamente.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "Al principio"
     },
     "descPreview": "Mostrar vista previa de la descripción",
-    "descPreviewHint": "Muestra un breve fragmento de la descripción en las tarjetas contraídas.",
     "completed": "Tareas completadas",
     "completedHint": "Cómo se muestran las tareas hechas (nunca se eliminan del documento).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Pide confirmación antes de eliminar una tarjeta (siempre puedes deshacer).",
     "closePopupAfterAdd": "Cerrar la ventana tras añadir una tarea",
     "closePopupAfterAddHint": "Cierra la ventana emergente al añadir una tarea. Si está desactivado, permanece abierta y confirma la adición.",
-    "display": "Preferencias de visualización",
     "dateFormat": "Formato de fecha",
-    "dateFormatHint": "Cómo se escriben las fechas límite en las tarjetas.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Medio (10 sept 2026)",
@@ -593,7 +589,7 @@
     "fields": "Campos visibles de la tarjeta",
     "fieldsHint": "El título de la tarea y el control de finalización siempre se muestran.",
     "field": {
-      "description": "Vista previa de la descripción",
+      "description": "Descripción",
       "priority": "Prioridad",
       "due": "Fecha límite",
       "assignee": "Responsable",
@@ -606,20 +602,21 @@
       "help": "Un documento se convierte en tablero de tareas cuando su <strong>primera línea no vacía</strong> empieza por uno de estos marcadores (uno por línea, sin distinguir mayúsculas). Puedes añadir un título tras el marcador, p. ej. <code>#!tasks Sprint 42</code>.",
       "error": "Añade al menos un marcador de activación; no se permite una lista vacía.",
       "save": "Guardar marcadores",
-      "reset": "Restablecer valores predeterminados"
+      "reset": "Restablecer valores predeterminados",
+      "unsaved": "Cambios sin guardar",
+      "resetConfirm": "¿Reemplazar tus marcadores por los predeterminados?"
     },
     "syntax": {
       "title": "Sintaxis de las tareas",
       "intro": "Bajo la línea del marcador, escribe tus tareas como una lista de verificación. El tablero se actualiza en vivo mientras escribes. El estado y la sección son independientes: el <code>@status</code> de una tarea es su fase del flujo, y su <code>## Encabezado</code> es la sección en la que está.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — una tarea abierta o hecha",
       "section": "<code>## Encabezado</code> — una sección (la vista Secciones agrupa por ellos)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — define un estado (una línea cada uno, justo debajo del marcador). Adminístralos desde los <em>Ajustes del tablero</em>; un tablero sin ninguno usa To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — el estado de la tarea, por clave (una casilla marcada equivale al primer estado Hecho; los atajos integrados como <code>@s:wip</code> siguen funcionando)",
       "priority": "<code>@priority:high</code> — high · medium · low (también <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — una fecha límite",
       "who": "<code>@who:alex</code> o <code>@@alex</code> — un responsable",
       "label": "<code>#label</code> — una o más etiquetas",
-      "parent": "<code>@parent:clave</code> — convierte la tarea en subtarea de la marcada con <code>@id:clave</code> (se gestiona desde el panel de la tarea); una tarea no puede completarse mientras tenga una subtarea abierta"
+      "more": "Sintaxis completa"
     },
     "rerun": "Repetir la configuración",
     "statusFlow": "Estados de los tableros nuevos",

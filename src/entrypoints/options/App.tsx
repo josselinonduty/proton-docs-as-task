@@ -1,17 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { LANGUAGE_SETTINGS, LANGUAGES } from '../../i18n/languages';
-import { DATE_FORMATS } from '../../lib/dates';
+import { Icon } from '../../components/Icon';
+import { AppearanceSelect, SettingSelect } from '../../components/SettingSelect';
 import { DEFAULT_MARKERS } from '../../lib/defaults';
 import { getSettings, setSettings } from '../../lib/settings';
 import { flowSummary } from '../../lib/statuses';
 import {
   BOARD_VIEWS,
-  CARD_DENSITIES,
   COMPLETED_DISPLAYS,
   STATUS_FLOWS,
-  THEMES,
   type CardFieldVisibility,
   type Settings,
 } from '../../lib/types';
@@ -30,12 +28,27 @@ const NEW_CARD_POSITIONS = ['bottom', 'top'] as const;
 
 const SAVED_BADGE_MS = 1500;
 
+const REPO_URL = 'https://github.com/josselinonduty/proton-docs-as-task';
+const SYNTAX_URL = `${REPO_URL}#task-syntax`;
+
+const parseMarkers = (text: string) =>
+  text
+    .split('\n')
+    .map((m) => m.trim())
+    .filter(Boolean);
+
+const sameList = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((item, i) => item === b[i]);
+
 export function App() {
   const { t } = useTranslation();
   const [settings, setLocal] = useState<Settings | null>(null);
   const [markersText, setMarkersText] = useState('');
   const [markerError, setMarkerError] = useState('');
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
+  const markerHelpId = useId();
+  const markerErrorId = useId();
 
   useEffect(() => {
     void getSettings().then((s) => {
@@ -53,16 +66,13 @@ export function App() {
   function persist(patch: Partial<Settings>) {
     void setSettings(patch).then((next) => {
       setLocal(next);
-      setMarkersText(next.markers.join('\n'));
+      if (patch.markers) setMarkersText(next.markers.join('\n'));
       setSavedAt(Date.now());
     });
   }
 
   function saveMarkers() {
-    const markers = markersText
-      .split('\n')
-      .map((m) => m.trim())
-      .filter(Boolean);
+    const markers = parseMarkers(markersText);
     if (markers.length === 0) {
       setMarkerError(t('options.markers.error'));
       return;
@@ -71,7 +81,16 @@ export function App() {
     persist({ markers });
   }
 
+  function resetMarkers() {
+    setConfirmingReset(false);
+    setMarkerError('');
+    persist({ markers: DEFAULT_MARKERS });
+  }
+
   if (!settings) return <div className="op-loading">{t('common.loading')}</div>;
+
+  const markersDirty = !sameList(parseMarkers(markersText), settings.markers);
+  const markersAreDefault = sameList(settings.markers, DEFAULT_MARKERS) && !markersDirty;
 
   return (
     <div className="op">
@@ -82,13 +101,16 @@ export function App() {
           <p className="op-sub">{t('options.subtitle')}</p>
         </div>
         <div className="op-head__aside">
-          {savedAt > 0 && (
-            <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success">
-              {t('options.saved')}
-            </span>
-          )}
+          <span className="op-saved" role="status">
+            {savedAt > 0 && (
+              <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success">
+                <Icon name="checkmark" size={12} />
+                {t('options.saved')}
+              </span>
+            )}
+          </span>
           <a
-            className="pdt-link"
+            className="pdt-btn"
             href={browser.runtime.getURL('/welcome.html')}
             target="_blank"
             rel="noreferrer"
@@ -98,122 +120,85 @@ export function App() {
         </div>
       </header>
 
-      <section className="op-card pdt-card">
-        <h2>{t('options.general')}</h2>
+      <Group title={t('options.groups.board')}>
         <Toggle
           label={t('options.enabled')}
-          hint={t('options.enabledHint')}
           checked={settings.enabled}
           onChange={(enabled) => persist({ enabled })}
         />
         <Toggle
           label={t('options.autoShow')}
-          hint={t('options.autoShowHint')}
           checked={settings.autoShow}
           onChange={(autoShow) => persist({ autoShow })}
         />
-        <Row label={t('options.defaultView')} hint={t('options.defaultViewHint')}>
-          <Select
-            value={settings.defaultView}
-            options={BOARD_VIEWS}
-            optionLabel={(view) => t(`options.views.${view}`)}
-            onChange={(defaultView) => persist({ defaultView })}
-          />
-        </Row>
-        <Row label={t('options.language')} hint={t('options.languageHint')}>
-          <Select
-            value={settings.language}
-            options={LANGUAGE_SETTINGS}
-            optionLabel={(code) => (code === 'auto' ? t('options.languageAuto') : LANGUAGES[code])}
-            onChange={(language) => persist({ language })}
-          />
-        </Row>
-        <Row label={t('options.theme')} hint={t('options.themeHint')}>
-          <Select
-            value={settings.theme}
-            options={THEMES}
-            optionLabel={(theme) => t(`options.themes.${theme}`)}
-            onChange={(theme) => persist({ theme })}
-          />
-        </Row>
-        <Row label={t('options.density')} hint={t('options.densityHint')}>
-          <Select
-            value={settings.density}
-            options={CARD_DENSITIES}
-            optionLabel={(density) => t(`options.densities.${density}`)}
-            onChange={(density) => persist({ density })}
-          />
-        </Row>
-      </section>
-
-      <section className="op-card pdt-card">
-        <h2>{t('options.behavior')}</h2>
-        <Row label={t('options.newCards')} hint={t('options.newCardsHint')}>
-          <Select
-            value={settings.newCardsAtTop ? 'top' : 'bottom'}
-            options={NEW_CARD_POSITIONS}
-            optionLabel={(position) => t(`options.newCardPositions.${position}`)}
-            onChange={(position) => persist({ newCardsAtTop: position === 'top' })}
-          />
+        <Row label={t('options.openIn')} hint={t('options.openInHint')}>
+          {(field) => (
+            <SettingSelect
+              {...field}
+              value={settings.defaultView}
+              options={BOARD_VIEWS}
+              optionLabel={(view) => t(`options.views.${view}`)}
+              onChange={(defaultView) => persist({ defaultView })}
+            />
+          )}
         </Row>
         <Row label={t('options.statusFlow')} hint={t('options.statusFlowHint')}>
-          <Select
-            value={settings.defaultStatuses}
-            options={STATUS_FLOWS}
-            optionLabel={(flow) => `${t(`statusFlows.${flow}.name`)} (${flowSummary(flow)})`}
-            onChange={(defaultStatuses) => persist({ defaultStatuses })}
-          />
+          {(field) => (
+            <SettingSelect
+              {...field}
+              value={settings.defaultStatuses}
+              options={STATUS_FLOWS}
+              optionLabel={(flow) => `${t(`statusFlows.${flow}.name`)} (${flowSummary(flow)})`}
+              onChange={(defaultStatuses) => persist({ defaultStatuses })}
+            />
+          )}
         </Row>
-        <Toggle
-          label={t('options.descPreview')}
-          hint={t('options.descPreviewHint')}
-          checked={settings.showDescriptionPreview}
-          onChange={(showDescriptionPreview) => persist({ showDescriptionPreview })}
-        />
-        <Row label={t('options.completed')} hint={t('options.completedHint')}>
-          <Select
-            value={settings.completedDisplay}
-            options={COMPLETED_DISPLAYS}
-            optionLabel={(display) => t(`options.completedDisplays.${display}`)}
-            onChange={(completedDisplay) => persist({ completedDisplay })}
-          />
-        </Row>
-        <Toggle
-          label={t('options.confirmDelete')}
-          hint={t('options.confirmDeleteHint')}
-          checked={settings.confirmDelete}
-          onChange={(confirmDelete) => persist({ confirmDelete })}
-        />
-        <Toggle
-          label={t('options.closePopupAfterAdd')}
-          hint={t('options.closePopupAfterAddHint')}
-          checked={settings.closePopupAfterAdd}
-          onChange={(closePopupAfterAdd) => persist({ closePopupAfterAdd })}
-        />
-      </section>
+      </Group>
 
-      <section className="op-card pdt-card">
-        <h2>{t('options.display')}</h2>
-        <Row label={t('options.dateFormat')} hint={t('options.dateFormatHint')}>
-          <Select
-            value={settings.dateFormat}
-            options={DATE_FORMATS}
-            optionLabel={(format) => t(`options.dateFormats.${format}`)}
-            onChange={(dateFormat) => persist({ dateFormat })}
-          />
+      <Group title={t('options.groups.appearance')}>
+        <Row label={t('options.language')}>
+          {(field) => (
+            <AppearanceSelect
+              {...field}
+              setting="language"
+              value={settings.language}
+              onChange={(language) => persist({ language })}
+            />
+          )}
         </Row>
-
-        <Row label={t('options.name')} hint={t('options.nameHint')}>
-          <input
-            type="text"
-            className="pdt-input"
-            value={settings.userAssignee}
-            placeholder={t('options.namePlaceholder')}
-            onChange={(e) => setLocal({ ...settings, userAssignee: e.target.value })}
-            onBlur={(e) => persist({ userAssignee: e.target.value })}
-          />
+        <Row label={t('options.theme')}>
+          {(field) => (
+            <AppearanceSelect
+              {...field}
+              setting="theme"
+              value={settings.theme}
+              onChange={(theme) => persist({ theme })}
+            />
+          )}
         </Row>
+        <Row label={t('options.density')}>
+          {(field) => (
+            <AppearanceSelect
+              {...field}
+              setting="density"
+              value={settings.density}
+              onChange={(density) => persist({ density })}
+            />
+          )}
+        </Row>
+        <Row label={t('options.dateFormat')}>
+          {(field) => (
+            <AppearanceSelect
+              {...field}
+              setting="dateFormat"
+              value={settings.dateFormat}
+              onChange={(dateFormat) => persist({ dateFormat })}
+            />
+          )}
+        </Row>
+      </Group>
 
+      <Group title={t('options.groups.cards')}>
         <fieldset className="op-fieldset">
           <legend className="op-row__label">{t('options.fields')}</legend>
           <p className="op-row__hint">{t('options.fieldsHint')}</p>
@@ -233,11 +218,69 @@ export function App() {
             ))}
           </div>
         </fieldset>
-      </section>
+        <Toggle
+          label={t('options.descPreview')}
+          checked={settings.showDescriptionPreview}
+          disabled={!settings.cardFields.description}
+          onChange={(showDescriptionPreview) => persist({ showDescriptionPreview })}
+        />
+        <Row label={t('options.completed')} hint={t('options.completedHint')}>
+          {(field) => (
+            <SettingSelect
+              {...field}
+              value={settings.completedDisplay}
+              options={COMPLETED_DISPLAYS}
+              optionLabel={(display) => t(`options.completedDisplays.${display}`)}
+              onChange={(completedDisplay) => persist({ completedDisplay })}
+            />
+          )}
+        </Row>
+        <Row label={t('options.newCards')} hint={t('options.newCardsHint')}>
+          {(field) => (
+            <SettingSelect
+              {...field}
+              value={settings.newCardsAtTop ? 'top' : 'bottom'}
+              options={NEW_CARD_POSITIONS}
+              optionLabel={(position) => t(`options.newCardPositions.${position}`)}
+              onChange={(position) => persist({ newCardsAtTop: position === 'top' })}
+            />
+          )}
+        </Row>
+      </Group>
 
-      <section className="op-card pdt-card">
-        <h2>{t('options.markers.title')}</h2>
-        <p className="op-hint">
+      <Group title={t('options.groups.behavior')}>
+        <Row label={t('options.name')} hint={t('options.nameHint')}>
+          {(field) => (
+            <input
+              {...field}
+              type="text"
+              className="pdt-input"
+              value={settings.userAssignee}
+              placeholder={t('options.namePlaceholder')}
+              onChange={(e) => setLocal({ ...settings, userAssignee: e.target.value })}
+              onBlur={(e) => persist({ userAssignee: e.target.value })}
+            />
+          )}
+        </Row>
+        <Toggle
+          label={t('options.confirmDelete')}
+          hint={t('options.confirmDeleteHint')}
+          checked={settings.confirmDelete}
+          onChange={(confirmDelete) => persist({ confirmDelete })}
+        />
+        <Toggle
+          label={t('options.closePopupAfterAdd')}
+          hint={t('options.closePopupAfterAddHint')}
+          checked={settings.closePopupAfterAdd}
+          onChange={(closePopupAfterAdd) => persist({ closePopupAfterAdd })}
+        />
+      </Group>
+
+      <details className="op-card op-more pdt-card">
+        <summary>
+          <h2>{t('options.markers.title')}</h2>
+        </summary>
+        <p className="op-hint" id={markerHelpId}>
           <Trans
             i18nKey="options.markers.help"
             components={{ strong: <strong />, code: <code /> }}
@@ -247,32 +290,57 @@ export function App() {
           className="pdt-textarea pdt-textarea-code"
           rows={4}
           value={markersText}
-          onChange={(e) => setMarkersText(e.target.value)}
+          aria-label={t('options.markers.title')}
+          aria-describedby={markerError ? `${markerHelpId} ${markerErrorId}` : markerHelpId}
+          aria-invalid={markerError ? true : undefined}
+          onChange={(e) => {
+            setMarkersText(e.target.value);
+            setConfirmingReset(false);
+          }}
           spellCheck={false}
         />
         {markerError && (
-          <p className="op-error" role="alert">
+          <p className="op-error" id={markerErrorId} role="alert">
             {markerError}
           </p>
         )}
-        <div className="op-actions">
-          <button className="pdt-btn pdt-btn-primary" onClick={saveMarkers}>
-            {t('options.markers.save')}
-          </button>
-          <button
-            className="pdt-btn"
-            onClick={() => {
-              setMarkerError('');
-              persist({ markers: DEFAULT_MARKERS });
-            }}
-          >
-            {t('options.markers.reset')}
-          </button>
-        </div>
-      </section>
+        {confirmingReset ? (
+          <div className="op-actions" role="group" aria-label={t('options.markers.reset')}>
+            <span className="op-actions__note">{t('options.markers.resetConfirm')}</span>
+            <button className="pdt-btn pdt-btn-primary" onClick={resetMarkers}>
+              {t('options.markers.reset')}
+            </button>
+            <button className="pdt-btn" onClick={() => setConfirmingReset(false)}>
+              {t('common.cancel')}
+            </button>
+          </div>
+        ) : (
+          <div className="op-actions">
+            <button
+              className="pdt-btn pdt-btn-primary"
+              disabled={!markersDirty}
+              onClick={saveMarkers}
+            >
+              {t('options.markers.save')}
+            </button>
+            <button
+              className="pdt-btn"
+              disabled={markersAreDefault}
+              onClick={() => setConfirmingReset(true)}
+            >
+              {t('options.markers.reset')}
+            </button>
+            {markersDirty && (
+              <span className="op-actions__note">{t('options.markers.unsaved')}</span>
+            )}
+          </div>
+        )}
+      </details>
 
-      <section className="op-card pdt-card">
-        <h2>{t('options.syntax.title')}</h2>
+      <details className="op-card op-more pdt-card">
+        <summary>
+          <h2>{t('options.syntax.title')}</h2>
+        </summary>
         <p className="op-hint">
           <Trans i18nKey="options.syntax.intro" components={{ code: <code /> }} />
         </p>
@@ -283,9 +351,6 @@ export function App() {
           </li>
           <li>
             <Trans i18nKey="options.syntax.section" components={{ code: <code /> }} />
-          </li>
-          <li>
-            <Trans i18nKey="options.syntax.status" components={{ code: <code />, em: <em /> }} />
           </li>
           <li>
             <Trans i18nKey="options.syntax.statusRef" components={{ code: <code /> }} />
@@ -302,18 +367,16 @@ export function App() {
           <li>
             <Trans i18nKey="options.syntax.label" components={{ code: <code /> }} />
           </li>
-          <li>
-            <Trans i18nKey="options.syntax.parent" components={{ code: <code /> }} />
-          </li>
         </ul>
-      </section>
+        <p className="op-more__link">
+          <a className="pdt-link" href={SYNTAX_URL} target="_blank" rel="noreferrer">
+            {t('options.syntax.more')}
+          </a>
+        </p>
+      </details>
 
       <footer className="op-foot">
-        <a
-          href="https://github.com/josselinonduty/proton-docs-as-task"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={REPO_URL} target="_blank" rel="noreferrer">
           github.com/josselinonduty/proton-docs-as-task
         </a>
       </footer>
@@ -321,65 +384,83 @@ export function App() {
   );
 }
 
-interface RowProps {
-  label: string;
-  hint: string;
-  children: React.ReactNode;
-}
-
-function Row({ label, hint, children }: RowProps) {
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  const headingId = useId();
   return (
-    <label className="op-row">
-      <span>
-        <span className="op-row__label">{label}</span>
-        <span className="op-row__hint">{hint}</span>
-      </span>
+    <section className="op-card pdt-card" aria-labelledby={headingId}>
+      <h2 id={headingId}>{title}</h2>
       {children}
-    </label>
+    </section>
   );
 }
 
-interface ToggleProps extends Omit<RowProps, 'children'> {
+/** Props a row hands to its control, tying it to the row's label and hint. */
+interface FieldProps {
+  id: string;
+  'aria-describedby'?: string;
+}
+
+interface RowProps {
+  label: string;
+  hint?: string;
+  children: (field: FieldProps) => React.ReactNode;
+}
+
+/** A label and its control side by side, with an optional hint under the label. */
+function Row({ label, hint, children }: RowProps) {
+  const id = useId();
+  const hintId = `${id}-hint`;
+  return (
+    <div className="op-row">
+      <label className="op-row__label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="op-row__control">
+        {children({ id, 'aria-describedby': hint ? hintId : undefined })}
+      </div>
+      {hint && (
+        <p className="op-row__hint" id={hintId}>
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+interface ToggleProps {
+  label: string;
+  hint?: string;
   checked: boolean;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }
 
-function Toggle({ checked, onChange, ...row }: ToggleProps) {
+/** An on/off setting, drawn as the same switch the popup uses. */
+function Toggle({ label, hint, checked, disabled, onChange }: ToggleProps) {
+  const hintId = useId();
   return (
-    <Row {...row}>
-      <input
-        type="checkbox"
-        className="pdt-native-check"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-    </Row>
-  );
-}
-
-interface SelectProps<T extends string> {
-  value: T;
-  options: readonly T[];
-  optionLabel: (option: T) => string;
-  onChange: (value: T) => void;
-}
-
-function Select<T extends string>({ value, options, optionLabel, onChange }: SelectProps<T>) {
-  return (
-    <select className="pdt-select" value={value} onChange={(e) => onChange(e.target.value as T)}>
-      {options.map((option) => (
-        <option key={option} value={option}>
-          {optionLabel(option)}
-        </option>
-      ))}
-    </select>
+    <div className="op-row op-row--switch">
+      <label className="pdt-switch-row" aria-disabled={disabled || undefined}>
+        <span>{label}</span>
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          aria-describedby={hint ? hintId : undefined}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span className="pdt-switch" aria-hidden="true" />
+      </label>
+      {hint && (
+        <p className="op-row__hint" id={hintId}>
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }
 
 const SYNTAX_EXAMPLE = `#!tasks Sprint 42
-@settings status todo "To Do" @category:todo
-@settings status doing "In Progress" @category:doing @color:blue @bg:blue
-@settings status done "Done" @category:done @color:green
 
 ## Backend
 - [x] Design the schema @who:sam
