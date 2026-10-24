@@ -114,7 +114,7 @@ and shared components above.
   double-dashes) — they're meant to be composed (`class="pdt-btn
 pdt-btn-primary pdt-btn-sm"`).
 - Surface-local, layout-only classes keep a short surface prefix
-  (`pp-` popup, `op-` options) or, inside the board overlay, a
+  (`pp-` popup, `op-` options, `wl-` welcome) or, inside the board overlay, a
   loose BEM-ish `pdt-block__element` / `pdt-block--modifier` scheme, since
   those never need to be reused outside their surface.
 - Never introduce a new color, radius or shadow value inline — add a token
