@@ -102,6 +102,13 @@ export interface ParseResult {
 export const BOARD_VIEWS = ['workflow', 'sections', 'swimlane', 'list'] as const;
 export type BoardView = (typeof BOARD_VIEWS)[number];
 
+/**
+ * Starting status flows offered for new boards, shortest first. Each maps to a
+ * list of {@link StatusDef}s in `statuses.ts`.
+ */
+export const STATUS_FLOWS = ['simple', 'standard', 'review'] as const;
+export type StatusFlow = (typeof STATUS_FLOWS)[number];
+
 export const THEMES = ['system', 'light', 'dark'] as const;
 export type Theme = (typeof THEMES)[number];
 
@@ -168,4 +175,6 @@ export interface Settings {
   dateFormat: DateFormat;
   /** The user's own assignee name, enabling the "My open tasks" filter. */
   userAssignee: string;
+  /** Status flow a blank document gets when it is converted to a task board. */
+  defaultStatuses: StatusFlow;
 }

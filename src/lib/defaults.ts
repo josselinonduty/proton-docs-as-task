@@ -4,6 +4,7 @@ import {
   BOARD_VIEWS,
   CARD_DENSITIES,
   COMPLETED_DISPLAYS,
+  STATUS_FLOWS,
   THEMES,
   type CardFieldVisibility,
   type Settings,
@@ -40,6 +41,7 @@ export const DEFAULT_SETTINGS: Settings = {
   completedDisplay: 'show',
   dateFormat: 'iso',
   userAssignee: '',
+  defaultStatuses: 'standard',
 };
 
 function oneOf<T extends string>(options: readonly T[], value: unknown, fallback: T): T {
@@ -72,6 +74,7 @@ export function withDefaults(stored?: Partial<Settings> | null): Settings {
     ),
     dateFormat: oneOf(DATE_FORMATS, s.dateFormat, DEFAULT_SETTINGS.dateFormat),
     userAssignee: typeof s.userAssignee === 'string' ? s.userAssignee.trim() : '',
+    defaultStatuses: oneOf(STATUS_FLOWS, s.defaultStatuses, DEFAULT_SETTINGS.defaultStatuses),
   };
 }
 

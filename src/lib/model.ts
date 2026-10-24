@@ -21,12 +21,12 @@
 
 import { encodeDescription } from './parser';
 import {
-  DEFAULT_STATUSES,
   defaultStatus,
   findStatus,
   isDoneStatus,
   isLastOfRequiredCategory,
   serializeStatusSetting,
+  statusesForFlow,
   uniqueStatusKey,
 } from './statuses';
 import type {
@@ -35,6 +35,7 @@ import type {
   Priority,
   StatusCategory,
   StatusDef,
+  StatusFlow,
   StatusKey,
   Task,
 } from './types';
@@ -109,11 +110,11 @@ export function createTask(section: string, status: StatusKey, title = ''): Boar
 }
 
 /** The board seeded when a blank document is converted to a task board. */
-export function createStarterModel(): BoardModel {
+export function createStarterModel(flow: StatusFlow = 'standard'): BoardModel {
   return {
     title: undefined,
     sections: [DEFAULT_SECTION],
-    statuses: DEFAULT_STATUSES.map((s) => ({ ...s })),
+    statuses: statusesForFlow(flow),
     tasks: [],
   };
 }
