@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.2.0...v1.2.1) (2026-10-24)
+
+
+### Bug fixes
+
+* **ci:** publish releases after attaching assets ([abc5c48](https://github.com/josselinonduty/proton-docs-as-task/commit/abc5c48c62bd53b8517e2bb7d0bd148f1dd51535))
+
 ## [1.2.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.1.0...v1.2.0) (2026-10-24)
 
 
