@@ -1,9 +1,7 @@
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LANGUAGE_SETTINGS, LANGUAGES } from '../../i18n/languages';
-import { DATE_FORMATS } from '../../lib/dates';
+import { AppearanceSelect } from '../../components/SettingSelect';
 import type { Preferences } from '../../lib/onboarding';
-import { CARD_DENSITIES, THEMES } from '../../lib/types';
 
 interface PreferenceFieldsProps {
   /** Receives focus when the step appears, so screen readers announce it. */
@@ -27,59 +25,35 @@ export function PreferenceFields({ headingRef, value, onChange }: PreferenceFiel
       <div className="wl-fields">
         <label className="wl-field">
           <span className="wl-field__label">{t('options.language')}</span>
-          <select
-            className="pdt-select"
+          <AppearanceSelect
+            setting="language"
             value={value.language}
-            onChange={(e) => set('language', e.target.value as Preferences['language'])}
-          >
-            {LANGUAGE_SETTINGS.map((code) => (
-              <option key={code} value={code}>
-                {code === 'auto' ? t('options.languageAuto') : LANGUAGES[code]}
-              </option>
-            ))}
-          </select>
+            onChange={(next) => set('language', next)}
+          />
         </label>
         <label className="wl-field">
           <span className="wl-field__label">{t('options.theme')}</span>
-          <select
-            className="pdt-select"
+          <AppearanceSelect
+            setting="theme"
             value={value.theme}
-            onChange={(e) => set('theme', e.target.value as Preferences['theme'])}
-          >
-            {THEMES.map((theme) => (
-              <option key={theme} value={theme}>
-                {t(`options.themes.${theme}`)}
-              </option>
-            ))}
-          </select>
+            onChange={(next) => set('theme', next)}
+          />
         </label>
         <label className="wl-field">
           <span className="wl-field__label">{t('options.density')}</span>
-          <select
-            className="pdt-select"
+          <AppearanceSelect
+            setting="density"
             value={value.density}
-            onChange={(e) => set('density', e.target.value as Preferences['density'])}
-          >
-            {CARD_DENSITIES.map((density) => (
-              <option key={density} value={density}>
-                {t(`options.densities.${density}`)}
-              </option>
-            ))}
-          </select>
+            onChange={(next) => set('density', next)}
+          />
         </label>
         <label className="wl-field">
           <span className="wl-field__label">{t('options.dateFormat')}</span>
-          <select
-            className="pdt-select"
+          <AppearanceSelect
+            setting="dateFormat"
             value={value.dateFormat}
-            onChange={(e) => set('dateFormat', e.target.value as Preferences['dateFormat'])}
-          >
-            {DATE_FORMATS.map((format) => (
-              <option key={format} value={format}>
-                {t(`options.dateFormats.${format}`)}
-              </option>
-            ))}
-          </select>
+            onChange={(next) => set('dateFormat', next)}
+          />
         </label>
         <label className="wl-field wl-field--wide">
           <span className="wl-field__label">{t('options.name')}</span>
