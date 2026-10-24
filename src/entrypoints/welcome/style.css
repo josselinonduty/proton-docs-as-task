@@ -1,0 +1,250 @@
+@import '../../styles/tokens.css';
+@import '../../styles/components.css';
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--pdt-background-weak);
+  color: var(--pdt-text-norm);
+  font-family: var(--pdt-font-family);
+  font-size: var(--pdt-text-md);
+  line-height: var(--pdt-line-height);
+}
+code {
+  padding: 1px 5px;
+  border-radius: var(--pdt-radius-sm);
+  background: var(--pdt-background-strong);
+  font-size: var(--pdt-text-xs);
+  font-family: var(--pdt-font-mono);
+}
+.wl-loading {
+  padding: var(--pdt-space-8);
+  text-align: center;
+  color: var(--pdt-text-weak);
+}
+.wl {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--pdt-space-8) var(--pdt-space-5) 48px;
+}
+.wl-head {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-3);
+  margin-bottom: var(--pdt-space-6);
+}
+.wl-logo {
+  flex: 0 0 auto;
+}
+.wl-head h1 {
+  margin: 0;
+  font-size: var(--pdt-text-xl);
+  font-weight: var(--pdt-font-weight-bold);
+}
+.wl-sub {
+  margin: 2px 0 0;
+  color: var(--pdt-text-weak);
+}
+.wl-card {
+  padding: var(--pdt-space-6);
+}
+
+/* Progress: text for everyone, a segmented bar as a visual cue. */
+.wl-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-3);
+  margin-bottom: var(--pdt-space-5);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+.wl-progress__bar {
+  display: flex;
+  flex: 1;
+  gap: var(--pdt-space-1);
+}
+.wl-progress__seg {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-background-strong);
+  transition: background var(--pdt-transition-base);
+}
+.wl-progress__seg.is-done {
+  background: var(--pdt-primary);
+}
+
+.wl-title {
+  margin: 0 0 var(--pdt-space-1);
+  font-size: var(--pdt-text-xl);
+  font-weight: var(--pdt-font-weight-bold);
+}
+/* Focus is moved here on purpose; the ring would be noise on a heading. */
+.wl-title:focus {
+  outline: none;
+}
+.wl-hint {
+  margin: 0 0 var(--pdt-space-4);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+
+/* Choice cards. The native radio is hidden but stays focusable. */
+.wl-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--pdt-space-3);
+}
+.wl-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-1);
+  padding: var(--pdt-space-3);
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-lg);
+  background: var(--pdt-background-norm);
+  cursor: pointer;
+  transition:
+    border-color var(--pdt-transition-fast),
+    background var(--pdt-transition-fast);
+}
+.wl-choice:hover {
+  border-color: var(--pdt-field-hover);
+}
+.wl-choice:has(.wl-choice__input:checked) {
+  border-color: var(--pdt-primary);
+  background: var(--pdt-primary-weak);
+}
+.wl-choice:has(.wl-choice__input:focus-visible) {
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.wl-choice__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.wl-choice__visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  margin-bottom: var(--pdt-space-2);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-background-weak);
+  overflow: hidden;
+}
+.wl-choice__name {
+  font-weight: var(--pdt-font-weight-bold);
+}
+.wl-choice__hint {
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+
+/* Static miniatures, colored from the tokens so they follow dark mode. */
+.wl-preview {
+  width: 100%;
+  height: 72px;
+}
+.wl-shape-col {
+  fill: var(--pdt-background-column);
+  stroke: var(--pdt-border-weak);
+}
+.wl-shape-card {
+  fill: var(--pdt-background-norm);
+  stroke: var(--pdt-border-norm);
+}
+.wl-shape-box {
+  fill: none;
+  stroke: var(--pdt-field-norm);
+}
+.wl-shape-line {
+  fill: var(--pdt-border-norm);
+}
+.wl-shape-accent {
+  fill: var(--pdt-primary);
+}
+
+/* A status flow as plain text: To Do → In Progress → Done. */
+.wl-chain {
+  padding: var(--pdt-space-1) var(--pdt-space-2);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-xs);
+  text-align: center;
+}
+
+.wl-summary {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--pdt-space-1) var(--pdt-space-4);
+  margin: 0 0 var(--pdt-space-5);
+  padding: var(--pdt-space-3) var(--pdt-space-4);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-background-weak);
+}
+.wl-summary dt {
+  color: var(--pdt-text-weak);
+}
+.wl-summary dd {
+  margin: 0;
+  font-weight: var(--pdt-font-weight-medium);
+}
+.wl-summary .wl-chain {
+  padding: 0 0 0 var(--pdt-space-2);
+  font-weight: var(--pdt-font-weight-regular);
+}
+
+.wl-next {
+  margin-bottom: var(--pdt-space-5);
+}
+.wl-next .wl-hint {
+  margin: var(--pdt-space-2) 0 0;
+}
+.wl-snippet {
+  padding-top: var(--pdt-space-4);
+  border-top: 1px solid var(--pdt-border-weak);
+}
+.wl-snippet h3 {
+  margin: 0 0 var(--pdt-space-1);
+  font-size: var(--pdt-text-md);
+  font-weight: var(--pdt-font-weight-bold);
+}
+.wl-snippet__row {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-2);
+}
+.wl-copied {
+  color: var(--pdt-signal-success-text);
+  font-size: var(--pdt-text-sm);
+}
+
+.wl-error {
+  margin: var(--pdt-space-3) 0 0;
+  color: var(--pdt-signal-danger-text);
+  font-size: var(--pdt-text-sm);
+  font-weight: var(--pdt-font-weight-medium);
+}
+.wl-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-3);
+  margin-top: var(--pdt-space-6);
+}
+.wl-actions__nav {
+  display: flex;
+  gap: var(--pdt-space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-progress__seg,
+  .wl-choice {
+    transition: none;
+  }
+}
