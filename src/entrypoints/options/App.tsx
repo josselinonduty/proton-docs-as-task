@@ -411,7 +411,7 @@ function Row({ label, hint, children }: RowProps) {
   const id = useId();
   const hintId = `${id}-hint`;
   return (
-    <div className="op-row">
+    <div className={`op-row${hint ? ' op-row--hinted' : ''}`}>
       <label className="op-row__label" htmlFor={id}>
         {label}
       </label>
