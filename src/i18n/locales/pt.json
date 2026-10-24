@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Confirmar a exclusão de cartões",
     "confirmDeleteHint": "Pede confirmação antes de excluir um cartão (pode sempre desfazer).",
+    "closePopupAfterAdd": "Fechar o popup após adicionar uma tarefa",
+    "closePopupAfterAddHint": "Fecha o popup depois de adicionar uma tarefa. Desativado, permanece aberto e confirma a adição.",
     "display": "Preferências de apresentação",
     "dateFormat": "Formato da data",
     "dateFormatHint": "Como as datas de entrega são escritas nos cartões.",

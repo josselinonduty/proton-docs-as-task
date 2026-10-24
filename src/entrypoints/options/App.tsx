@@ -184,6 +184,12 @@ export function App() {
           checked={settings.confirmDelete}
           onChange={(confirmDelete) => persist({ confirmDelete })}
         />
+        <Toggle
+          label={t('options.closePopupAfterAdd')}
+          hint={t('options.closePopupAfterAddHint')}
+          checked={settings.closePopupAfterAdd}
+          onChange={(closePopupAfterAdd) => persist({ closePopupAfterAdd })}
+        />
       </section>
 
       <section className="op-card pdt-card">

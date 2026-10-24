@@ -167,6 +167,8 @@ export interface Settings {
   showDescriptionPreview: boolean;
   /** Ask for confirmation before deleting a card. */
   confirmDelete: boolean;
+  /** Close the toolbar popup once a task has been quick-added from it. */
+  closePopupAfterAdd: boolean;
   /** Which optional fields cards display. */
   cardFields: CardFieldVisibility;
   /** How completed tasks are presented. */

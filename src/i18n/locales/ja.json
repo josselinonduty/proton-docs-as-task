@@ -561,6 +561,8 @@
     },
     "confirmDelete": "カード削除の確認",
     "confirmDeleteHint": "カードを削除する前に確認します（いつでも元に戻せます）。",
+    "closePopupAfterAdd": "タスク追加後にポップアップを閉じる",
+    "closePopupAfterAddHint": "タスクを追加するとポップアップを閉じます。オフの場合は開いたままで、追加を確認するメッセージを表示します。",
     "display": "表示設定",
     "dateFormat": "日付の形式",
     "dateFormatHint": "カードに表示する期限の書式です。",
