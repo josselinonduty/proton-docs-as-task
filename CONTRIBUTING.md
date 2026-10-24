@@ -16,8 +16,36 @@ npm run dev          # launch Chrome with the extension + HMR
 npm run dev:firefox  # launch Firefox instead
 ```
 
-Then open a document on `docs.proton.me`, make its first line `#!tasks`, and add
-a few `- [ ]` items.
+Then open an empty document on `docs.proton.me` and click **Create task board**,
+or make a document's first line `#!tasks` and add a few `- [ ]` items. How the
+extension talks to Proton's editor is described in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+To try a production build:
+
+```bash
+npm run build            # → .output/chrome-mv3
+npm run build:firefox    # → .output/firefox-mv2
+```
+
+In Chrome, open `chrome://extensions`, turn on **Developer mode**, click **Load
+unpacked** and select `.output/chrome-mv3`. In Firefox, open `about:debugging` →
+**Load Temporary Add-on** and pick any file in `.output/firefox-mv2`.
+
+### Scripts
+
+| Command                           | Description                                                   |
+| --------------------------------- | ------------------------------------------------------------- |
+| `npm run dev` / `dev:firefox`     | Dev server with hot reload                                    |
+| `npm run playground`              | Board and extension pages against a fake document             |
+| `npm run build` / `build:firefox` | Production build                                              |
+| `npm run zip` / `zip:firefox`     | Zip a build for release                                       |
+| `npm run submit`                  | Submit built zips to the extension stores (needs credentials) |
+| `npm run submit:init`             | Generate store credentials into `.env.submit`                 |
+| `npm run compile`                 | Type-check with `tsc --noEmit`                                |
+| `npm run lint`                    | Lint with ESLint                                              |
+| `npm run format` / `format:check` | Format (or check) with Prettier                               |
+| `npm test`                        | Run the unit tests (Vitest)                                   |
 
 ## Before you push
 
@@ -92,9 +120,7 @@ identical files; only the `onboarding.webp` clip differs between runs.
 
 ## Releasing
 
-Releasing is documented in the [README](README.md#releasing): release-please
-keeps a release PR open on `main`; merge it to tag and publish. The release
-workflow builds the Chrome and Firefox packages, attaches them to the GitHub
-Release, and (once the [store credentials](README.md#store-credentials) are
-configured as repo secrets) submits them to the Chrome Web Store and Firefox
-Add-ons for review.
+Releases are automated; see [docs/RELEASING.md](docs/RELEASING.md).
+release-please keeps a release PR open on `main`, and merging it tags, builds
+and publishes the GitHub Release, then submits to the stores once their
+[credentials](docs/RELEASING.md#store-credentials) are configured.
