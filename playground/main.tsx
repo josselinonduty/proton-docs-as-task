@@ -146,6 +146,10 @@ function DocsShell() {
         <a href={params.has('empty') ? '?' : '?empty'}>
           {params.has('empty') ? 'Sample board' : 'Empty document'}
         </a>
+        <span className="pg-muted">Pages:</span>
+        <a href="/popup.html">Popup</a>
+        <a href="/options.html">Options</a>
+        <a href="/welcome.html">Welcome</a>
       </header>
       <main className="pg-doc">
         <textarea
