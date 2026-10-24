@@ -44,24 +44,14 @@
 
 ## Install
 
-Download the latest package from
-[Releases](https://github.com/josselinonduty/proton-docs-as-task/releases/latest).
+Install it from your browser's store:
 
-**Chrome, Edge and other Chromium browsers**
+- **Firefox:** [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/proton-docs-as-task/)
+- **Chrome, Brave, Edge and other Chromium browsers:**
+  [Chrome Web Store](https://chromewebstore.google.com/detail/proton-docs-as-task/lcbkhlchhgjcgbgohhkablaffpmakioh)
 
-1. Download `proton-docs-as-task-<version>-chrome.zip` and unzip it.
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Click **Load unpacked** and select the unzipped folder.
-
-**Firefox**
-
-1. Download `proton-docs-as-task-<version>-firefox.zip`.
-2. Open `about:debugging` → **This Firefox** → **Load Temporary Add-on**, and
-   pick the zip.
-
-> [!IMPORTANT]
-> Firefox removes an add-on loaded this way when it restarts. Load it again
-> after each restart until the add-on is signed on addons.mozilla.org.
+Packages for each release are also attached to
+[GitHub Releases](https://github.com/josselinonduty/proton-docs-as-task/releases/latest).
 
 ## Quick start
 
