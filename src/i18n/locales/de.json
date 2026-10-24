@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Verwandeln Sie ein Proton-Docs-Dokument in ein interaktives Aufgaben-Board.",
-    "saved": "Gespeichert ✓",
-    "general": "Allgemein",
+    "groups": {
+      "board": "Board",
+      "appearance": "Darstellung",
+      "cards": "Karten",
+      "behavior": "Verhalten"
+    },
+    "saved": "Gespeichert",
     "enabled": "Erweiterung aktivieren",
-    "enabledHint": "Das gesamte Board ein- oder ausschalten.",
     "autoShow": "Aktivierte Boards automatisch öffnen",
-    "autoShowHint": "Das Board öffnen, sobald ein Dokument aktiviert wird.",
-    "defaultView": "Standardansicht",
-    "defaultViewHint": "In welchem Layout sich das Board öffnet.",
+    "openIn": "Boards öffnen in",
+    "openInHint": "Folgt der zuletzt auf einem Board genutzten Ansicht.",
     "views": {
       "workflow": "Workflow (nach Status)",
       "sections": "Abschnitte (nach Überschrift)",
@@ -543,22 +546,18 @@
       "list": "Liste (einfache Checkliste)"
     },
     "language": "Sprache",
-    "languageHint": "Die Sprache von Board, Popup und dieser Seite.",
     "languageAuto": "Automatisch (Browsersprache)",
     "theme": "Design",
-    "themeHint": "Dem System folgen oder Hell / Dunkel erzwingen.",
     "themes": {
       "system": "System",
       "light": "Hell",
       "dark": "Dunkel"
     },
     "density": "Kartendichte",
-    "densityHint": "Wie eng die Karten angeordnet sind.",
     "densities": {
       "comfortable": "Komfortabel",
       "compact": "Kompakt"
     },
-    "behavior": "Board-Verhalten",
     "newCards": "Neue Karten",
     "newCardsHint": "Wo eine schnell hinzugefügte Karte in ihrer Spalte landet.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "Oben"
     },
     "descPreview": "Beschreibungsvorschau anzeigen",
-    "descPreviewHint": "Zeigt auf eingeklappten Karten einen kurzen Ausschnitt der Beschreibung.",
     "completed": "Erledigte Aufgaben",
     "completedHint": "Wie erledigte Aufgaben angezeigt werden (sie werden nie aus dem Dokument entfernt).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Vor dem Löschen einer Karte nachfragen (Sie können es immer rückgängig machen).",
     "closePopupAfterAdd": "Popup nach dem Hinzufügen einer Aufgabe schließen",
     "closePopupAfterAddHint": "Schließt das Popup, sobald eine Aufgabe hinzugefügt wurde. Ist die Option aus, bleibt es offen und bestätigt das Hinzufügen.",
-    "display": "Anzeigeeinstellungen",
     "dateFormat": "Datumsformat",
-    "dateFormatHint": "Wie Fälligkeitsdaten auf Karten geschrieben werden.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Mittel (10.09.2026)",
@@ -593,7 +589,7 @@
     "fields": "Sichtbare Kartenfelder",
     "fieldsHint": "Aufgabentitel und Erledigt-Schaltfläche werden immer angezeigt.",
     "field": {
-      "description": "Beschreibungsvorschau",
+      "description": "Beschreibung",
       "priority": "Priorität",
       "due": "Fälligkeitsdatum",
       "assignee": "Zuständig",
@@ -606,20 +602,21 @@
       "help": "Ein Dokument wird zum Aufgaben-Board, wenn seine <strong>erste nicht leere Zeile</strong> mit einem dieser Marker beginnt (einer pro Zeile, Groß-/Kleinschreibung egal). Nach dem Marker können Sie einen Titel angeben, z. B. <code>#!tasks Sprint 42</code>.",
       "error": "Fügen Sie mindestens einen Aktivierungsmarker hinzu — eine leere Liste ist nicht zulässig.",
       "save": "Marker speichern",
-      "reset": "Auf Standard zurücksetzen"
+      "reset": "Auf Standard zurücksetzen",
+      "unsaved": "Ungespeicherte Änderungen",
+      "resetConfirm": "Ihre Markierungen durch die Standardwerte ersetzen?"
     },
     "syntax": {
       "title": "Aufgabensyntax",
       "intro": "Schreiben Sie Ihre Aufgaben unter der Marker-Zeile als Checkliste. Das Board aktualisiert sich live beim Tippen. Status und Abschnitt sind unabhängig: Der <code>@status</code> einer Aufgabe ist ihre Workflow-Stufe, ihre <code>## Überschrift</code> der Abschnitt, in dem sie steht.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — eine offene oder erledigte Aufgabe",
       "section": "<code>## Überschrift</code> — ein Abschnitt (die Abschnittsansicht gruppiert danach)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — definiert einen Status (je eine Zeile, direkt unter dem Marker). Verwalten Sie sie in den <em>Board-Einstellungen</em>; ein Board ohne Status verwendet To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — der Status der Aufgabe, per Schlüssel (ein angehaktes Kästchen bedeutet den ersten Erledigt-Status; eingebaute Kurzformen wie <code>@s:wip</code> funktionieren weiterhin)",
       "priority": "<code>@priority:high</code> — high · medium · low (auch <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — ein Fälligkeitsdatum",
       "who": "<code>@who:alex</code> oder <code>@@alex</code> — eine zuständige Person",
       "label": "<code>#label</code> — ein oder mehrere Labels",
-      "parent": "<code>@parent:schlüssel</code> — macht die Aufgabe zur Unteraufgabe der mit <code>@id:schlüssel</code> markierten (wird im Aufgabenbereich verwaltet); eine Aufgabe kann nicht abgeschlossen werden, solange eine Unteraufgabe offen ist"
+      "more": "Vollständige Syntax"
     },
     "rerun": "Einrichtung erneut starten",
     "statusFlow": "Status für neue Boards",

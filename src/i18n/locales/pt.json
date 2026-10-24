@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Transforme um documento do Proton Docs num quadro de tarefas interativo.",
-    "saved": "Guardado ✓",
-    "general": "Geral",
+    "groups": {
+      "board": "Quadro",
+      "appearance": "Aparência",
+      "cards": "Cartões",
+      "behavior": "Comportamento"
+    },
+    "saved": "Guardado",
     "enabled": "Ativar a extensão",
-    "enabledHint": "Ativa ou desativa todo o quadro.",
     "autoShow": "Abrir automaticamente os quadros ativados",
-    "autoShowHint": "Abre o quadro assim que um documento é ativado.",
-    "defaultView": "Visualização predefinida",
-    "defaultViewHint": "Em que disposição o quadro abre.",
+    "openIn": "Abrir os quadros em",
+    "openInHint": "Segue a última vista usada num quadro.",
     "views": {
       "workflow": "Fluxo (por estado)",
       "sections": "Seções (por título)",
@@ -543,22 +546,18 @@
       "list": "Lista (lista de verificação simples)"
     },
     "language": "Idioma",
-    "languageHint": "O idioma do quadro, do popup e desta página.",
     "languageAuto": "Automático (idioma do navegador)",
     "theme": "Tema",
-    "themeHint": "Seguir o sistema ou forçar claro / escuro.",
     "themes": {
       "system": "Sistema",
       "light": "Claro",
       "dark": "Escuro"
     },
     "density": "Densidade dos cartões",
-    "densityHint": "Quão juntos ficam os cartões.",
     "densities": {
       "comfortable": "Confortável",
       "compact": "Compacta"
     },
-    "behavior": "Comportamento do quadro",
     "newCards": "Novos cartões",
     "newCardsHint": "Onde um cartão adicionado rapidamente fica na sua coluna.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "No início"
     },
     "descPreview": "Mostrar pré-visualização da descrição",
-    "descPreviewHint": "Mostra um breve excerto da descrição nos cartões recolhidos.",
     "completed": "Tarefas concluídas",
     "completedHint": "Como as tarefas feitas são apresentadas (nunca são removidas do documento).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Pede confirmação antes de excluir um cartão (pode sempre desfazer).",
     "closePopupAfterAdd": "Fechar o popup após adicionar uma tarefa",
     "closePopupAfterAddHint": "Fecha o popup depois de adicionar uma tarefa. Desativado, permanece aberto e confirma a adição.",
-    "display": "Preferências de apresentação",
     "dateFormat": "Formato da data",
-    "dateFormatHint": "Como as datas de entrega são escritas nos cartões.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Médio (10 de set. de 2026)",
@@ -593,7 +589,7 @@
     "fields": "Campos visíveis do cartão",
     "fieldsHint": "O título da tarefa e o controlo de conclusão são sempre apresentados.",
     "field": {
-      "description": "Pré-visualização da descrição",
+      "description": "Descrição",
       "priority": "Prioridade",
       "due": "Data de entrega",
       "assignee": "Responsável",
@@ -606,20 +602,21 @@
       "help": "Um documento torna-se um quadro de tarefas quando a sua <strong>primeira linha não vazia</strong> começa por um destes marcadores (um por linha, sem distinguir maiúsculas de minúsculas). Pode adicionar um título após o marcador, p. ex. <code>#!tasks Sprint 42</code>.",
       "error": "Adicione pelo menos um marcador de ativação — não é permitida uma lista vazia.",
       "save": "Guardar marcadores",
-      "reset": "Repor predefinições"
+      "reset": "Repor predefinições",
+      "unsaved": "Alterações por guardar",
+      "resetConfirm": "Substituir os seus marcadores pelas predefinições?"
     },
     "syntax": {
       "title": "Sintaxe das tarefas",
       "intro": "Abaixo da linha do marcador, escreva as suas tarefas como uma lista de verificação. O quadro atualiza-se em tempo real enquanto escreve. O estado e a seção são independentes: o <code>@status</code> de uma tarefa é a sua fase do fluxo, e o seu <code>## Título</code> é a seção em que se encontra.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — uma tarefa aberta ou concluída",
       "section": "<code>## Título</code> — uma seção (a visualização Seções agrupa por estes)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — define um estado (uma linha cada, logo abaixo do marcador). Gira-os nas <em>Configurações do quadro</em>; um quadro sem estados usa To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — o estado da tarefa, por chave (uma caixa marcada corresponde ao primeiro estado Concluído; os atalhos integrados como <code>@s:wip</code> continuam a funcionar)",
       "priority": "<code>@priority:high</code> — high · medium · low (também <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — uma data de entrega",
       "who": "<code>@who:alex</code> ou <code>@@alex</code> — um responsável",
       "label": "<code>#label</code> — uma ou mais etiquetas",
-      "parent": "<code>@parent:chave</code> — torna a tarefa uma subtarefa da marcada com <code>@id:chave</code> (gerido no painel da tarefa); uma tarefa não pode ser concluída enquanto uma subtarefa estiver aberta"
+      "more": "Sintaxe completa"
     },
     "rerun": "Repetir a configuração",
     "statusFlow": "Estados dos novos quadros",
