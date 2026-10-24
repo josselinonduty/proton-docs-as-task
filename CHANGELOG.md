@@ -3,6 +3,47 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.1.0...v1.2.0) (2026-10-24)
+
+
+### Features
+
+* **board:** manage statuses per document ([#59](https://github.com/josselinonduty/proton-docs-as-task/issues/59)) ([01f2e99](https://github.com/josselinonduty/proton-docs-as-task/commit/01f2e99cfc96985221122a3b34f88b9af41e8448))
+* **board:** manage sub-tasks ([9c90207](https://github.com/josselinonduty/proton-docs-as-task/commit/9c9020705738c025825363a7c39e56738e5ea758)), closes [#40](https://github.com/josselinonduty/proton-docs-as-task/issues/40)
+* **board:** open the full new task dialog from column footers ([87db8aa](https://github.com/josselinonduty/proton-docs-as-task/commit/87db8aa147b027f799618c2d492816f872345db3))
+* **i18n:** add en, fr, de, es, it, ja, pt, nl and zh locales ([b0a179d](https://github.com/josselinonduty/proton-docs-as-task/commit/b0a179d0c9bfbc13e3fbd05e2b535b7e36e151b7)), closes [#42](https://github.com/josselinonduty/proton-docs-as-task/issues/42)
+* **i18n:** add welcome and status flow translations ([5222e78](https://github.com/josselinonduty/proton-docs-as-task/commit/5222e78d60976104e940ae6cec682e3b7141f20e))
+* **onboarding:** add layout presets for first-run setup ([d9dce46](https://github.com/josselinonduty/proton-docs-as-task/commit/d9dce4628002b1121831dfae9ee92695af981eaf))
+* **options:** add status flow option and run setup link ([09a7176](https://github.com/josselinonduty/proton-docs-as-task/commit/09a717690f5dc145e4d2e185262946bc1ebef016))
+* **options:** regroup settings into board, appearance, cards and behavior ([f3e68d3](https://github.com/josselinonduty/proton-docs-as-task/commit/f3e68d3f6e73788783c01462f407b92816e6d682))
+* **statuses:** add selectable status flows for new boards ([a85ffa3](https://github.com/josselinonduty/proton-docs-as-task/commit/a85ffa337839914706b1eefc546c8447f31fce53))
+* **welcome:** add a preferences step to first-run setup ([358d8ee](https://github.com/josselinonduty/proton-docs-as-task/commit/358d8ee132a4fa2a6cc983efa4764263e84bc775)), closes [#66](https://github.com/josselinonduty/proton-docs-as-task/issues/66)
+* **welcome:** add first-run welcome page ([22144ba](https://github.com/josselinonduty/proton-docs-as-task/commit/22144ba45bf26126856286c49932ee5f7571516a))
+
+
+### Bug fixes
+
+* **board:** ignore parent links that loop back to the task ([1d07c4a](https://github.com/josselinonduty/proton-docs-as-task/commit/1d07c4a6b9b4cae7df782104a24a8cc8e57596d5))
+* **board:** reset sub-task drafts when the panel switches task ([386b071](https://github.com/josselinonduty/proton-docs-as-task/commit/386b0715d3af71f22e753dfd216bc38370f882d4))
+* **options:** align unhinted rows and wrap the header on narrow screens ([c7d8815](https://github.com/josselinonduty/proton-docs-as-task/commit/c7d88152d7d8d75887d806a525e5acea6bbff57b))
+* **popup:** close after adding a task, configurable in options ([44ea255](https://github.com/josselinonduty/proton-docs-as-task/commit/44ea255b7ad6069351ed702830c140b7c799e3c6)), closes [#68](https://github.com/josselinonduty/proton-docs-as-task/issues/68)
+
+
+### Refactoring
+
+* **components:** extract shared hooks and page mounting ([9bbce11](https://github.com/josselinonduty/proton-docs-as-task/commit/9bbce114733e237cdd46b26d84e0eed5cafa3fb4))
+* **i18n:** split language definitions and nest option labels ([d435ea5](https://github.com/josselinonduty/proton-docs-as-task/commit/d435ea5fc0b725f852482f5db6648a9bb513c0db))
+* **settings:** centralize option lists and settings migration ([cebab84](https://github.com/josselinonduty/proton-docs-as-task/commit/cebab84764e619a1d2df74d9bc6faeb460be979f))
+* **settings:** share appearance selects with first-run setup ([390a626](https://github.com/josselinonduty/proton-docs-as-task/commit/390a626bb36bf2f0df3cc5bfecb44cfc2962673f))
+
+
+### Documentation
+
+* add user guide, architecture and releasing docs ([e7a62d0](https://github.com/josselinonduty/proton-docs-as-task/commit/e7a62d07db5220f39082af9955e95a5fd183b224))
+* **readme:** lead with screenshots and a two-step quick start ([6ae5ef4](https://github.com/josselinonduty/proton-docs-as-task/commit/6ae5ef46ac3b469af887c84b5f58c13ef3d5b32b))
+* **readme:** link the published store listings for installation ([143e6e8](https://github.com/josselinonduty/proton-docs-as-task/commit/143e6e8a5982ea91128a9919181fddb427cf0747))
+* **welcome:** document first-run setup and welcome prefix ([d1a0ad1](https://github.com/josselinonduty/proton-docs-as-task/commit/d1a0ad19c1c8b8405ef3f23a36f3ec4b690bc3d5))
+
 ## [1.1.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.0.0...v1.1.0) (2026-10-20)
 
 
