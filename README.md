@@ -127,6 +127,18 @@ same actions — add a task, switch view, change sorting, clear filters, show/hi
 completed, open settings, retry a failed save — searchable, with recently used
 commands first.
 
+### First-run setup
+
+A fresh install opens a short **welcome page** with two questions: a **starting
+layout** (_Simple list_, _Kanban board_ or _Swimlanes_, which sets the default
+view, density and the card fields shown) and a **status flow** for new boards
+(_To Do → Done_, _To Do → In Progress → Done_, or with an _In review_ step).
+Everything is saved at the end in one step, skipping changes nothing, and each
+choice stays an ordinary setting. The status flow is the **Statuses for new
+boards** option and only applies when a blank document is converted; existing
+boards keep their own statuses. Updates never show the page; use **Run setup
+again** at the top of the options page to revisit it.
+
 ### Display preferences
 
 The options page controls **card density** (comfortable / compact), which
