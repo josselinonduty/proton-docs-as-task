@@ -128,6 +128,7 @@ pdt-btn-primary pdt-btn-sm"`).
 3. Check both color schemes — every token already has a dark-mode override,
    so components built from tokens get dark mode for free; verify visually
    with the OS theme toggled. `npm run playground` mounts the real board
-   against a fake document for exactly this (see README).
+   and extension pages against a fake document for exactly this (see
+   [CONTRIBUTING](CONTRIBUTING.md#playground-and-screenshots)).
 4. Check text-on-tint contrast (≥ 4.5:1 for text under 18px) when adding a
    colored chip.
