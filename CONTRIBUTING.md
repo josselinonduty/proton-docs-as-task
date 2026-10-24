@@ -21,7 +21,7 @@ or make a document's first line `#!tasks` and add a few `- [ ]` items. How the
 extension talks to Proton's editor is described in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-To try a production build:
+To try a production build locally:
 
 ```bash
 npm run build            # → .output/chrome-mv3
