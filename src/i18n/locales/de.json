@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> oder <code>@@alex</code> — eine zuständige Person",
       "label": "<code>#label</code> — ein oder mehrere Labels",
       "parent": "<code>@parent:schlüssel</code> — macht die Aufgabe zur Unteraufgabe der mit <code>@id:schlüssel</code> markierten (wird im Aufgabenbereich verwaltet); eine Aufgabe kann nicht abgeschlossen werden, solange eine Unteraufgabe offen ist"
-    }
+    },
+    "rerun": "Einrichtung erneut starten",
+    "statusFlow": "Status für neue Boards",
+    "statusFlowHint": "Der Statusablauf, den ein leeres Dokument beim Umwandeln in ein Board erhält. Bestehende Boards behalten ihren."
   },
   "popup": {
     "added": "Zu {{section}} hinzugefügt.",
@@ -637,5 +640,68 @@
     "adding": "Wird hinzugefügt…",
     "hide": "Board ausblenden",
     "settings": "Einstellungen & Syntaxhilfe"
+  },
+  "layouts": {
+    "list": {
+      "name": "Einfache Liste",
+      "hint": "Eine übersichtliche Checkliste mit Titeln und Fälligkeiten."
+    },
+    "board": {
+      "name": "Kanban-Board",
+      "hint": "Karten in Spalten nach Status, mit allen Details."
+    },
+    "swimlanes": {
+      "name": "Swimlanes",
+      "hint": "Statusspalten, gekreuzt mit Abschnittszeilen, für größere Projekte."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Einfach",
+      "hint": "Nur offen und erledigt."
+    },
+    "standard": {
+      "name": "Standard",
+      "hint": "Ergänzt einen Schritt für Arbeit in Bearbeitung."
+    },
+    "review": {
+      "name": "Mit Review",
+      "hint": "Ergänzt einen Review-Schritt vor dem Abschluss."
+    }
+  },
+  "welcome": {
+    "title": "Willkommen bei Proton Docs as Task",
+    "subtitle": "Zwei kurze Fragen zur Einrichtung deiner Boards. Alles lässt sich später in den Einstellungen ändern.",
+    "skip": "Überspringen, Standard verwenden",
+    "back": "Zurück",
+    "next": "Weiter",
+    "finish": "Fertig",
+    "step": "Schritt {{current}} von {{total}}",
+    "progress": "Fortschritt der Einrichtung",
+    "layout": {
+      "title": "Wähle ein Start-Layout",
+      "hint": "Es legt fest, wie deine Boards standardmäßig aussehen."
+    },
+    "flow": {
+      "title": "Wähle einen Statusablauf",
+      "hint": "Neue Boards starten mit diesen Status. Bestehende Boards bleiben unverändert."
+    },
+    "done": {
+      "title": "Alles bereit",
+      "hint": "Deine Auswahl ist gespeichert. Du kannst sie jederzeit in den Einstellungen ändern.",
+      "skippedHint": "Die Standardeinstellungen bleiben erhalten. Du kannst sie jederzeit in den Einstellungen ändern.",
+      "layout": "Layout",
+      "flow": "Statusablauf",
+      "openDocs": "Proton Docs öffnen",
+      "goToDocs": "Zu Proton Docs wechseln",
+      "openHint": "Wähle in einem leeren Dokument „In Aufgaben-Board umwandeln“.",
+      "snippetTitle": "Oder verwandle ein bestehendes Dokument in ein Board",
+      "snippetHint": "Setze dies als erste Zeile des Dokuments:",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "settings": "Einstellungen öffnen"
+    },
+    "error": "Deine Auswahl konnte nicht gespeichert werden.",
+    "retry": "Erneut versuchen"
   }
 }

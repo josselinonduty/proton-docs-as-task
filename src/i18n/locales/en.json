@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> or <code>@@alex</code> — an assignee",
       "label": "<code>#label</code> — one or more labels",
       "parent": "<code>@parent:key</code> — makes the task a sub-task of the one marked <code>@id:key</code> (managed from the task panel); a task can't be completed while a sub-task is open"
-    }
+    },
+    "rerun": "Run setup again",
+    "statusFlow": "Statuses for new boards",
+    "statusFlowHint": "The status flow a blank document gets when you convert it to a board. Existing boards keep theirs."
   },
   "popup": {
     "added": "Added to {{section}}.",
@@ -637,5 +640,68 @@
     "adding": "Adding…",
     "hide": "Hide board",
     "settings": "Settings & syntax guide"
+  },
+  "layouts": {
+    "list": {
+      "name": "Simple list",
+      "hint": "A tidy checklist with titles and due dates."
+    },
+    "board": {
+      "name": "Kanban board",
+      "hint": "Cards in columns by status, with every detail."
+    },
+    "swimlanes": {
+      "name": "Swimlanes",
+      "hint": "Status columns crossed with section rows, for larger projects."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Simple",
+      "hint": "Just what is open and what is done."
+    },
+    "standard": {
+      "name": "Standard",
+      "hint": "Adds a step for work in progress."
+    },
+    "review": {
+      "name": "With review",
+      "hint": "Adds a review step before work is done."
+    }
+  },
+  "welcome": {
+    "title": "Welcome to Proton Docs as Task",
+    "subtitle": "Two quick questions to set up your boards. You can change everything later in settings.",
+    "skip": "Skip, use defaults",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "step": "Step {{current}} of {{total}}",
+    "progress": "Setup progress",
+    "layout": {
+      "title": "Pick a starting layout",
+      "hint": "This sets how your boards look by default."
+    },
+    "flow": {
+      "title": "Pick a status flow",
+      "hint": "New boards start with these statuses. Boards you already have are not changed."
+    },
+    "done": {
+      "title": "You're all set",
+      "hint": "Your choices are saved. You can change them anytime in settings.",
+      "skippedHint": "Default settings are kept. You can change them anytime in settings.",
+      "layout": "Layout",
+      "flow": "Status flow",
+      "openDocs": "Open Proton Docs",
+      "goToDocs": "Go to Proton Docs",
+      "openHint": "In an empty document, choose “Convert to task board”.",
+      "snippetTitle": "Or turn an existing document into a board",
+      "snippetHint": "Make this the first line of the document:",
+      "copy": "Copy",
+      "copied": "Copied",
+      "settings": "Open settings"
+    },
+    "error": "Your choices couldn't be saved.",
+    "retry": "Try again"
   }
 }

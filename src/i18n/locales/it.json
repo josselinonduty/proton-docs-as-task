@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> o <code>@@alex</code> — un assegnatario",
       "label": "<code>#label</code> — una o più etichette",
       "parent": "<code>@parent:chiave</code> — rende l’attività una sottoattività di quella con <code>@id:chiave</code> (gestito dal pannello dell’attività); un’attività non può essere completata finché una sottoattività è aperta"
-    }
+    },
+    "rerun": "Ripeti la configurazione",
+    "statusFlow": "Stati delle nuove bacheche",
+    "statusFlowHint": "Il flusso di stati che un documento vuoto riceve quando lo converti in bacheca. Le bacheche esistenti mantengono il proprio."
   },
   "popup": {
     "added": "Aggiunta a {{section}}.",
@@ -637,5 +640,68 @@
     "adding": "Aggiunta in corso…",
     "hide": "Nascondi bacheca",
     "settings": "Impostazioni e guida alla sintassi"
+  },
+  "layouts": {
+    "list": {
+      "name": "Elenco semplice",
+      "hint": "Una checklist ordinata con titoli e scadenze."
+    },
+    "board": {
+      "name": "Bacheca kanban",
+      "hint": "Schede in colonne per stato, con tutti i dettagli."
+    },
+    "swimlanes": {
+      "name": "Corsie",
+      "hint": "Colonne di stato incrociate con righe di sezioni, per progetti più grandi."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Semplice",
+      "hint": "Solo ciò che è aperto e ciò che è fatto."
+    },
+    "standard": {
+      "name": "Standard",
+      "hint": "Aggiunge un passaggio per il lavoro in corso."
+    },
+    "review": {
+      "name": "Con revisione",
+      "hint": "Aggiunge un passaggio di revisione prima del completamento."
+    }
+  },
+  "welcome": {
+    "title": "Benvenuto in Proton Docs as Task",
+    "subtitle": "Due domande rapide per configurare le tue bacheche. Potrai modificare tutto più tardi nelle impostazioni.",
+    "skip": "Salta, usa i valori predefiniti",
+    "back": "Indietro",
+    "next": "Avanti",
+    "finish": "Fine",
+    "step": "Passaggio {{current}} di {{total}}",
+    "progress": "Avanzamento della configurazione",
+    "layout": {
+      "title": "Scegli una disposizione iniziale",
+      "hint": "Definisce l’aspetto predefinito delle tue bacheche."
+    },
+    "flow": {
+      "title": "Scegli un flusso di stati",
+      "hint": "Le nuove bacheche partono con questi stati. Quelle esistenti non cambiano."
+    },
+    "done": {
+      "title": "Tutto pronto",
+      "hint": "Le tue scelte sono salvate. Puoi modificarle in qualsiasi momento nelle impostazioni.",
+      "skippedHint": "Le impostazioni predefinite sono state mantenute. Puoi modificarle in qualsiasi momento nelle impostazioni.",
+      "layout": "Disposizione",
+      "flow": "Flusso di stati",
+      "openDocs": "Apri Proton Docs",
+      "goToDocs": "Vai a Proton Docs",
+      "openHint": "In un documento vuoto, scegli «Converti in bacheca di attività».",
+      "snippetTitle": "Oppure trasforma un documento esistente in una bacheca",
+      "snippetHint": "Rendila la prima riga del documento:",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "settings": "Apri impostazioni"
+    },
+    "error": "Non è stato possibile salvare le tue scelte.",
+    "retry": "Riprova"
   }
 }

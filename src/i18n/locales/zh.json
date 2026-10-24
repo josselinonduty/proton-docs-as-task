@@ -603,7 +603,10 @@
       "who": "<code>@who:alex</code> 或 <code>@@alex</code> — 负责人",
       "label": "<code>#label</code> — 一个或多个标签",
       "parent": "<code>@parent:键</code> — 使该任务成为标记为 <code>@id:键</code> 的任务的子任务（在任务面板中管理）；有未完成的子任务时无法完成该任务"
-    }
+    },
+    "rerun": "重新运行设置向导",
+    "statusFlow": "新看板的状态",
+    "statusFlowHint": "空白文档转换为看板时使用的状态流程。已有的看板保持不变。"
   },
   "popup": {
     "added": "已添加到{{section}}。",
@@ -622,5 +625,68 @@
     "adding": "正在添加…",
     "hide": "隐藏看板",
     "settings": "设置与语法指南"
+  },
+  "layouts": {
+    "list": {
+      "name": "简单列表",
+      "hint": "只有标题和截止日期的清爽清单。"
+    },
+    "board": {
+      "name": "看板",
+      "hint": "按状态分列的卡片，显示全部细节。"
+    },
+    "swimlanes": {
+      "name": "泳道",
+      "hint": "状态列与分区行交叉，适合较大的项目。"
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "简单",
+      "hint": "只区分未完成和已完成。"
+    },
+    "standard": {
+      "name": "标准",
+      "hint": "增加一个进行中的步骤。"
+    },
+    "review": {
+      "name": "含评审",
+      "hint": "在完成之前增加一个评审步骤。"
+    }
+  },
+  "welcome": {
+    "title": "欢迎使用 Proton Docs as Task",
+    "subtitle": "回答两个简单的问题来设置你的看板。之后随时可以在设置中更改。",
+    "skip": "跳过，使用默认设置",
+    "back": "上一步",
+    "next": "下一步",
+    "finish": "完成",
+    "step": "第 {{current}} 步，共 {{total}} 步",
+    "progress": "设置进度",
+    "layout": {
+      "title": "选择初始布局",
+      "hint": "决定你的看板默认的外观。"
+    },
+    "flow": {
+      "title": "选择状态流程",
+      "hint": "新看板将从这些状态开始。已有的看板不会改变。"
+    },
+    "done": {
+      "title": "一切就绪",
+      "hint": "你的选择已保存。随时可以在设置中更改。",
+      "skippedHint": "已保留默认设置。随时可以在设置中更改。",
+      "layout": "布局",
+      "flow": "状态流程",
+      "openDocs": "打开 Proton Docs",
+      "goToDocs": "前往 Proton Docs",
+      "openHint": "在空白文档中选择“转换为任务看板”。",
+      "snippetTitle": "或将现有文档变成看板",
+      "snippetHint": "将下面这行作为文档的第一行：",
+      "copy": "复制",
+      "copied": "已复制",
+      "settings": "打开设置"
+    },
+    "error": "无法保存你的选择。",
+    "retry": "重试"
   }
 }
