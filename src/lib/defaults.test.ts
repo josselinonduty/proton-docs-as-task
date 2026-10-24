@@ -13,6 +13,11 @@ describe('withDefaults', () => {
     expect(s).toEqual({ ...DEFAULT_SETTINGS, enabled: false });
   });
 
+  it('closes the popup after adding a task by default, unless turned off', () => {
+    expect(withDefaults().closePopupAfterAdd).toBe(true);
+    expect(withDefaults({ closePopupAfterAdd: false }).closePopupAfterAdd).toBe(false);
+  });
+
   it('merges partial cardFields over defaults', () => {
     const s = withDefaults({ cardFields: { priority: false } as never });
     expect(s.cardFields).toEqual({ ...DEFAULT_CARD_FIELDS, priority: false });

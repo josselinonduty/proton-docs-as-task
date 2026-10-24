@@ -82,6 +82,10 @@ export function App() {
       section: qaSection || undefined,
       due: qaDue || undefined,
     });
+    if (res?.added && settings?.closePopupAfterAdd) {
+      window.close();
+      return;
+    }
     if (res?.added) {
       setFeedback({ kind: 'saved', message: t('popup.added', { section: res.section }) });
       setQaTitle('');

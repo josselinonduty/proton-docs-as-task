@@ -561,6 +561,8 @@
     },
     "confirmDelete": "删除卡片前确认",
     "confirmDeleteHint": "删除卡片前先询问（你随时可以撤销）。",
+    "closePopupAfterAdd": "添加任务后关闭弹出窗口",
+    "closePopupAfterAddHint": "添加任务后关闭弹出窗口。关闭此选项时，窗口保持打开并显示添加确认。",
     "display": "显示偏好",
     "dateFormat": "日期格式",
     "dateFormatHint": "卡片上截止日期的书写方式。",

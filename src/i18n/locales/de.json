@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Löschen von Karten bestätigen",
     "confirmDeleteHint": "Vor dem Löschen einer Karte nachfragen (Sie können es immer rückgängig machen).",
+    "closePopupAfterAdd": "Popup nach dem Hinzufügen einer Aufgabe schließen",
+    "closePopupAfterAddHint": "Schließt das Popup, sobald eine Aufgabe hinzugefügt wurde. Ist die Option aus, bleibt es offen und bestätigt das Hinzufügen.",
     "display": "Anzeigeeinstellungen",
     "dateFormat": "Datumsformat",
     "dateFormatHint": "Wie Fälligkeitsdaten auf Karten geschrieben werden.",

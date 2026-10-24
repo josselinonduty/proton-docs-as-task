@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Confirmer la suppression d’une carte",
     "confirmDeleteHint": "Demande confirmation avant de supprimer une carte (vous pouvez toujours annuler).",
+    "closePopupAfterAdd": "Fermer la fenêtre après l’ajout d’une tâche",
+    "closePopupAfterAddHint": "Ferme la fenêtre une fois la tâche ajoutée. Désactivé, elle reste ouverte et confirme l’ajout.",
     "display": "Préférences d’affichage",
     "dateFormat": "Format de date",
     "dateFormatHint": "Comment les échéances sont écrites sur les cartes.",
