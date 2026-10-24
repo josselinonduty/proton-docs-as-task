@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { browser } from 'wxt/browser';
 import { LANGUAGE_SETTINGS, LANGUAGES } from '../../i18n/languages';
 import { DATE_FORMATS } from '../../lib/dates';
 import { DEFAULT_MARKERS } from '../../lib/defaults';
 import { getSettings, setSettings } from '../../lib/settings';
+import { flowSummary } from '../../lib/statuses';
 import {
   BOARD_VIEWS,
   CARD_DENSITIES,
   COMPLETED_DISPLAYS,
+  STATUS_FLOWS,
   THEMES,
   type CardFieldVisibility,
   type Settings,
@@ -78,11 +81,21 @@ export function App() {
           <h1>Proton Docs as Task</h1>
           <p className="op-sub">{t('options.subtitle')}</p>
         </div>
-        {savedAt > 0 && (
-          <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success op-saved">
-            {t('options.saved')}
-          </span>
-        )}
+        <div className="op-head__aside">
+          {savedAt > 0 && (
+            <span className="pdt-badge pdt-badge-solid pdt-badge-solid-success">
+              {t('options.saved')}
+            </span>
+          )}
+          <a
+            className="pdt-link"
+            href={browser.runtime.getURL('/welcome.html')}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t('options.rerun')}
+          </a>
+        </div>
       </header>
 
       <section className="op-card pdt-card">
@@ -141,6 +154,14 @@ export function App() {
             options={NEW_CARD_POSITIONS}
             optionLabel={(position) => t(`options.newCardPositions.${position}`)}
             onChange={(position) => persist({ newCardsAtTop: position === 'top' })}
+          />
+        </Row>
+        <Row label={t('options.statusFlow')} hint={t('options.statusFlowHint')}>
+          <Select
+            value={settings.defaultStatuses}
+            options={STATUS_FLOWS}
+            optionLabel={(flow) => `${t(`statusFlows.${flow}.name`)} (${flowSummary(flow)})`}
+            onChange={(defaultStatuses) => persist({ defaultStatuses })}
           />
         </Row>
         <Toggle

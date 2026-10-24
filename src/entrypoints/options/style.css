@@ -55,7 +55,10 @@ code {
   margin: 2px 0 0;
   color: var(--pdt-text-weak);
 }
-.op-saved {
+.op-head__aside {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-3);
   margin-left: auto;
 }
 
