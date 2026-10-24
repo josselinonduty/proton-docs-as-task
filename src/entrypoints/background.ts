@@ -2,12 +2,12 @@ import { defineBackground } from '#imports';
 import { browser } from 'wxt/browser';
 
 export default defineBackground(() => {
-  // Open the options page the first time the extension is installed so users
-  // discover the activation marker and syntax.
+  // Greet new installs with the welcome page, which sets up their layout and
+  // status flow. Updates stay quiet: it is reachable from the options page.
   browser.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
-      browser.runtime.openOptionsPage().catch(() => {
-        /* options page may be unavailable in some contexts */
+      browser.tabs.create({ url: browser.runtime.getURL('/welcome.html') }).catch(() => {
+        /* tabs may be unavailable in some contexts */
       });
     }
   });
