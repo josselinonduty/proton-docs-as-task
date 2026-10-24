@@ -129,11 +129,13 @@ commands first.
 
 ### First-run setup
 
-A fresh install opens a short **welcome page** with two questions: a **starting
+A fresh install opens a short **welcome page** with three steps: a **starting
 layout** (_Simple list_, _Kanban board_ or _Swimlanes_, which sets the default
 view, density and the card fields shown) and a **status flow** for new boards
-(_To Do → Done_, _To Do → In Progress → Done_, or with an _In review_ step).
-Everything is saved at the end in one step, skipping changes nothing, and each
+(_To Do → Done_, _To Do → In Progress → Done_, or with an _In review_ step),
+then a few small **preferences**: language, theme, card density (the layout only
+suggests one), date format, your name (for the _My open tasks_ filter) and
+whether deleting a card asks for confirmation. Everything is saved at the end in one step, skipping changes nothing, and each
 choice stays an ordinary setting. The status flow is the **Statuses for new
 boards** option and only applies when a blank document is converted; existing
 boards keep their own statuses. Updates never show the page; use **Run setup

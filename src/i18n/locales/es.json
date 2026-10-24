@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Te damos la bienvenida a Proton Docs as Task",
-    "subtitle": "Dos preguntas rápidas para configurar tus tableros. Podrás cambiarlo todo más tarde en los ajustes.",
+    "subtitle": "Unas preguntas rápidas para configurar tus tableros. Podrás cambiarlo todo más tarde en los ajustes.",
     "skip": "Omitir, usar valores predeterminados",
     "back": "Atrás",
     "next": "Siguiente",
@@ -688,6 +688,10 @@
       "title": "Elige un flujo de estados",
       "hint": "Los tableros nuevos empiezan con estos estados. Los tableros que ya tienes no cambian."
     },
+    "prefs": {
+      "title": "Define tus preferencias",
+      "hint": "Idioma, tema y unos pocos ajustes sencillos. Puedes cambiarlos más tarde en los ajustes."
+    },
     "done": {
       "title": "Todo listo",
       "hint": "Tus elecciones están guardadas. Puedes cambiarlas cuando quieras en los ajustes.",
@@ -701,7 +705,8 @@
       "snippetHint": "Haz que esta sea la primera línea del documento:",
       "copy": "Copiar",
       "copied": "Copiado",
-      "settings": "Abrir ajustes"
+      "settings": "Abrir ajustes",
+      "prefs": "Preferencias"
     },
     "error": "No se pudieron guardar tus elecciones.",
     "retry": "Reintentar"

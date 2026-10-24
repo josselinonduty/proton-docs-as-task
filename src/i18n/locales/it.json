@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Benvenuto in Proton Docs as Task",
-    "subtitle": "Due domande rapide per configurare le tue bacheche. Potrai modificare tutto più tardi nelle impostazioni.",
+    "subtitle": "Alcune domande rapide per configurare le tue bacheche. Potrai modificare tutto più tardi nelle impostazioni.",
     "skip": "Salta, usa i valori predefiniti",
     "back": "Indietro",
     "next": "Avanti",
@@ -688,6 +688,10 @@
       "title": "Scegli un flusso di stati",
       "hint": "Le nuove bacheche partono con questi stati. Quelle esistenti non cambiano."
     },
+    "prefs": {
+      "title": "Imposta le tue preferenze",
+      "hint": "Lingua, tema e qualche piccola impostazione. Puoi modificarle in seguito nelle impostazioni."
+    },
     "done": {
       "title": "Tutto pronto",
       "hint": "Le tue scelte sono salvate. Puoi modificarle in qualsiasi momento nelle impostazioni.",
@@ -701,7 +705,8 @@
       "snippetHint": "Rendila la prima riga del documento:",
       "copy": "Copia",
       "copied": "Copiato",
-      "settings": "Apri impostazioni"
+      "settings": "Apri impostazioni",
+      "prefs": "Preferenze"
     },
     "error": "Non è stato possibile salvare le tue scelte.",
     "retry": "Riprova"

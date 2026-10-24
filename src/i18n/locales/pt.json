@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Bem-vindo ao Proton Docs as Task",
-    "subtitle": "Duas perguntas rápidas para configurar os seus quadros. Pode alterar tudo mais tarde nas definições.",
+    "subtitle": "Algumas perguntas rápidas para configurar os seus quadros. Pode alterar tudo mais tarde nas definições.",
     "skip": "Ignorar, usar predefinições",
     "back": "Anterior",
     "next": "Seguinte",
@@ -688,6 +688,10 @@
       "title": "Escolha um fluxo de estados",
       "hint": "Os novos quadros começam com estes estados. Os quadros que já tem não são alterados."
     },
+    "prefs": {
+      "title": "Defina as suas preferências",
+      "hint": "Idioma, tema e algumas definições simples. Pode alterá-las mais tarde nas definições."
+    },
     "done": {
       "title": "Tudo pronto",
       "hint": "As suas escolhas foram guardadas. Pode alterá-las a qualquer momento nas definições.",
@@ -701,7 +705,8 @@
       "snippetHint": "Coloque isto na primeira linha do documento:",
       "copy": "Copiar",
       "copied": "Copiado",
-      "settings": "Abrir definições"
+      "settings": "Abrir definições",
+      "prefs": "Preferências"
     },
     "error": "Não foi possível guardar as suas escolhas.",
     "retry": "Tentar novamente"

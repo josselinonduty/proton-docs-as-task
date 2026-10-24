@@ -43,7 +43,7 @@ describe('welcome page', () => {
     render(<App />);
     await screen.findByRole('radiogroup');
     expect(radio(/Kanban board/).checked).toBe(true);
-    expect(screen.getByRole('progressbar').getAttribute('aria-valuetext')).toBe('Step 1 of 2');
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuetext')).toBe('Step 1 of 3');
   });
 
   it('saves the layout and status flow once, at the end', async () => {
@@ -54,12 +54,20 @@ describe('welcome page', () => {
     expect(setSettings).not.toHaveBeenCalled();
 
     pick('With review');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.change(screen.getByLabelText('Theme'), { target: { value: 'dark' } });
+    fireEvent.change(screen.getByLabelText('Card density'), { target: { value: 'comfortable' } });
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
 
     expect(await screen.findByRole('heading', { name: "You're all set" })).toBeTruthy();
     expect(setSettings).toHaveBeenCalledTimes(1);
     expect(setSettings).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultView: 'swimlane', defaultStatuses: 'review' }),
+      expect.objectContaining({
+        defaultView: 'swimlane',
+        defaultStatuses: 'review',
+        theme: 'dark',
+        density: 'comfortable',
+      }),
     );
   });
 
@@ -80,10 +88,20 @@ describe('welcome page', () => {
     expect(radio(/Simple list/).checked).toBe(true);
   });
 
+  it('suggests the layout density but keeps a later choice', async () => {
+    render(<App />);
+    await screen.findByRole('radiogroup');
+    pick('Simple list');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByLabelText<HTMLSelectElement>('Card density').value).toBe('compact');
+  });
+
   it('reports a failed save and lets the user retry', async () => {
     setSettings.mockRejectedValueOnce(new Error('quota'));
     render(<App />);
     await screen.findByRole('radiogroup');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     expect((await screen.findByRole('alert')).textContent).toContain("couldn't be saved");
