@@ -25,6 +25,8 @@ interface QuickAddFormProps {
   labelSuggestions: Suggestion[];
   /** The section to default to (remembered across the board session). */
   defaultSection: string;
+  /** Status to preselect; falls back to To Do. */
+  defaultStatusKey?: StatusKey;
   now: Date;
   dateFormat: DateFormat;
   onSubmit: (payload: QuickAddPayload) => void;
@@ -42,6 +44,7 @@ export function QuickAddForm({
   assigneeSuggestions,
   labelSuggestions,
   defaultSection,
+  defaultStatusKey,
   now,
   dateFormat,
   onSubmit,
@@ -49,7 +52,9 @@ export function QuickAddForm({
 }: QuickAddFormProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
-  const [status, setStatus] = useState<StatusKey>(() => defaultStatus(statuses, false));
+  const [status, setStatus] = useState<StatusKey>(
+    () => defaultStatusKey ?? defaultStatus(statuses, false),
+  );
   const [section, setSection] = useState(defaultSection);
   const [due, setDue] = useState<string | undefined>(undefined);
   const [priority, setPriority] = useState<'' | Priority>('');

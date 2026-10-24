@@ -179,8 +179,12 @@ export function EditableBoard(props: EditableBoardProps) {
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  const [adding, setAdding] = useState<string | null>(null); // per-column quick-add
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  // Section/status preselected when the dialog is opened from a column footer.
+  const [quickAddPreset, setQuickAddPreset] = useState<{
+    section?: string;
+    status?: StatusKey;
+  } | null>(null);
   const [hiddenNotice, setHiddenNotice] = useState(false);
   const [pendingSectionDelete, setPendingSectionDelete] = useState<PendingSectionDelete | null>(
     null,
@@ -416,23 +420,20 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   // ---- Quick add (per column) --------------------------------------------
-  const submitColumnQuickAdd = (col: BoardColumn, title: string) => {
-    const clean = title.trim();
-    if (!clean) return;
-    const section =
+  const openColumnQuickAdd = (col: BoardColumn) => {
+    setQuickAddPreset(
       view === 'sections'
-        ? col.section!
-        : (view === 'list' && model.defaultSection) || model.sections[0] || 'Tasks';
-    const status = (view === 'workflow' && col.status) || defaultStatus(statuses, false);
-    const { model: next, taskId } = addTask(model, section, {
-      status,
-      title: clean,
-      atTop: settings.newCardsAtTop,
-    });
-    onChange(next, t('board.undo.added'));
-    setFocusTaskId(taskId);
-    setHighlightId(taskId);
-    announce(t('board.addedTo', { title: clean, column: col.label }));
+        ? { section: col.section }
+        : view === 'workflow'
+          ? { status: col.status }
+          : null,
+    );
+    setQuickAddOpen(true);
+  };
+
+  const closeQuickAdd = () => {
+    setQuickAddOpen(false);
+    setQuickAddPreset(null);
   };
 
   // ---- Quick add (header form) -------------------------------------------
@@ -870,7 +871,10 @@ export function EditableBoard(props: EditableBoardProps) {
 
           <button
             className="pdt-btn pdt-btn-primary"
-            onClick={() => setQuickAddOpen(true)}
+            onClick={() => {
+              setQuickAddPreset(null);
+              setQuickAddOpen(true);
+            }}
             aria-haspopup="dialog"
             title={t('board.addTaskKey')}
           >
@@ -1023,21 +1027,24 @@ export function EditableBoard(props: EditableBoardProps) {
       </header>
 
       {quickAddOpen && (
-        <Dialog title={t('board.newTask')} size="lg" onClose={() => setQuickAddOpen(false)}>
+        <Dialog title={t('board.newTask')} size="lg" onClose={closeQuickAdd}>
           <QuickAddForm
             sections={model.sections}
             statuses={statuses}
             assigneeSuggestions={assigneeSuggestions}
             labelSuggestions={labelSuggestions}
             defaultSection={
-              lastQuickAddSection && model.sections.includes(lastQuickAddSection)
-                ? lastQuickAddSection
-                : (model.sections[0] ?? 'Tasks')
+              quickAddPreset?.section && model.sections.includes(quickAddPreset.section)
+                ? quickAddPreset.section
+                : lastQuickAddSection && model.sections.includes(lastQuickAddSection)
+                  ? lastQuickAddSection
+                  : (model.sections[0] ?? 'Tasks')
             }
+            defaultStatusKey={quickAddPreset?.status}
             now={now}
             dateFormat={settings.dateFormat}
             onSubmit={submitHeaderQuickAdd}
-            onClose={() => setQuickAddOpen(false)}
+            onClose={closeQuickAdd}
           />
         </Dialog>
       )}
@@ -1510,13 +1517,14 @@ export function EditableBoard(props: EditableBoardProps) {
               )}
               {!collapsed && !isDoneCol && (
                 <div className="pdt-column__foot">
-                  <QuickAdd
-                    open={adding === col.key}
-                    label={col.label}
-                    onOpen={() => setAdding(col.key)}
-                    onCancel={() => setAdding(null)}
-                    onSubmit={(title) => submitColumnQuickAdd(col, title)}
-                  />
+                  <button
+                    type="button"
+                    className="pdt-add-task"
+                    onClick={() => openColumnQuickAdd(col)}
+                  >
+                    <Icon name="plus" size={14} />
+                    {t('quickAdd.add')}
+                  </button>
                 </div>
               )}
             </div>
@@ -1898,59 +1906,6 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
     );
   }
   return null;
-}
-
-interface QuickAddProps {
-  open: boolean;
-  label: string;
-  onOpen: () => void;
-  onCancel: () => void;
-  onSubmit: (title: string) => void;
-}
-
-function QuickAdd({ open, label, onOpen, onCancel, onSubmit }: QuickAddProps) {
-  const { t } = useTranslation();
-  const [value, setValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (open) inputRef.current?.focus();
-    else setValue('');
-  }, [open]);
-
-  if (!open) {
-    return (
-      <button type="button" className="pdt-add-task" onClick={onOpen}>
-        <Icon name="plus" size={14} />
-        {t('quickAdd.add')}
-      </button>
-    );
-  }
-
-  return (
-    <input
-      ref={inputRef}
-      className="pdt-input pdt-quickadd"
-      value={value}
-      placeholder={t('board.addTo', { label })}
-      aria-label={t('board.addToAria', { label })}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          onSubmit(value);
-          setValue('');
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          onCancel();
-        }
-      }}
-      onBlur={() => {
-        if (!value.trim()) onCancel();
-      }}
-    />
-  );
 }
 
 interface SectionDeleteDialogProps {
