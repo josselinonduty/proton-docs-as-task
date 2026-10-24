@@ -61,6 +61,9 @@ code {
   gap: var(--pdt-space-3);
   margin-left: auto;
 }
+.op-head__aside a.pdt-btn {
+  text-decoration: none;
+}
 
 .op-card {
   margin-bottom: var(--pdt-space-5);
@@ -76,15 +79,17 @@ code {
   font-size: var(--pdt-text-sm);
 }
 
+/* A setting: label on the left, control on the right, hint under the label. */
 .op-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--pdt-space-4);
+  column-gap: var(--pdt-space-4);
   padding: var(--pdt-space-3) 0;
   border-top: 1px solid var(--pdt-border-weak);
 }
-.op-row:first-of-type {
+.op-card h2 + .op-row,
+.op-card h2 + .op-fieldset {
   border-top: none;
   padding-top: 0;
 }
@@ -92,19 +97,99 @@ code {
   display: block;
   font-weight: var(--pdt-font-weight-medium);
 }
+.op-row__control {
+  grid-row: span 2;
+}
 .op-row__hint {
-  display: block;
+  grid-column: 1;
+  margin: 2px 0 0;
   font-size: var(--pdt-text-xs);
   color: var(--pdt-text-weak);
 }
 .op-row select {
-  max-width: 220px;
+  max-width: 240px;
+}
+.op-row--switch {
+  grid-template-columns: minmax(0, 1fr);
+}
+.op-row--switch .pdt-switch-row {
+  position: relative;
+}
+.op-row--switch .pdt-switch-row[aria-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.op-row--switch .op-row__hint {
+  padding-right: 54px;
+}
+@media (max-width: 520px) {
+  .op-row {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--pdt-space-2);
+  }
+  .op-row__control {
+    grid-row: auto;
+  }
+  .op-row select {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Saved confirmation; the live region stays mounted so it is announced. */
+.op-saved .pdt-badge {
+  gap: 4px;
+}
+
+/* Rarely needed sections, collapsed until opened. */
+.op-more summary {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-2);
+  cursor: pointer;
+  list-style: none;
+}
+.op-more summary::-webkit-details-marker {
+  display: none;
+}
+.op-more summary::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--pdt-text-weak);
+  border-bottom: 2px solid var(--pdt-text-weak);
+  transform: rotate(-45deg);
+  transition: transform var(--pdt-transition-base);
+}
+.op-more[open] summary::before {
+  transform: rotate(45deg);
+}
+.op-more summary:focus-visible {
+  outline: none;
+  border-radius: var(--pdt-radius-sm);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.op-card.op-more summary h2 {
+  margin: 0;
+}
+.op-more[open] summary {
+  margin-bottom: var(--pdt-space-3);
+}
+.op-more__link {
+  margin: var(--pdt-space-3) 0 0;
+  font-size: var(--pdt-text-sm);
 }
 
 .op-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--pdt-space-2);
   margin-top: var(--pdt-space-2);
+}
+.op-actions__note {
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
 }
 
 .op-error {
@@ -149,13 +234,20 @@ code {
 }
 
 .op-fieldset {
-  border: 1px solid var(--pdt-border-norm);
-  border-radius: var(--pdt-radius-md);
-  padding: var(--pdt-space-2);
-  margin: var(--pdt-space-2) 0 0;
+  min-width: 0;
+  margin: 0;
+  padding: var(--pdt-space-3) 0;
+  border: none;
+  border-top: 1px solid var(--pdt-border-weak);
 }
+/* A legend sits outside the box flow; float it so the hint below it lines up. */
 .op-fieldset legend {
-  padding: 0 6px;
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+.op-fieldset legend + .op-row__hint {
+  clear: left;
 }
 .op-checks {
   display: grid;

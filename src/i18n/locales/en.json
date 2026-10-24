@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Turn a Proton Docs document into an interactive task board.",
-    "saved": "Saved ✓",
-    "general": "General",
+    "groups": {
+      "board": "Board",
+      "appearance": "Appearance",
+      "cards": "Cards",
+      "behavior": "Behavior"
+    },
+    "saved": "Saved",
     "enabled": "Enable the extension",
-    "enabledHint": "Turn the whole board on or off.",
     "autoShow": "Open activated boards automatically",
-    "autoShowHint": "Open the board as soon as a document activates.",
-    "defaultView": "Default view",
-    "defaultViewHint": "Which layout the board opens in.",
+    "openIn": "Open boards in",
+    "openInHint": "Follows the view you last used on a board.",
     "views": {
       "workflow": "Workflow (by status)",
       "sections": "Sections (by heading)",
@@ -543,22 +546,18 @@
       "list": "List (simple checklist)"
     },
     "language": "Language",
-    "languageHint": "The language of the board, popup and this page.",
     "languageAuto": "Automatic (browser language)",
     "theme": "Theme",
-    "themeHint": "Match the system, or force light / dark.",
     "themes": {
       "system": "System",
       "light": "Light",
       "dark": "Dark"
     },
     "density": "Card density",
-    "densityHint": "How tightly cards are packed.",
     "densities": {
       "comfortable": "Comfortable",
       "compact": "Compact"
     },
-    "behavior": "Board behavior",
     "newCards": "New cards",
     "newCardsHint": "Where a quick-added card lands in its column.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "At the top"
     },
     "descPreview": "Show description preview",
-    "descPreviewHint": "Show a short snippet of the description on collapsed cards.",
     "completed": "Completed tasks",
     "completedHint": "How done tasks are shown (never removed from the document).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Ask before deleting a card (you can always undo).",
     "closePopupAfterAdd": "Close the popup after adding a task",
     "closePopupAfterAddHint": "Close the popup once a task is added. When off, it stays open and confirms the addition.",
-    "display": "Display preferences",
     "dateFormat": "Date format",
-    "dateFormatHint": "How due dates are written on cards.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Medium (Sep 10, 2026)",
@@ -593,7 +589,7 @@
     "fields": "Visible card fields",
     "fieldsHint": "The task title and completion control are always shown.",
     "field": {
-      "description": "Description preview",
+      "description": "Description",
       "priority": "Priority",
       "due": "Due date",
       "assignee": "Assignee",
@@ -606,20 +602,21 @@
       "help": "A document becomes a task board when its <strong>first non-empty line</strong> starts with one of these (one per line, case-insensitive). You can add a title after the marker, e.g. <code>#!tasks Sprint 42</code>.",
       "error": "Add at least one activation marker — an empty list is not allowed.",
       "save": "Save markers",
-      "reset": "Reset to defaults"
+      "reset": "Reset to defaults",
+      "unsaved": "Unsaved changes",
+      "resetConfirm": "Replace your markers with the defaults?"
     },
     "syntax": {
       "title": "Task syntax",
       "intro": "Below the marker line, write your tasks as a checklist. The board updates live as you type. Status and section are independent: a task's <code>@status</code> is its workflow stage, while its <code>## Heading</code> is the section it lives under.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — an open or done task",
       "section": "<code>## Heading</code> — a section (the Sections view groups by these)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — defines a status (one line each, right below the marker). Manage them from the board's <em>Board settings</em>; a board without any uses To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — the task's status, by key (a ticked checkbox means the first Done status; built-in shorthands like <code>@s:wip</code> still work)",
       "priority": "<code>@priority:high</code> — high · medium · low (also <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — a due date",
       "who": "<code>@who:alex</code> or <code>@@alex</code> — an assignee",
       "label": "<code>#label</code> — one or more labels",
-      "parent": "<code>@parent:key</code> — makes the task a sub-task of the one marked <code>@id:key</code> (managed from the task panel); a task can't be completed while a sub-task is open"
+      "more": "Full syntax reference"
     },
     "rerun": "Run setup again",
     "statusFlow": "Statuses for new boards",

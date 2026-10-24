@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Verander een Proton Docs-document in een interactief takenbord.",
-    "saved": "Opgeslagen ✓",
-    "general": "Algemeen",
+    "groups": {
+      "board": "Bord",
+      "appearance": "Weergave",
+      "cards": "Kaarten",
+      "behavior": "Gedrag"
+    },
+    "saved": "Opgeslagen",
     "enabled": "De extensie inschakelen",
-    "enabledHint": "Schakel het hele bord in of uit.",
     "autoShow": "Geactiveerde borden automatisch openen",
-    "autoShowHint": "Open het bord zodra een document wordt geactiveerd.",
-    "defaultView": "Standaardweergave",
-    "defaultViewHint": "In welke indeling het bord opent.",
+    "openIn": "Borden openen in",
+    "openInHint": "Volgt de weergave die je het laatst op een bord gebruikte.",
     "views": {
       "workflow": "Workflow (op status)",
       "sections": "Secties (op kop)",
@@ -543,22 +546,18 @@
       "list": "Lijst (eenvoudige checklist)"
     },
     "language": "Taal",
-    "languageHint": "De taal van het bord, de popup en deze pagina.",
     "languageAuto": "Automatisch (taal van de browser)",
     "theme": "Thema",
-    "themeHint": "Het systeem volgen of licht / donker afdwingen.",
     "themes": {
       "system": "Systeem",
       "light": "Licht",
       "dark": "Donker"
     },
     "density": "Kaartdichtheid",
-    "densityHint": "Hoe dicht kaarten op elkaar staan.",
     "densities": {
       "comfortable": "Ruim",
       "compact": "Compact"
     },
-    "behavior": "Bordgedrag",
     "newCards": "Nieuwe kaarten",
     "newCardsHint": "Waar een snel toegevoegde kaart in zijn kolom terechtkomt.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "Bovenaan"
     },
     "descPreview": "Beschrijvingsvoorbeeld tonen",
-    "descPreviewHint": "Toon een kort fragment van de beschrijving op ingeklapte kaarten.",
     "completed": "Voltooide taken",
     "completedHint": "Hoe voltooide taken worden getoond (nooit uit het document verwijderd).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Vragen voordat een kaart wordt verwijderd (je kunt altijd ongedaan maken).",
     "closePopupAfterAdd": "Popup sluiten na het toevoegen van een taak",
     "closePopupAfterAddHint": "Sluit de popup zodra een taak is toegevoegd. Uitgeschakeld blijft hij open en bevestigt hij de toevoeging.",
-    "display": "Weergavevoorkeuren",
     "dateFormat": "Datumnotatie",
-    "dateFormatHint": "Hoe deadlines op kaarten worden geschreven.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Middel (10 sep 2026)",
@@ -593,7 +589,7 @@
     "fields": "Zichtbare kaartvelden",
     "fieldsHint": "De taaktitel en het voltooiingsbesturingselement worden altijd getoond.",
     "field": {
-      "description": "Beschrijvingsvoorbeeld",
+      "description": "Beschrijving",
       "priority": "Prioriteit",
       "due": "Deadline",
       "assignee": "Toegewezen aan",
@@ -606,20 +602,21 @@
       "help": "Een document wordt een takenbord wanneer de <strong>eerste niet-lege regel</strong> met een van deze markeringen begint (één per regel, hoofdletterongevoelig). Je kunt na de markering een titel toevoegen, bijv. <code>#!tasks Sprint 42</code>.",
       "error": "Voeg minstens één activeringsmarkering toe — een lege lijst is niet toegestaan.",
       "save": "Markeringen opslaan",
-      "reset": "Standaardwaarden herstellen"
+      "reset": "Standaardwaarden herstellen",
+      "unsaved": "Niet-opgeslagen wijzigingen",
+      "resetConfirm": "Je markeringen vervangen door de standaardwaarden?"
     },
     "syntax": {
       "title": "Taaksyntaxis",
       "intro": "Schrijf je taken onder de markeringsregel als checklist. Het bord wordt live bijgewerkt terwijl je typt. Status en sectie zijn onafhankelijk: de <code>@status</code> van een taak is de workflowfase, terwijl de <code>## Kop</code> de sectie is waarin de taak staat.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — een openstaande of voltooide taak",
       "section": "<code>## Kop</code> — een sectie (de Sectieweergave groepeert hierop)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — definieert een status (één regel per status, direct onder de markering). Beheer ze via de <em>Bordinstellingen</em>; een bord zonder statussen gebruikt To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — de status van de taak, via sleutel (een aangevinkt vakje betekent de eerste Klaar-status; ingebouwde afkortingen zoals <code>@s:wip</code> werken nog steeds)",
       "priority": "<code>@priority:high</code> — high · medium · low (ook <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — een deadline",
       "who": "<code>@who:alex</code> of <code>@@alex</code> — een toegewezen persoon",
       "label": "<code>#label</code> — een of meer labels",
-      "parent": "<code>@parent:sleutel</code> — maakt de taak een subtaak van de taak met <code>@id:sleutel</code> (beheerd vanuit het taakpaneel); een taak kan niet worden voltooid zolang een subtaak openstaat"
+      "more": "Volledige syntaxis"
     },
     "rerun": "Installatie opnieuw uitvoeren",
     "statusFlow": "Statussen voor nieuwe borden",

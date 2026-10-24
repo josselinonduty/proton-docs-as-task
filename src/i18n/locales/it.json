@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Trasforma un documento di Proton Docs in una bacheca di attività interattiva.",
-    "saved": "Salvato ✓",
-    "general": "Generale",
+    "groups": {
+      "board": "Bacheca",
+      "appearance": "Aspetto",
+      "cards": "Schede",
+      "behavior": "Comportamento"
+    },
+    "saved": "Salvato",
     "enabled": "Abilita l’estensione",
-    "enabledHint": "Attiva o disattiva l’intera bacheca.",
     "autoShow": "Apri automaticamente le bacheche attivate",
-    "autoShowHint": "Apre la bacheca non appena un documento si attiva.",
-    "defaultView": "Vista predefinita",
-    "defaultViewHint": "Con quale layout si apre la bacheca.",
+    "openIn": "Apri le bacheche in",
+    "openInHint": "Segue l’ultima vista usata su una bacheca.",
     "views": {
       "workflow": "Flusso (per stato)",
       "sections": "Sezioni (per titolo)",
@@ -543,22 +546,18 @@
       "list": "Elenco (semplice elenco di controllo)"
     },
     "language": "Lingua",
-    "languageHint": "La lingua della bacheca, del popup e di questa pagina.",
     "languageAuto": "Automatica (lingua del browser)",
     "theme": "Tema",
-    "themeHint": "Segui il sistema oppure forza chiaro / scuro.",
     "themes": {
       "system": "Sistema",
       "light": "Chiaro",
       "dark": "Scuro"
     },
     "density": "Densità delle schede",
-    "densityHint": "Quanto sono ravvicinate le schede.",
     "densities": {
       "comfortable": "Comoda",
       "compact": "Compatta"
     },
-    "behavior": "Comportamento della bacheca",
     "newCards": "Nuove schede",
     "newCardsHint": "Dove finisce nella sua colonna una scheda aggiunta rapidamente.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "In cima"
     },
     "descPreview": "Mostra l’anteprima della descrizione",
-    "descPreviewHint": "Mostra un breve estratto della descrizione sulle schede compresse.",
     "completed": "Attività completate",
     "completedHint": "Come vengono mostrate le attività fatte (mai rimosse dal documento).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Chiede conferma prima di eliminare una scheda (puoi sempre annullare).",
     "closePopupAfterAdd": "Chiudi il popup dopo l’aggiunta di un’attività",
     "closePopupAfterAddHint": "Chiude il popup dopo l’aggiunta di un’attività. Se disattivato, resta aperto e conferma l’aggiunta.",
-    "display": "Preferenze di visualizzazione",
     "dateFormat": "Formato della data",
-    "dateFormatHint": "Come vengono scritte le scadenze sulle schede.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Medio (10 set 2026)",
@@ -593,7 +589,7 @@
     "fields": "Campi visibili della scheda",
     "fieldsHint": "Il titolo dell’attività e il controllo di completamento sono sempre visibili.",
     "field": {
-      "description": "Anteprima della descrizione",
+      "description": "Descrizione",
       "priority": "Priorità",
       "due": "Scadenza",
       "assignee": "Assegnatario",
@@ -606,20 +602,21 @@
       "help": "Un documento diventa una bacheca di attività quando la sua <strong>prima riga non vuota</strong> inizia con uno di questi marcatori (uno per riga, senza distinzione tra maiuscole e minuscole). Puoi aggiungere un titolo dopo il marcatore, ad es. <code>#!tasks Sprint 42</code>.",
       "error": "Aggiungi almeno un marcatore di attivazione: un elenco vuoto non è consentito.",
       "save": "Salva marcatori",
-      "reset": "Ripristina i valori predefiniti"
+      "reset": "Ripristina i valori predefiniti",
+      "unsaved": "Modifiche non salvate",
+      "resetConfirm": "Sostituire i tuoi marcatori con quelli predefiniti?"
     },
     "syntax": {
       "title": "Sintassi delle attività",
       "intro": "Sotto la riga del marcatore, scrivi le tue attività come elenco di controllo. La bacheca si aggiorna in tempo reale mentre scrivi. Stato e sezione sono indipendenti: lo <code>@status</code> di un’attività è la sua fase del flusso, mentre il suo <code>## Titolo</code> è la sezione in cui si trova.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — un’attività aperta o completata",
       "section": "<code>## Titolo</code> — una sezione (la vista Sezioni raggruppa in base ad essi)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — definisce uno stato (una riga ciascuno, subito sotto il marcatore). Gestiscili dalle <em>Impostazioni della bacheca</em>; una bacheca senza stati usa To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — lo stato dell’attività, tramite chiave (una casella spuntata corrisponde al primo stato Completato; le scorciatoie integrate come <code>@s:wip</code> funzionano ancora)",
       "priority": "<code>@priority:high</code> — high · medium · low (anche <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — una scadenza",
       "who": "<code>@who:alex</code> o <code>@@alex</code> — un assegnatario",
       "label": "<code>#label</code> — una o più etichette",
-      "parent": "<code>@parent:chiave</code> — rende l’attività una sottoattività di quella con <code>@id:chiave</code> (gestito dal pannello dell’attività); un’attività non può essere completata finché una sottoattività è aperta"
+      "more": "Sintassi completa"
     },
     "rerun": "Ripeti la configurazione",
     "statusFlow": "Stati delle nuove bacheche",

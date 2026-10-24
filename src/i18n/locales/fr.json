@@ -528,14 +528,17 @@
   },
   "options": {
     "subtitle": "Transformez un document Proton Docs en tableau de tâches interactif.",
-    "saved": "Enregistré ✓",
-    "general": "Général",
+    "groups": {
+      "board": "Tableau",
+      "appearance": "Apparence",
+      "cards": "Cartes",
+      "behavior": "Comportement"
+    },
+    "saved": "Enregistré",
     "enabled": "Activer l’extension",
-    "enabledHint": "Active ou désactive tout le tableau.",
     "autoShow": "Ouvrir automatiquement les tableaux activés",
-    "autoShowHint": "Ouvre le tableau dès qu’un document s’active.",
-    "defaultView": "Vue par défaut",
-    "defaultViewHint": "La disposition dans laquelle le tableau s’ouvre.",
+    "openIn": "Ouvrir les tableaux en",
+    "openInHint": "Suit la dernière vue utilisée sur un tableau.",
     "views": {
       "workflow": "Workflow (par statut)",
       "sections": "Sections (par titre)",
@@ -543,22 +546,18 @@
       "list": "Liste (liste de contrôle simple)"
     },
     "language": "Langue",
-    "languageHint": "La langue du tableau, de la fenêtre contextuelle et de cette page.",
     "languageAuto": "Automatique (langue du navigateur)",
     "theme": "Thème",
-    "themeHint": "Suivre le système, ou forcer le clair / sombre.",
     "themes": {
       "system": "Système",
       "light": "Clair",
       "dark": "Sombre"
     },
     "density": "Densité des cartes",
-    "densityHint": "À quel point les cartes sont resserrées.",
     "densities": {
       "comfortable": "Confortable",
       "compact": "Compacte"
     },
-    "behavior": "Comportement du tableau",
     "newCards": "Nouvelles cartes",
     "newCardsHint": "Où se place une carte ajoutée rapidement dans sa colonne.",
     "newCardPositions": {
@@ -566,7 +565,6 @@
       "top": "En haut"
     },
     "descPreview": "Afficher l’aperçu de la description",
-    "descPreviewHint": "Affiche un court extrait de la description sur les cartes réduites.",
     "completed": "Tâches terminées",
     "completedHint": "Comment les tâches terminées sont affichées (jamais supprimées du document).",
     "completedDisplays": {
@@ -578,9 +576,7 @@
     "confirmDeleteHint": "Demande confirmation avant de supprimer une carte (vous pouvez toujours annuler).",
     "closePopupAfterAdd": "Fermer la fenêtre après l’ajout d’une tâche",
     "closePopupAfterAddHint": "Ferme la fenêtre une fois la tâche ajoutée. Désactivé, elle reste ouverte et confirme l’ajout.",
-    "display": "Préférences d’affichage",
     "dateFormat": "Format de date",
-    "dateFormatHint": "Comment les échéances sont écrites sur les cartes.",
     "dateFormats": {
       "iso": "ISO (2026-09-10)",
       "medium": "Moyen (10 sept. 2026)",
@@ -593,7 +589,7 @@
     "fields": "Champs de carte visibles",
     "fieldsHint": "Le titre de la tâche et la case d’achèvement sont toujours affichés.",
     "field": {
-      "description": "Aperçu de la description",
+      "description": "Description",
       "priority": "Priorité",
       "due": "Échéance",
       "assignee": "Assigné à",
@@ -606,20 +602,21 @@
       "help": "Un document devient un tableau de tâches lorsque sa <strong>première ligne non vide</strong> commence par l’un de ces marqueurs (un par ligne, insensible à la casse). Vous pouvez ajouter un titre après le marqueur, p. ex. <code>#!tasks Sprint 42</code>.",
       "error": "Ajoutez au moins un marqueur d’activation — une liste vide n’est pas autorisée.",
       "save": "Enregistrer les marqueurs",
-      "reset": "Rétablir les valeurs par défaut"
+      "reset": "Rétablir les valeurs par défaut",
+      "unsaved": "Modifications non enregistrées",
+      "resetConfirm": "Remplacer vos marqueurs par ceux par défaut ?"
     },
     "syntax": {
       "title": "Syntaxe des tâches",
       "intro": "Sous la ligne du marqueur, écrivez vos tâches sous forme de liste de contrôle. Le tableau se met à jour en direct pendant la saisie. Le statut et la section sont indépendants : le <code>@status</code> d’une tâche est son étape de workflow, tandis que son <code>## Titre</code> est la section dans laquelle elle se trouve.",
       "task": "<code>- [ ]</code> / <code>- [x]</code> — une tâche ouverte ou terminée",
       "section": "<code>## Titre</code> — une section (la vue Sections regroupe selon ces titres)",
-      "status": "<code>@settings status review \"In review\" @category:doing</code> — définit un statut (une ligne chacun, juste sous le marqueur). Gérez-les depuis les <em>Paramètres du tableau</em> ; un tableau sans statut utilise To Do · In Progress · Done",
       "statusRef": "<code>@status:review</code> — le statut de la tâche, par clé (une case cochée correspond au premier statut Terminé ; les raccourcis intégrés comme <code>@s:wip</code> fonctionnent toujours)",
       "priority": "<code>@priority:high</code> — high · medium · low (aussi <code>!</code>/<code>!!</code>/<code>!!!</code>)",
       "due": "<code>@due:2026-09-10</code> — une échéance",
       "who": "<code>@who:alex</code> ou <code>@@alex</code> — un assigné",
       "label": "<code>#label</code> — une ou plusieurs étiquettes",
-      "parent": "<code>@parent:clé</code> — fait de la tâche une sous-tâche de celle marquée <code>@id:clé</code> (géré depuis le panneau de la tâche) ; une tâche ne peut pas être terminée tant qu’une sous-tâche est ouverte"
+      "more": "Syntaxe complète"
     },
     "rerun": "Relancer la configuration",
     "statusFlow": "Statuts des nouveaux tableaux",
