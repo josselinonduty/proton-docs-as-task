@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Welkom bij Proton Docs as Task",
-    "subtitle": "Twee korte vragen om je borden in te stellen. Je kunt alles later wijzigen in de instellingen.",
+    "subtitle": "Een paar korte vragen om je borden in te stellen. Je kunt alles later wijzigen in de instellingen.",
     "skip": "Overslaan, standaardwaarden gebruiken",
     "back": "Terug",
     "next": "Volgende",
@@ -688,6 +688,10 @@
       "title": "Kies een statusverloop",
       "hint": "Nieuwe borden beginnen met deze statussen. Bestaande borden blijven ongewijzigd."
     },
+    "prefs": {
+      "title": "Stel je voorkeuren in",
+      "hint": "Taal, thema en een paar kleine standaardinstellingen. Je kunt alles later wijzigen in de instellingen."
+    },
     "done": {
       "title": "Alles is klaar",
       "hint": "Je keuzes zijn opgeslagen. Je kunt ze altijd wijzigen in de instellingen.",
@@ -701,7 +705,8 @@
       "snippetHint": "Zet dit als eerste regel van het document:",
       "copy": "Kopiëren",
       "copied": "Gekopieerd",
-      "settings": "Instellingen openen"
+      "settings": "Instellingen openen",
+      "prefs": "Voorkeuren"
     },
     "error": "Je keuzes konden niet worden opgeslagen.",
     "retry": "Opnieuw proberen"

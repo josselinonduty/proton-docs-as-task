@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Bienvenue dans Proton Docs as Task",
-    "subtitle": "Deux questions rapides pour configurer vos tableaux. Vous pourrez tout modifier plus tard dans les paramètres.",
+    "subtitle": "Quelques questions rapides pour configurer vos tableaux. Vous pourrez tout modifier plus tard dans les paramètres.",
     "skip": "Passer, garder les valeurs par défaut",
     "back": "Retour",
     "next": "Suivant",
@@ -688,6 +688,10 @@
       "title": "Choisissez un circuit de statuts",
       "hint": "Les nouveaux tableaux démarrent avec ces statuts. Vos tableaux existants ne changent pas."
     },
+    "prefs": {
+      "title": "Définissez vos préférences",
+      "hint": "Langue, thème et quelques réglages simples. Chacun reste modifiable plus tard dans les paramètres."
+    },
     "done": {
       "title": "Tout est prêt",
       "hint": "Vos choix sont enregistrés. Vous pouvez les modifier à tout moment dans les paramètres.",
@@ -701,7 +705,8 @@
       "snippetHint": "Faites-en la première ligne du document :",
       "copy": "Copier",
       "copied": "Copié",
-      "settings": "Ouvrir les paramètres"
+      "settings": "Ouvrir les paramètres",
+      "prefs": "Préférences"
     },
     "error": "Vos choix n’ont pas pu être enregistrés.",
     "retry": "Réessayer"

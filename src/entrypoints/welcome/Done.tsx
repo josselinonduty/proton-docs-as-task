@@ -1,7 +1,8 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import type { Layout } from '../../lib/onboarding';
+import { LANGUAGES } from '../../i18n/languages';
+import type { Layout, Preferences } from '../../lib/onboarding';
 import { flowSummary } from '../../lib/statuses';
 import type { StatusFlow } from '../../lib/types';
 
@@ -11,6 +12,7 @@ const COPIED_MS = 1500;
 interface DoneProps {
   layout: Layout;
   flow: StatusFlow;
+  preferences: Preferences;
   /** The marker to put on the first line of a document. */
   marker: string;
   /** Setup was skipped, so the summary shows the settings that were kept. */
@@ -19,7 +21,7 @@ interface DoneProps {
 }
 
 /** Result screen: what was set, and the way into a first board. */
-export function Done({ layout, flow, marker, skipped, headingRef }: DoneProps) {
+export function Done({ layout, flow, preferences, marker, skipped, headingRef }: DoneProps) {
   const { t } = useTranslation();
   const [docsTab, setDocsTab] = useState<{ id: number; windowId?: number } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -69,6 +71,16 @@ export function Done({ layout, flow, marker, skipped, headingRef }: DoneProps) {
         <dt>{t('welcome.done.flow')}</dt>
         <dd>
           {t(`statusFlows.${flow}.name`)} <span className="wl-chain">{flowSummary(flow)}</span>
+        </dd>
+        <dt>{t('welcome.done.prefs')}</dt>
+        <dd>
+          {[
+            preferences.language === 'auto'
+              ? t('options.languageAuto')
+              : LANGUAGES[preferences.language],
+            t(`options.themes.${preferences.theme}`),
+            t(`options.densities.${preferences.density}`),
+          ].join(' · ')}
         </dd>
       </dl>
 

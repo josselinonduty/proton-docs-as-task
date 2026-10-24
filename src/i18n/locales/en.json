@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Welcome to Proton Docs as Task",
-    "subtitle": "Two quick questions to set up your boards. You can change everything later in settings.",
+    "subtitle": "A few quick questions to set up your boards. You can change everything later in settings.",
     "skip": "Skip, use defaults",
     "back": "Back",
     "next": "Next",
@@ -688,6 +688,10 @@
       "title": "Pick a status flow",
       "hint": "New boards start with these statuses. Boards you already have are not changed."
     },
+    "prefs": {
+      "title": "Set your preferences",
+      "hint": "Language, theme and a few small defaults. Each one can be changed later in settings."
+    },
     "done": {
       "title": "You're all set",
       "hint": "Your choices are saved. You can change them anytime in settings.",
@@ -701,7 +705,8 @@
       "snippetHint": "Make this the first line of the document:",
       "copy": "Copy",
       "copied": "Copied",
-      "settings": "Open settings"
+      "settings": "Open settings",
+      "prefs": "Preferences"
     },
     "error": "Your choices couldn't be saved.",
     "retry": "Try again"
