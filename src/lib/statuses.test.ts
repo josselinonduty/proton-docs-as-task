@@ -4,6 +4,7 @@ import {
   contrastRatio,
   DEFAULT_STATUSES,
   defaultStatus,
+  flowSummary,
   hasLowContrast,
   isLastOfRequiredCategory,
   normalizeColor,
@@ -11,9 +12,11 @@ import {
   parseStatusSetting,
   serializeStatusSetting,
   slugifyKey,
+  STATUS_FLOW_TEMPLATES,
+  statusesForFlow,
   uniqueStatusKey,
 } from './statuses';
-import type { StatusDef } from './types';
+import { STATUS_FLOWS, type StatusDef } from './types';
 
 describe('parseStatusSetting', () => {
   it('reads key, quoted label, category and colours', () => {
@@ -132,5 +135,25 @@ describe('status helpers', () => {
     expect(hasLowContrast({ color: '#000000', bg: '#ffffff' })).toBe(false);
     expect(hasLowContrast({ color: 'blue', bg: '#0000ff' })).toBe(false);
     expect(hasLowContrast({ color: '#777777' })).toBe(false);
+  });
+});
+
+describe('STATUS_FLOW_TEMPLATES', () => {
+  it('gives every flow a Not started and a Done status', () => {
+    for (const flow of STATUS_FLOWS) {
+      const categories = STATUS_FLOW_TEMPLATES[flow].map((s) => s.category);
+      expect(categories).toContain('todo');
+      expect(categories).toContain('done');
+      expect(normalizeStatuses(STATUS_FLOW_TEMPLATES[flow])).toEqual(STATUS_FLOW_TEMPLATES[flow]);
+    }
+  });
+
+  it('summarizes a flow as a chain of labels', () => {
+    expect(flowSummary('review')).toBe('To Do → In Progress → In review → Done');
+  });
+
+  it('hands out copies', () => {
+    statusesForFlow('standard')[0]!.label = 'Changed';
+    expect(DEFAULT_STATUSES[0]!.label).toBe('To Do');
   });
 });

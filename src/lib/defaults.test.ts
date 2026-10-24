@@ -35,6 +35,11 @@ describe('withDefaults', () => {
     expect(s.language).toBe('auto');
   });
 
+  it('keeps a known status flow and replaces an unknown one', () => {
+    expect(withDefaults({ defaultStatuses: 'review' }).defaultStatuses).toBe('review');
+    expect(withDefaults({ defaultStatuses: 'kanban' } as never).defaultStatuses).toBe('standard');
+  });
+
   it('keeps a supported language', () => {
     expect(withDefaults({ language: 'ja' }).language).toBe('ja');
   });

@@ -13,13 +13,47 @@
  * board's first write, so the document stays the only source of truth.
  */
 
-import { STATUS_CATEGORIES, type StatusCategory, type StatusDef, type StatusKey } from './types';
+import {
+  STATUS_CATEGORIES,
+  type StatusCategory,
+  type StatusDef,
+  type StatusFlow,
+  type StatusKey,
+} from './types';
 
-export const DEFAULT_STATUSES: readonly StatusDef[] = [
-  { key: 'todo', label: 'To Do', category: 'todo' },
-  { key: 'doing', label: 'In Progress', category: 'doing' },
-  { key: 'done', label: 'Done', category: 'done' },
-];
+/**
+ * The starting flows a new board can choose from. Labels are written into the
+ * document, so like the default section name they stay untranslated.
+ */
+export const STATUS_FLOW_TEMPLATES: Record<StatusFlow, readonly StatusDef[]> = {
+  simple: [
+    { key: 'todo', label: 'To Do', category: 'todo' },
+    { key: 'done', label: 'Done', category: 'done' },
+  ],
+  standard: [
+    { key: 'todo', label: 'To Do', category: 'todo' },
+    { key: 'doing', label: 'In Progress', category: 'doing' },
+    { key: 'done', label: 'Done', category: 'done' },
+  ],
+  review: [
+    { key: 'todo', label: 'To Do', category: 'todo' },
+    { key: 'doing', label: 'In Progress', category: 'doing' },
+    { key: 'review', label: 'In review', category: 'doing' },
+    { key: 'done', label: 'Done', category: 'done' },
+  ],
+};
+
+export const DEFAULT_STATUSES: readonly StatusDef[] = STATUS_FLOW_TEMPLATES.standard;
+
+/** The flow's labels in order, e.g. `To Do → In Progress → Done`. */
+export function flowSummary(flow: StatusFlow): string {
+  return STATUS_FLOW_TEMPLATES[flow].map((s) => s.label).join(' → ');
+}
+
+/** A fresh, mutable copy of a flow's statuses. */
+export function statusesForFlow(flow: StatusFlow): StatusDef[] {
+  return STATUS_FLOW_TEMPLATES[flow].map((s) => ({ ...s }));
+}
 
 /** Categories every board needs at least one status of. */
 const REQUIRED_CATEGORIES: StatusCategory[] = ['todo', 'done'];
