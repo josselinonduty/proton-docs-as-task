@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> o <code>@@alex</code> — un responsable",
       "label": "<code>#label</code> — una o más etiquetas",
       "parent": "<code>@parent:clave</code> — convierte la tarea en subtarea de la marcada con <code>@id:clave</code> (se gestiona desde el panel de la tarea); una tarea no puede completarse mientras tenga una subtarea abierta"
-    }
+    },
+    "rerun": "Repetir la configuración",
+    "statusFlow": "Estados de los tableros nuevos",
+    "statusFlowHint": "El flujo de estados que recibe un documento en blanco al convertirlo en tablero. Los tableros existentes conservan el suyo."
   },
   "popup": {
     "added": "Añadida a {{section}}.",
@@ -637,5 +640,68 @@
     "adding": "Añadiendo…",
     "hide": "Ocultar tablero",
     "settings": "Ajustes y guía de sintaxis"
+  },
+  "layouts": {
+    "list": {
+      "name": "Lista simple",
+      "hint": "Una lista ordenada con títulos y fechas de vencimiento."
+    },
+    "board": {
+      "name": "Tablero kanban",
+      "hint": "Tarjetas en columnas por estado, con todos los detalles."
+    },
+    "swimlanes": {
+      "name": "Calles",
+      "hint": "Columnas de estado cruzadas con filas de secciones, para proyectos grandes."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Simple",
+      "hint": "Solo lo pendiente y lo hecho."
+    },
+    "standard": {
+      "name": "Estándar",
+      "hint": "Añade un paso para el trabajo en curso."
+    },
+    "review": {
+      "name": "Con revisión",
+      "hint": "Añade un paso de revisión antes de dar el trabajo por terminado."
+    }
+  },
+  "welcome": {
+    "title": "Te damos la bienvenida a Proton Docs as Task",
+    "subtitle": "Dos preguntas rápidas para configurar tus tableros. Podrás cambiarlo todo más tarde en los ajustes.",
+    "skip": "Omitir, usar valores predeterminados",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "finish": "Terminar",
+    "step": "Paso {{current}} de {{total}}",
+    "progress": "Progreso de la configuración",
+    "layout": {
+      "title": "Elige una disposición inicial",
+      "hint": "Define el aspecto predeterminado de tus tableros."
+    },
+    "flow": {
+      "title": "Elige un flujo de estados",
+      "hint": "Los tableros nuevos empiezan con estos estados. Los tableros que ya tienes no cambian."
+    },
+    "done": {
+      "title": "Todo listo",
+      "hint": "Tus elecciones están guardadas. Puedes cambiarlas cuando quieras en los ajustes.",
+      "skippedHint": "Se mantienen los ajustes predeterminados. Puedes cambiarlos cuando quieras en los ajustes.",
+      "layout": "Disposición",
+      "flow": "Flujo de estados",
+      "openDocs": "Abrir Proton Docs",
+      "goToDocs": "Ir a Proton Docs",
+      "openHint": "En un documento vacío, elige «Convertir en tablero de tareas».",
+      "snippetTitle": "O convierte un documento existente en un tablero",
+      "snippetHint": "Haz que esta sea la primera línea del documento:",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "settings": "Abrir ajustes"
+    },
+    "error": "No se pudieron guardar tus elecciones.",
+    "retry": "Reintentar"
   }
 }

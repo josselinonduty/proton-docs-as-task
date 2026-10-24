@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> ou <code>@@alex</code> — um responsável",
       "label": "<code>#label</code> — uma ou mais etiquetas",
       "parent": "<code>@parent:chave</code> — torna a tarefa uma subtarefa da marcada com <code>@id:chave</code> (gerido no painel da tarefa); uma tarefa não pode ser concluída enquanto uma subtarefa estiver aberta"
-    }
+    },
+    "rerun": "Repetir a configuração",
+    "statusFlow": "Estados dos novos quadros",
+    "statusFlowHint": "O fluxo de estados que um documento em branco recebe ao ser convertido num quadro. Os quadros existentes mantêm o seu."
   },
   "popup": {
     "added": "Adicionada a {{section}}.",
@@ -637,5 +640,68 @@
     "adding": "A adicionar…",
     "hide": "Ocultar quadro",
     "settings": "Configurações e guia de sintaxe"
+  },
+  "layouts": {
+    "list": {
+      "name": "Lista simples",
+      "hint": "Uma lista organizada com títulos e prazos."
+    },
+    "board": {
+      "name": "Quadro kanban",
+      "hint": "Cartões em colunas por estado, com todos os detalhes."
+    },
+    "swimlanes": {
+      "name": "Raias",
+      "hint": "Colunas de estado cruzadas com linhas de secções, para projetos maiores."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Simples",
+      "hint": "Apenas o que está em aberto e o que está concluído."
+    },
+    "standard": {
+      "name": "Padrão",
+      "hint": "Acrescenta um passo para o trabalho em curso."
+    },
+    "review": {
+      "name": "Com revisão",
+      "hint": "Acrescenta um passo de revisão antes de concluir o trabalho."
+    }
+  },
+  "welcome": {
+    "title": "Bem-vindo ao Proton Docs as Task",
+    "subtitle": "Duas perguntas rápidas para configurar os seus quadros. Pode alterar tudo mais tarde nas definições.",
+    "skip": "Ignorar, usar predefinições",
+    "back": "Anterior",
+    "next": "Seguinte",
+    "finish": "Concluir",
+    "step": "Passo {{current}} de {{total}}",
+    "progress": "Progresso da configuração",
+    "layout": {
+      "title": "Escolha uma disposição inicial",
+      "hint": "Define o aspeto predefinido dos seus quadros."
+    },
+    "flow": {
+      "title": "Escolha um fluxo de estados",
+      "hint": "Os novos quadros começam com estes estados. Os quadros que já tem não são alterados."
+    },
+    "done": {
+      "title": "Tudo pronto",
+      "hint": "As suas escolhas foram guardadas. Pode alterá-las a qualquer momento nas definições.",
+      "skippedHint": "As definições predefinidas foram mantidas. Pode alterá-las a qualquer momento nas definições.",
+      "layout": "Disposição",
+      "flow": "Fluxo de estados",
+      "openDocs": "Abrir o Proton Docs",
+      "goToDocs": "Ir para o Proton Docs",
+      "openHint": "Num documento vazio, escolha «Converter em quadro de tarefas».",
+      "snippetTitle": "Ou transforme um documento existente num quadro",
+      "snippetHint": "Coloque isto na primeira linha do documento:",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "settings": "Abrir definições"
+    },
+    "error": "Não foi possível guardar as suas escolhas.",
+    "retry": "Tentar novamente"
   }
 }

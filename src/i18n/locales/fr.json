@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> ou <code>@@alex</code> — un assigné",
       "label": "<code>#label</code> — une ou plusieurs étiquettes",
       "parent": "<code>@parent:clé</code> — fait de la tâche une sous-tâche de celle marquée <code>@id:clé</code> (géré depuis le panneau de la tâche) ; une tâche ne peut pas être terminée tant qu’une sous-tâche est ouverte"
-    }
+    },
+    "rerun": "Relancer la configuration",
+    "statusFlow": "Statuts des nouveaux tableaux",
+    "statusFlowHint": "Le circuit de statuts d’un document vide converti en tableau. Les tableaux existants gardent le leur."
   },
   "popup": {
     "added": "Ajoutée à {{section}}.",
@@ -637,5 +640,68 @@
     "adding": "Ajout…",
     "hide": "Masquer le tableau",
     "settings": "Paramètres et guide de syntaxe"
+  },
+  "layouts": {
+    "list": {
+      "name": "Liste simple",
+      "hint": "Une checklist claire avec titres et échéances."
+    },
+    "board": {
+      "name": "Tableau kanban",
+      "hint": "Des cartes en colonnes par statut, avec tous les détails."
+    },
+    "swimlanes": {
+      "name": "Couloirs",
+      "hint": "Colonnes de statuts croisées avec des lignes de sections, pour les projets plus vastes."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Simple",
+      "hint": "Seulement ce qui reste à faire et ce qui est fait."
+    },
+    "standard": {
+      "name": "Standard",
+      "hint": "Ajoute une étape pour le travail en cours."
+    },
+    "review": {
+      "name": "Avec relecture",
+      "hint": "Ajoute une étape de relecture avant que le travail soit terminé."
+    }
+  },
+  "welcome": {
+    "title": "Bienvenue dans Proton Docs as Task",
+    "subtitle": "Deux questions rapides pour configurer vos tableaux. Vous pourrez tout modifier plus tard dans les paramètres.",
+    "skip": "Passer, garder les valeurs par défaut",
+    "back": "Retour",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "step": "Étape {{current}} sur {{total}}",
+    "progress": "Progression de la configuration",
+    "layout": {
+      "title": "Choisissez une disposition de départ",
+      "hint": "Elle définit l’apparence par défaut de vos tableaux."
+    },
+    "flow": {
+      "title": "Choisissez un circuit de statuts",
+      "hint": "Les nouveaux tableaux démarrent avec ces statuts. Vos tableaux existants ne changent pas."
+    },
+    "done": {
+      "title": "Tout est prêt",
+      "hint": "Vos choix sont enregistrés. Vous pouvez les modifier à tout moment dans les paramètres.",
+      "skippedHint": "Les paramètres par défaut sont conservés. Vous pouvez les modifier à tout moment dans les paramètres.",
+      "layout": "Disposition",
+      "flow": "Circuit de statuts",
+      "openDocs": "Ouvrir Proton Docs",
+      "goToDocs": "Aller à Proton Docs",
+      "openHint": "Dans un document vide, choisissez « Convertir en tableau de tâches ».",
+      "snippetTitle": "Ou transformez un document existant en tableau",
+      "snippetHint": "Faites-en la première ligne du document :",
+      "copy": "Copier",
+      "copied": "Copié",
+      "settings": "Ouvrir les paramètres"
+    },
+    "error": "Vos choix n’ont pas pu être enregistrés.",
+    "retry": "Réessayer"
   }
 }

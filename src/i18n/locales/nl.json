@@ -618,7 +618,10 @@
       "who": "<code>@who:alex</code> of <code>@@alex</code> — een toegewezen persoon",
       "label": "<code>#label</code> — een of meer labels",
       "parent": "<code>@parent:sleutel</code> — maakt de taak een subtaak van de taak met <code>@id:sleutel</code> (beheerd vanuit het taakpaneel); een taak kan niet worden voltooid zolang een subtaak openstaat"
-    }
+    },
+    "rerun": "Installatie opnieuw uitvoeren",
+    "statusFlow": "Statussen voor nieuwe borden",
+    "statusFlowHint": "Het statusverloop dat een leeg document krijgt wanneer je het omzet in een bord. Bestaande borden houden hun eigen verloop."
   },
   "popup": {
     "added": "Toegevoegd aan {{section}}.",
@@ -637,5 +640,68 @@
     "adding": "Toevoegen…",
     "hide": "Bord verbergen",
     "settings": "Instellingen en syntaxisgids"
+  },
+  "layouts": {
+    "list": {
+      "name": "Eenvoudige lijst",
+      "hint": "Een overzichtelijke checklist met titels en deadlines."
+    },
+    "board": {
+      "name": "Kanbanbord",
+      "hint": "Kaarten in kolommen per status, met alle details."
+    },
+    "swimlanes": {
+      "name": "Swimlanes",
+      "hint": "Statuskolommen gekruist met sectierijen, voor grotere projecten."
+    }
+  },
+  "statusFlows": {
+    "simple": {
+      "name": "Eenvoudig",
+      "hint": "Alleen wat open staat en wat klaar is."
+    },
+    "standard": {
+      "name": "Standaard",
+      "hint": "Voegt een stap toe voor werk in uitvoering."
+    },
+    "review": {
+      "name": "Met review",
+      "hint": "Voegt een reviewstap toe voordat werk klaar is."
+    }
+  },
+  "welcome": {
+    "title": "Welkom bij Proton Docs as Task",
+    "subtitle": "Twee korte vragen om je borden in te stellen. Je kunt alles later wijzigen in de instellingen.",
+    "skip": "Overslaan, standaardwaarden gebruiken",
+    "back": "Terug",
+    "next": "Volgende",
+    "finish": "Voltooien",
+    "step": "Stap {{current}} van {{total}}",
+    "progress": "Voortgang van de installatie",
+    "layout": {
+      "title": "Kies een startindeling",
+      "hint": "Dit bepaalt hoe je borden er standaard uitzien."
+    },
+    "flow": {
+      "title": "Kies een statusverloop",
+      "hint": "Nieuwe borden beginnen met deze statussen. Bestaande borden blijven ongewijzigd."
+    },
+    "done": {
+      "title": "Alles is klaar",
+      "hint": "Je keuzes zijn opgeslagen. Je kunt ze altijd wijzigen in de instellingen.",
+      "skippedHint": "De standaardinstellingen blijven behouden. Je kunt ze altijd wijzigen in de instellingen.",
+      "layout": "Indeling",
+      "flow": "Statusverloop",
+      "openDocs": "Proton Docs openen",
+      "goToDocs": "Naar Proton Docs gaan",
+      "openHint": "Kies in een leeg document “Omzetten naar takenbord”.",
+      "snippetTitle": "Of maak van een bestaand document een bord",
+      "snippetHint": "Zet dit als eerste regel van het document:",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd",
+      "settings": "Instellingen openen"
+    },
+    "error": "Je keuzes konden niet worden opgeslagen.",
+    "retry": "Opnieuw proberen"
   }
 }
