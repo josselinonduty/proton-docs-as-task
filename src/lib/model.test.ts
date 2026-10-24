@@ -72,6 +72,17 @@ describe('serializeModel', () => {
     expect(serializeModel(model, MARKER).split('\n')[0]).toBe('#!tasks Sprint 42');
   });
 
+  it('seeds the starter board with the chosen status flow', () => {
+    expect(createStarterModel().statuses.map((s) => s.key)).toEqual(['todo', 'doing', 'done']);
+    expect(createStarterModel('simple').statuses.map((s) => s.key)).toEqual(['todo', 'done']);
+    expect(createStarterModel('review').statuses.map((s) => s.key)).toEqual([
+      'todo',
+      'doing',
+      'review',
+      'done',
+    ]);
+  });
+
   it('emits a heading per section and a checkbox line per task with metadata', () => {
     const model = build(SAMPLE);
     const text = serializeModel(model, MARKER);

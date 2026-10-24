@@ -346,12 +346,12 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   }, [flush, showModel]);
 
   const convertToTaskDoc = useCallback(() => {
-    const starter = createStarterModel();
+    const starter = createStarterModel(settings.defaultStatuses);
     baseLines.current = docLines.current;
     showModel(starter);
     setVisible(true);
     commit(starter, true);
-  }, [commit, showModel]);
+  }, [commit, showModel, settings.defaultStatuses]);
 
   const reloadFromDoc = useCallback(() => {
     if (writeTimer.current) clearTimeout(writeTimer.current);
