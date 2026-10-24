@@ -3,30 +3,6 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
-A rebuilt saving system that works through Proton's own editor.
-
-- **No more "The underlying document changed" conflicts.** The board no longer
-  scrapes the editor DOM and replays a synthetic paste. A page-world editor
-  bridge attaches to Proton's Lexical editor, reads its state directly, and
-  writes each board edit as one tagged Lexical update — so Proton's Yjs sync,
-  history and saving handle it like typed text, and the board can tell its own
-  writes apart from everyone else's without guessing from timing.
-- **Changes merge instead of colliding.** A board edit is three-way merged with
-  anything that changed in the document meanwhile, and only the blocks that
-  changed are touched, so edits from your phone and your desktop (or a
-  collaborator) both survive. Changes made elsewhere appear on the open board
-  live, keeping open cards and selections.
-- **Native headings and checklists.** Sections are written as real headings and
-  tasks as real check-list items, so the document reads naturally in Proton
-  too. Older plain-text boards convert the first time the board edits them.
-- **Offline / locked editing.** While Proton has editing locked (loading,
-  offline, view-only), board edits are kept and saved as soon as it unlocks;
-  the header shows _Waiting to save_. Pending edits are also flushed when the
-  tab is hidden or closed, which matters on mobile.
-- Requires Chrome 111+ or Firefox 128+.
-
 ## [1.1.0](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.0.0...v1.1.0) (2026-10-20)
 
 
