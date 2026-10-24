@@ -33,6 +33,26 @@ npm run build         # Chrome production build
 npm run build:firefox # Firefox production build
 ```
 
+## Playground and screenshots
+
+`npm run playground` serves the real board on a fake Proton Docs page at
+<http://localhost:5199>, with no extension install or Proton account. `?empty`
+starts from a blank document, and the bar links to the popup, options and
+welcome pages, rendered against stand-ins for the browser APIs.
+
+The store screenshots (`assets/screenshots/`) and the README images
+(`assets/readme/`) are generated from the playground. Regenerate them whenever
+a change shows up in them:
+
+```bash
+npm install --no-save playwright-core@1.56.0  # once; leaves package.json alone
+node scripts/generate-screenshots
+```
+
+It needs a Chromium-based browser and, for the README images, `ffmpeg` with
+libwebp. The clock is frozen and settings are seeded, so unchanged screens give
+identical files; only the `onboarding.webp` clip differs between runs.
+
 ## Guidelines
 
 - **Keep the core logic pure and tested.** Parsing, grouping, merging and the
