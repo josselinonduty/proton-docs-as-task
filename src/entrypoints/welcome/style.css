@@ -248,3 +248,30 @@ code {
     transition: none;
   }
 }
+
+/* Preferences step: one labelled field per setting. */
+.wl-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--pdt-space-4);
+}
+.wl-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-1);
+}
+.wl-field--wide {
+  grid-column: 1 / -1;
+}
+.wl-field__label {
+  font-weight: var(--pdt-font-weight-medium);
+}
+.wl-field__hint {
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+.wl-check {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-2);
+}

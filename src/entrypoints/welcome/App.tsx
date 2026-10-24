@@ -1,21 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_MARKERS } from '../../lib/defaults';
-import { LAYOUTS, layoutForView, onboardingPatch, type Layout } from '../../lib/onboarding';
+import { setLanguage } from '../../i18n';
+import {
+  LAYOUTS,
+  LAYOUT_PRESETS,
+  layoutForView,
+  onboardingPatch,
+  type Layout,
+  type Preferences,
+} from '../../lib/onboarding';
 import { getSettings, setSettings } from '../../lib/settings';
 import { flowSummary } from '../../lib/statuses';
 import { STATUS_FLOWS, type StatusFlow } from '../../lib/types';
 import { ChoiceGroup, Progress } from './Choices';
 import { Done } from './Done';
+import { PreferenceFields } from './PreferenceFields';
 import { LayoutPreview } from './Previews';
 
-const STEPS = ['layout', 'flow'] as const;
+const STEPS = ['layout', 'flow', 'prefs'] as const;
 type Step = (typeof STEPS)[number] | 'done';
 
 interface Choices {
   layout: Layout;
   flow: StatusFlow;
   marker: string;
+  preferences: Preferences;
 }
 
 export function App() {
@@ -35,6 +45,14 @@ export function App() {
         layout: layoutForView(s.defaultView),
         flow: s.defaultStatuses,
         marker: s.markers[0] ?? DEFAULT_MARKERS[0]!,
+        preferences: {
+          language: s.language,
+          theme: s.theme,
+          density: s.density,
+          dateFormat: s.dateFormat,
+          userAssignee: s.userAssignee,
+          confirmDelete: s.confirmDelete,
+        },
       }),
     );
   }, []);
@@ -48,7 +66,25 @@ export function App() {
 
   const update = (patch: Partial<Choices>) => setChoices({ ...choices, ...patch });
 
+  // A layout suggests a density, which the next steps still let the user change.
+  function pickLayout(layout: Layout) {
+    update({
+      layout,
+      preferences: { ...choices!.preferences, density: LAYOUT_PRESETS[layout].density },
+    });
+  }
+
+  // The language applies right away so the questions can be read in it.
+  function pickPreferences(preferences: Preferences) {
+    update({ preferences });
+    if (preferences.language !== choices!.preferences.language) {
+      void setLanguage(preferences.language);
+    }
+  }
+
   function skip() {
+    // Nothing is saved, so drop a language that was only previewed.
+    void getSettings().then((s) => setLanguage(s.language));
     setSkipped(true);
     setStep('done');
   }
@@ -57,7 +93,7 @@ export function App() {
     setSaving(true);
     setFailed(false);
     try {
-      await setSettings(onboardingPatch(picked.layout, picked.flow));
+      await setSettings(onboardingPatch(picked.layout, picked.flow, picked.preferences));
       setSkipped(false);
       setStep('done');
     } catch {
@@ -88,7 +124,7 @@ export function App() {
             name="layout"
             value={choices.layout}
             options={LAYOUTS}
-            onChange={(layout) => update({ layout })}
+            onChange={pickLayout}
             optionName={(layout) => t(`layouts.${layout}.name`)}
             optionHint={(layout) => t(`layouts.${layout}.hint`)}
             optionVisual={(layout) => <LayoutPreview layout={layout} />}
@@ -110,10 +146,19 @@ export function App() {
           />
         )}
 
+        {step === 'prefs' && (
+          <PreferenceFields
+            headingRef={headingRef}
+            value={choices.preferences}
+            onChange={pickPreferences}
+          />
+        )}
+
         {step === 'done' && (
           <Done
             layout={choices.layout}
             flow={choices.flow}
+            preferences={choices.preferences}
             marker={choices.marker}
             skipped={skipped}
             headingRef={headingRef}
@@ -132,16 +177,20 @@ export function App() {
               {t('welcome.skip')}
             </button>
             <div className="wl-actions__nav">
-              {step === 'flow' && (
-                <button type="button" className="pdt-btn" onClick={() => setStep('layout')}>
+              {step !== 'layout' && (
+                <button
+                  type="button"
+                  className="pdt-btn"
+                  onClick={() => setStep(STEPS[STEPS.indexOf(step) - 1]!)}
+                >
                   {t('welcome.back')}
                 </button>
               )}
-              {step === 'layout' ? (
+              {step !== 'prefs' ? (
                 <button
                   type="button"
                   className="pdt-btn pdt-btn-primary"
-                  onClick={() => setStep('flow')}
+                  onClick={() => setStep(STEPS[STEPS.indexOf(step) + 1]!)}
                 >
                   {t('welcome.next')}
                 </button>

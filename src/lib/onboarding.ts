@@ -39,10 +39,21 @@ export const LAYOUT_PRESETS: Record<Layout, LayoutSettings> = {
   },
 };
 
+/** The small settings the welcome page asks about, after the layout and flow. */
+export type Preferences = Pick<
+  Settings,
+  'language' | 'theme' | 'density' | 'dateFormat' | 'userAssignee' | 'confirmDelete'
+>;
+
 /** The settings to persist for the choices made on the welcome page. */
-export function onboardingPatch(layout: Layout, flow: StatusFlow): Partial<Settings> {
+export function onboardingPatch(
+  layout: Layout,
+  flow: StatusFlow,
+  preferences: Preferences,
+): Partial<Settings> {
   const { cardFields, ...rest } = LAYOUT_PRESETS[layout];
-  return { ...rest, cardFields: { ...cardFields }, defaultStatuses: flow };
+  // The layout only suggests a density; the preference the user confirmed wins.
+  return { ...rest, cardFields: { ...cardFields }, defaultStatuses: flow, ...preferences };
 }
 
 /** The layout closest to a stored view, to preselect when setup is run again. */

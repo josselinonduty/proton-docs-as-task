@@ -673,7 +673,7 @@
   },
   "welcome": {
     "title": "Willkommen bei Proton Docs as Task",
-    "subtitle": "Zwei kurze Fragen zur Einrichtung deiner Boards. Alles lässt sich später in den Einstellungen ändern.",
+    "subtitle": "Ein paar kurze Fragen zur Einrichtung deiner Boards. Alles lässt sich später in den Einstellungen ändern.",
     "skip": "Überspringen, Standard verwenden",
     "back": "Zurück",
     "next": "Weiter",
@@ -688,6 +688,10 @@
       "title": "Wähle einen Statusablauf",
       "hint": "Neue Boards starten mit diesen Status. Bestehende Boards bleiben unverändert."
     },
+    "prefs": {
+      "title": "Einstellungen festlegen",
+      "hint": "Sprache, Design und ein paar kleine Standardwerte. Alles lässt sich später in den Einstellungen ändern."
+    },
     "done": {
       "title": "Alles bereit",
       "hint": "Deine Auswahl ist gespeichert. Du kannst sie jederzeit in den Einstellungen ändern.",
@@ -701,7 +705,8 @@
       "snippetHint": "Setze dies als erste Zeile des Dokuments:",
       "copy": "Kopieren",
       "copied": "Kopiert",
-      "settings": "Einstellungen öffnen"
+      "settings": "Einstellungen öffnen",
+      "prefs": "Einstellungen"
     },
     "error": "Deine Auswahl konnte nicht gespeichert werden.",
     "retry": "Erneut versuchen"
