@@ -37,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   newCardsAtTop: false,
   showDescriptionPreview: true,
   confirmDelete: true,
+  closePopupAfterAdd: true,
   cardFields: DEFAULT_CARD_FIELDS,
   completedDisplay: 'show',
   dateFormat: 'iso',
@@ -66,6 +67,7 @@ export function withDefaults(stored?: Partial<Settings> | null): Settings {
     newCardsAtTop: s.newCardsAtTop,
     showDescriptionPreview: s.showDescriptionPreview,
     confirmDelete: s.confirmDelete,
+    closePopupAfterAdd: s.closePopupAfterAdd,
     cardFields: { ...DEFAULT_CARD_FIELDS, ...stored?.cardFields },
     completedDisplay: oneOf(
       COMPLETED_DISPLAYS,

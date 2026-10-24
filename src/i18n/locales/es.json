@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Confirmar la eliminación de tarjetas",
     "confirmDeleteHint": "Pide confirmación antes de eliminar una tarjeta (siempre puedes deshacer).",
+    "closePopupAfterAdd": "Cerrar la ventana tras añadir una tarea",
+    "closePopupAfterAddHint": "Cierra la ventana emergente al añadir una tarea. Si está desactivado, permanece abierta y confirma la adición.",
     "display": "Preferencias de visualización",
     "dateFormat": "Formato de fecha",
     "dateFormatHint": "Cómo se escriben las fechas límite en las tarjetas.",

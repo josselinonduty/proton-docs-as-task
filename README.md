@@ -462,7 +462,7 @@ or the "Settings & syntax guide" link in the popup) to:
   extension's own UI is translated; what the document stores (the `Tasks` section,
   the default `To Do` / `In Progress` / `Done` statuses) stays as written,
 - tune board behavior — new cards at top or bottom, description previews,
-  and confirm-before-delete,
+  confirm-before-delete, and whether the popup closes after you add a task,
 - set **display preferences** — which fields cards show, how completed tasks are
   presented (shown / Done collapsed / hidden), the date format, and your own name
   for the _My open tasks_ filter,

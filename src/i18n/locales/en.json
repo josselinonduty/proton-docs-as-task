@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Confirm card deletion",
     "confirmDeleteHint": "Ask before deleting a card (you can always undo).",
+    "closePopupAfterAdd": "Close the popup after adding a task",
+    "closePopupAfterAddHint": "Close the popup once a task is added. When off, it stays open and confirms the addition.",
     "display": "Display preferences",
     "dateFormat": "Date format",
     "dateFormatHint": "How due dates are written on cards.",

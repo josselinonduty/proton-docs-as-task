@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Verwijderen van kaarten bevestigen",
     "confirmDeleteHint": "Vragen voordat een kaart wordt verwijderd (je kunt altijd ongedaan maken).",
+    "closePopupAfterAdd": "Popup sluiten na het toevoegen van een taak",
+    "closePopupAfterAddHint": "Sluit de popup zodra een taak is toegevoegd. Uitgeschakeld blijft hij open en bevestigt hij de toevoeging.",
     "display": "Weergavevoorkeuren",
     "dateFormat": "Datumnotatie",
     "dateFormatHint": "Hoe deadlines op kaarten worden geschreven.",

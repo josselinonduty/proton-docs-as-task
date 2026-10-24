@@ -576,6 +576,8 @@
     },
     "confirmDelete": "Conferma l’eliminazione delle schede",
     "confirmDeleteHint": "Chiede conferma prima di eliminare una scheda (puoi sempre annullare).",
+    "closePopupAfterAdd": "Chiudi il popup dopo l’aggiunta di un’attività",
+    "closePopupAfterAddHint": "Chiude il popup dopo l’aggiunta di un’attività. Se disattivato, resta aperto e conferma l’aggiunta.",
     "display": "Preferenze di visualizzazione",
     "dateFormat": "Formato della data",
     "dateFormatHint": "Come vengono scritte le scadenze sulle schede.",
