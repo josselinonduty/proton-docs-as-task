@@ -27,6 +27,8 @@ export interface LaidOutColumn {
   /** Shown cards in display order: sorted, then narrowed by filters and Hide completed. */
   visible: BoardTask[];
   visibleIds: string[];
+  /** The place each shown card has in it. */
+  place: CardPlace;
 }
 
 export interface LaidOutBoardColumn extends LaidOutColumn {
@@ -88,14 +90,14 @@ export function layoutBoard(input: LayoutInput): BoardLayout {
     const ordered = sortActive ? sortTasks(col.tasks, sort) : col.tasks;
     const visible = ordered.filter((task) => isTaskShown(task, input));
     const visibleIds = visible.map((task) => task.id);
+    const place = { colKey: col.key, colLabel: col.label, ids: visibleIds, tasks: visible };
     if (onScreen) {
-      const place = { colKey: col.key, colLabel: col.label, ids: visibleIds, tasks: visible };
       for (const id of visibleIds) {
         navOrder.push(id);
         places.set(id, place);
       }
     }
-    return { col, visible, visibleIds };
+    return { col, visible, visibleIds, place };
   };
 
   if (view !== 'swimlane') {
