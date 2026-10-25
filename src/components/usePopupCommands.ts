@@ -1,26 +1,27 @@
 import { useEffect, useEffectEvent } from 'react';
-import { browser } from 'wxt/browser';
-import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
+import type { GetDataType, GetReturnType } from '@webext-core/messaging';
+import { onMessage, type PopupCommand, type ProtocolMap } from '../lib/messaging';
+
+export type PopupHandlers = {
+  [K in PopupCommand]: (data: GetDataType<ProtocolMap[K]>) => GetReturnType<ProtocolMap[K]>;
+};
 
 /**
- * Answer popup commands with `handle`, which sees the latest render's state.
- * The listener is registered once; only the editor frame calls this, so a
- * response identifies the meaningful frame. `handle` returns undefined for a
- * message that isn't ours, leaving it to other listeners.
+ * Answer popup commands with `handlers`, which see the latest render's state.
+ * The listeners are registered once. Only the editor frame calls this, and
+ * frames without a listener stay silent, so the popup gets this frame's
+ * answer (see `lib/messaging.ts`).
  */
-export function usePopupCommands(
-  handle: (message: ContentMessage) => StatusResponse | AddTaskResponse | undefined,
-) {
-  const onMessage = useEffectEvent(handle);
+export function usePopupCommands(handlers: PopupHandlers) {
+  const latest = useEffectEvent(() => handlers);
 
   useEffect(() => {
-    const listener = (
-      message: ContentMessage,
-    ): Promise<StatusResponse | AddTaskResponse> | undefined => {
-      const response = onMessage(message);
-      return response && Promise.resolve(response);
-    };
-    browser.runtime.onMessage.addListener(listener);
-    return () => browser.runtime.onMessage.removeListener(listener);
+    const removers = [
+      onMessage('get-status', ({ data }) => latest()['get-status'](data)),
+      onMessage('toggle-board', ({ data }) => latest()['toggle-board'](data)),
+      onMessage('set-board-visible', ({ data }) => latest()['set-board-visible'](data)),
+      onMessage('add-task', ({ data }) => latest()['add-task'](data)),
+    ];
+    return () => removers.forEach((remove) => remove());
   }, []);
 }

@@ -1,5 +1,6 @@
 import { defineBackground } from '#imports';
 import { browser } from 'wxt/browser';
+import { onMessage } from '../lib/messaging';
 
 export default defineBackground(() => {
   // Greet new installs with the welcome page, which sets up their layout and
@@ -14,13 +15,10 @@ export default defineBackground(() => {
 
   // `browser.runtime.openOptionsPage` is not available in content scripts, so
   // the in-page board asks the background to open the options page for it.
-  browser.runtime.onMessage.addListener((message: unknown) => {
-    if ((message as { type?: string })?.type === 'open-options') {
-      return browser.runtime
-        .openOptionsPage()
-        .then(() => ({ ok: true }))
-        .catch(() => ({ ok: false }));
-    }
-    return undefined;
-  });
+  onMessage('open-options', () =>
+    browser.runtime.openOptionsPage().then(
+      () => true,
+      () => false,
+    ),
+  );
 });

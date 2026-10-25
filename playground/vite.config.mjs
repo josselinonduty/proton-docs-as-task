@@ -17,6 +17,7 @@ export default defineConfig({
     alias: {
       '#imports': fileURLToPath(new URL('./shims/imports.ts', import.meta.url)),
       'wxt/browser': fileURLToPath(new URL('./shims/browser.ts', import.meta.url)),
+      '@webext-core/messaging': fileURLToPath(new URL('./shims/messaging.ts', import.meta.url)),
     },
   },
   server: {

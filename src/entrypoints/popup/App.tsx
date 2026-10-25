@@ -3,7 +3,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
 import { getSettings, setSettings } from '../../lib/settings';
 import type { Settings } from '../../lib/types';
-import type { ContentMessage, ResponseTo, StatusResponse } from '../../lib/messaging';
+import { sendMessage, type StatusResponse } from '../../lib/messaging';
 
 type TabStatus =
   | { state: 'loading' }
@@ -18,16 +18,15 @@ async function queryActiveTab(): Promise<{ id?: number; url?: string }> {
   return { id: tab?.id, url: tab?.url };
 }
 
-async function sendToTab<M extends ContentMessage>(
-  tabId: number,
-  message: M,
-): Promise<ResponseTo<M> | null> {
-  try {
-    const res: ResponseTo<M> | undefined = await browser.tabs.sendMessage(tabId, message);
-    return res?.ok ? res : null;
-  } catch {
-    return null; // no content script / editor frame in this tab
-  }
+/**
+ * The editor frame's answer, or null when the tab has no content script or
+ * no editor frame: `sendMessage` then rejects, as nothing answered.
+ */
+function fromTab<T>(response: Promise<T>): Promise<T | null> {
+  return response.then(
+    (res) => res ?? null,
+    () => null,
+  );
 }
 
 export function App() {
@@ -53,7 +52,7 @@ export function App() {
         setTab({ state: 'inactive' });
         return;
       }
-      const status = await sendToTab(active.id, { type: 'get-status' });
+      const status = await fromTab(sendMessage('get-status', undefined, active.id));
       setTab(status?.activated ? { state: 'active', status } : { state: 'inactive' });
     })();
   }, []);
@@ -66,7 +65,7 @@ export function App() {
 
   async function toggleBoard() {
     if (tabId == null) return;
-    const status = await sendToTab(tabId, { type: 'toggle-board' });
+    const status = await fromTab(sendMessage('toggle-board', undefined, tabId));
     if (status) setTab({ state: 'active', status });
   }
 
@@ -76,12 +75,13 @@ export function App() {
     const title = qaTitle.trim();
     if (!title) return;
     setFeedback({ kind: 'saving' });
-    const res = await sendToTab(tabId, {
-      type: 'add-task',
-      title,
-      section: qaSection || undefined,
-      due: qaDue || undefined,
-    });
+    const res = await fromTab(
+      sendMessage(
+        'add-task',
+        { title, section: qaSection || undefined, due: qaDue || undefined },
+        tabId,
+      ),
+    );
     if (res?.added && settings?.closePopupAfterAdd) {
       window.close();
       return;
@@ -90,7 +90,7 @@ export function App() {
       setFeedback({ kind: 'saved', message: t('popup.added', { section: res.section }) });
       setQaTitle('');
       setQaDue('');
-      const status = await sendToTab(tabId, { type: 'get-status' });
+      const status = await fromTab(sendMessage('get-status', undefined, tabId));
       if (status?.activated) setTab({ state: 'active', status });
     } else if (res?.error === 'read-only') {
       setFeedback({ kind: 'warning', message: t('popup.readOnly') });
