@@ -1,23 +1,26 @@
 /* All styles are scoped inside the content-script shadow root. The board's
- * rules live in src/styles/board/, one file per area, imported in cascade order. */
-@import '@/styles/tokens.css';
-@import '@/styles/components.css';
-@import '@/styles/board/base.css';
-@import '@/styles/board/fab.css';
-@import '@/styles/board/shell.css';
-@import '@/styles/board/menu.css';
-@import '@/styles/board/filters.css';
-@import '@/styles/board/banner.css';
-@import '@/styles/board/columns.css';
-@import '@/styles/board/status-colors.css';
-@import '@/styles/board/board-settings.css';
-@import '@/styles/board/card.css';
-@import '@/styles/board/details.css';
-@import '@/styles/board/swimlane.css';
-@import '@/styles/board/forms.css';
-@import '@/styles/board/feedback.css';
-@import '@/styles/board/dialogs.css';
-@import '@/styles/board/palette.css';
-@import '@/styles/board/shortcuts.css';
-@import '@/styles/board/motion.css';
-@import '@/styles/board/list.css';
+ * rules live in src/styles/board/, one file per area, imported in cascade order.
+ * Cascade layers (see STYLEGUIDE.md): tokens, then the shared components and
+ * the board's rules together in `app`, in that order. */
+@layer tokens, app;
+@import '@/styles/tokens.css' layer(tokens);
+@import '@/styles/components.css' layer(app);
+@import '@/styles/board/base.css' layer(app);
+@import '@/styles/board/fab.css' layer(app);
+@import '@/styles/board/shell.css' layer(app);
+@import '@/styles/board/menu.css' layer(app);
+@import '@/styles/board/filters.css' layer(app);
+@import '@/styles/board/banner.css' layer(app);
+@import '@/styles/board/columns.css' layer(app);
+@import '@/styles/board/status-colors.css' layer(app);
+@import '@/styles/board/board-settings.css' layer(app);
+@import '@/styles/board/card.css' layer(app);
+@import '@/styles/board/details.css' layer(app);
+@import '@/styles/board/swimlane.css' layer(app);
+@import '@/styles/board/forms.css' layer(app);
+@import '@/styles/board/feedback.css' layer(app);
+@import '@/styles/board/dialogs.css' layer(app);
+@import '@/styles/board/palette.css' layer(app);
+@import '@/styles/board/shortcuts.css' layer(app);
+@import '@/styles/board/motion.css' layer(app);
+@import '@/styles/board/list.css' layer(app);
