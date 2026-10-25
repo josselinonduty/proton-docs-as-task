@@ -55,7 +55,7 @@ export function QuickAddForm({
   const [status, setStatus] = useState<StatusKey>(
     () => defaultStatusKey ?? defaultStatus(statuses, false),
   );
-  const [section, setSection] = useState(defaultSection);
+  const [pickedSection, setSection] = useState(defaultSection);
   const [due, setDue] = useState<string | undefined>(undefined);
   const [priority, setPriority] = useState<'' | Priority>('');
   const [assignee, setAssignee] = useState('');
@@ -66,10 +66,8 @@ export function QuickAddForm({
     titleRef.current?.focus();
   }, []);
 
-  // Follow the remembered section if it changes and the user hasn't overridden.
-  useEffect(() => {
-    setSection((s) => (sections.includes(s) ? s : defaultSection));
-  }, [defaultSection, sections]);
+  // A section that no longer exists falls back to the remembered one.
+  const section = sections.includes(pickedSection) ? pickedSection : defaultSection;
 
   const submit = () => {
     const clean = title.trim();

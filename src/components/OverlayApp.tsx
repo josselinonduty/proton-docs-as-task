@@ -86,7 +86,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     else host.setAttribute('data-theme', settings.theme);
   }, [host, settings.theme]);
   useEffect(() => {
-    host.lang = i18n.language;
+    host.setAttribute('lang', i18n.language);
   }, [host, i18n.language]);
 
   const result = useMemo(() => parseDocument(text, settings.markers), [text, settings.markers]);
@@ -140,6 +140,8 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   // The document stopped being a task board (marker removed elsewhere).
   useEffect(() => {
     if (visible && !result.activated && !session.hasPending() && text.trim() !== '') {
+      // Hiding goes with clearing the session (an external store), so it stays in the effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(false);
       session.clear();
     }
@@ -148,6 +150,8 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   // Auto-show the board the first time a document becomes a task board.
   useEffect(() => {
     if (result.activated && !wasActivated.current && settings.autoShow) openBoard();
+    // Reads the session store, which render can't: an effect is the place for it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!result.activated && !session.getSnapshot().model) setVisible(false);
     wasActivated.current = result.activated;
   }, [result.activated, settings.autoShow, openBoard, session]);

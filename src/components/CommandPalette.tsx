@@ -73,10 +73,6 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
   }, [commands, query]);
 
   useEffect(() => {
-    setActive(0);
-  }, [query]);
-
-  useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`);
     el?.scrollIntoView?.({ block: 'nearest' });
   }, [active]);
@@ -126,7 +122,11 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
           aria-label={t('palette.search')}
           placeholder={t('palette.placeholder')}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            // A new query means a new list: start again from its top.
+            setActive(0);
+          }}
         />
         <ul className="pdt-palette__list" id="pdt-palette-list" role="listbox" ref={listRef}>
           {results.map((command, i) => (
