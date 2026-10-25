@@ -22,7 +22,7 @@ extension:
 5. **Renders** a React board in a Shadow DOM overlay, so its styles never leak
    into Proton's UI, or the reverse.
 6. **Writes edits back through Proton's editor.** Each change is serialised
-   ([`model.ts`](../src/lib/model.ts)), three-way merged with whatever changed
+   ([`model/`](../src/lib/model/index.ts)), three-way merged with whatever changed
    in the document meanwhile ([`lineMerge.ts`](../src/lib/lineMerge.ts)), and
    applied as one tagged Lexical update that touches only the changed blocks.
    `## Sections` become real headings and tasks real check-list items. Proton's
@@ -83,10 +83,11 @@ src/
 │  │                              #   and hooks (useBoardSession, usePopupCommands, useSessionPrefs)
 │  └─ board/                      # EditableBoard's pieces (see below)
 ├─ i18n/                          # i18next setup and locales/*.json (en is the source)
-├─ styles/                        # shared design tokens and components (see STYLEGUIDE.md)
+├─ styles/                        # design tokens, shared components and the board's
+│                                 #   stylesheets in board/ (see STYLEGUIDE.md)
 └─ lib/
    ├─ parser.ts                   # marker detection and task syntax
-   ├─ model.ts                    # task model, views, edits, serialisation, bulk actions
+   ├─ model/                      # task model, one module per concern (see below)
    ├─ statuses.ts                 # per-board statuses, flows and @settings lines
    ├─ filters.ts / sorting.ts     # search, filters, presets; display-only sorting
    ├─ dates.ts / suggestions.ts   # due-date states; assignee and label suggestions
@@ -131,8 +132,30 @@ scripts/generate-screenshots      # store and README images from the playground
   `BoardDetails` and `BoardConfirmDialogs`. They read the board and its
   actions from `BoardContext`.
 
+### The model
+
+[`lib/model/`](../src/lib/model) holds the editable board model as pure
+functions: each takes a model and returns a new one. `index.ts` is the public
+API; import from `@/lib/model`, not from a module. The modules:
+
+- `types.ts`: `BoardModel`, `BoardTask`, `BoardColumn`.
+- `create.ts`: ids, new tasks, the starter board and `fromParseResult`.
+- `views.ts`: `columnsForView`, the model projected into a view's columns.
+- `sections.ts` and `tasks.ts`: the title, sections, and task edits and moves.
+- `links.ts` and `subtasks.ts`: blocking and related links, sub-tasks, and the
+  status rules that follow from them (`canSetStatus`).
+- `bulk.ts`: the selection's bulk actions and `countTasks`.
+- `statuses.ts`: adding, editing, moving and removing statuses.
+- `serialize.ts`: the model back to document text.
+- `internal.ts`: helpers the modules share (`reindex`, task keys); not exported.
+
 Logic in `src/lib` and the interactive components have unit tests next to them
-(`*.test.ts(x)`).
+(`*.test.ts(x)`). Tests import `describe`, `it`, `vi`… from `vitest`: the
+global test types aren't loaded, so production code can't use them.
+
+Imports that leave their folder go through the `@/` alias (`@/` is `src/`, set
+up by WXT, Vitest and the playground); same-folder imports stay relative. See
+[STYLEGUIDE.md](../STYLEGUIDE.md#imports).
 
 ## Limitations
 

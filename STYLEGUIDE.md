@@ -9,19 +9,52 @@ naturally next to Proton's own UI.
 ```
 src/styles/
 ├─ tokens.css      # design tokens (colors, spacing, radius, type, motion)
-└─ components.css  # reusable component classes (buttons, inputs, badges…)
+├─ components.css  # reusable component classes (buttons, inputs, badges…)
+└─ board/          # the board overlay's own rules, one file per area
 ```
 
 Every entrypoint stylesheet starts with:
 
 ```css
-@import '../../styles/tokens.css';
-@import '../../styles/components.css';
+@layer tokens, app;
+@import '@/styles/tokens.css' layer(tokens);
+@import '@/styles/components.css' layer(app);
 ```
 
-and then adds only the layout rules specific to that surface. Don't
-reintroduce colors, radii or button/input styling locally — extend
-`components.css` instead so the change applies everywhere.
+and then adds only the layout rules specific to that surface, inside
+`@layer app { … }`. Don't reintroduce colors, radii or button/input styling
+locally — extend `components.css` instead so the change applies everywhere.
+
+### Cascade layers
+
+Every rule sits in a layer, and a later layer wins over an earlier one
+whatever the selectors' specificity:
+
+1. **`tokens`**: `tokens.css`, the custom properties.
+2. **`app`**: `components.css`, then the surface's own rules, in that order.
+   Inside the layer the usual rules apply: specificity, then source order.
+
+Keep every rule in a layer: a rule outside any layer beats them all. The
+shared components share `app` with the surfaces for now, because a few
+component states win over a surface rule only through specificity
+(`.pdt-btn:focus-visible` over `.pdt-fab`'s shadow, `.pdt-focusable:focus-visible`
+over the borders of `.pdt-chip__x` and `.pdt-swatch`, `.pdt-btn-ghost:hover`
+over `.pdt-board__back`, `.pdt-btn:hover` over the popup's `.pp-btn--ghost`).
+A `components` layer below `app` would make the surface rule win there; give
+those surface rules their own state rules first.
+
+### The board's stylesheets
+
+The overlay's `entrypoints/proton-task.content/style.css` only imports: the
+tokens and components, then `src/styles/board/*.css` into `app`. Each board
+file covers one area, in cascade order: `base` (host font, box sizing),
+`fab`, `shell` (board, header, view switcher, search, save state), `menu`,
+`filters` (filter bar, chips), `banner`, `columns`, `status-colors`,
+`board-settings`, `card`, `details`, `swimlane`, `forms` (combobox, labels,
+due date, quick add), `feedback` (undo toast, bulk bar), `dialogs`, `palette`,
+`shortcuts`, `motion` (reduced motion) and `list`. Add a rule to the file of
+the area it styles; a new area gets a new file, imported where it belongs in
+the order.
 
 ## Matching Proton's design language
 
@@ -119,6 +152,15 @@ pdt-btn-primary pdt-btn-sm"`).
   those never need to be reused outside their surface.
 - Never introduce a new color, radius or shadow value inline — add a token
   if the existing ones don't fit, and explain why in the token's comment.
+
+## Imports
+
+Imports that leave their folder use the `@/` alias, which WXT maps to `src/`
+(and Vitest and the playground's Vite config mirror): `@/lib/model`,
+`@/components/Icon`, `@/styles/tokens.css`. Imports from the same folder stay
+relative (`./BoardCard`, `./style.css`). ESLint rejects `../` imports in
+`src/`. A file outside `src/` (the extension icon in `assets/`) uses `@@/`, the
+repository root.
 
 ## When adding new UI
 
