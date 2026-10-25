@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   addTask,
@@ -45,7 +45,7 @@ import { Dialog } from './Dialog';
 import { useDismiss } from './useDismiss';
 import { useStatusActions } from './useStatusActions';
 import { BoardContext, type BoardContextValue } from './board/BoardContext';
-import { BoardHeader } from './board/BoardHeader';
+import { BoardHeader, viewTabId } from './board/BoardHeader';
 import { BoardColumns } from './board/BoardColumns';
 import { BoardSwimlane } from './board/BoardSwimlane';
 import { BoardDetails } from './board/BoardDetails';
@@ -178,6 +178,7 @@ export function EditableBoard(props: EditableBoardProps) {
   const { details } = detailsNav;
   const dnd = useBoardDnd();
 
+  const panelId = useId();
   const boardRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
@@ -501,6 +502,7 @@ export function EditableBoard(props: EditableBoardProps) {
           progress={progress}
           saveState={saveState}
           view={view}
+          panelId={panelId}
           filters={filters}
           facets={facets}
           presets={presets}
@@ -592,7 +594,12 @@ export function EditableBoard(props: EditableBoardProps) {
         )}
 
         <div className="pdt-board__body">
-          <div className="pdt-board__main">
+          <div
+            className="pdt-board__main"
+            id={panelId}
+            role="tabpanel"
+            aria-labelledby={viewTabId(panelId, view)}
+          >
             {view === 'swimlane' ? (
               <BoardSwimlane rows={layout.rows} />
             ) : (
