@@ -4,6 +4,9 @@
  */
 
 import {
+  isBridgeResponse,
+  isEditorStateMessage,
+  readDetail,
   REQUEST_EVENT,
   RESPONSE_EVENT,
   STATE_EVENT,
@@ -38,13 +41,11 @@ export function connectEditor(doc: Document = document): EditorClient {
   const ready = new Promise<EditorStateMessage>((resolve) => (resolveReady = resolve));
 
   const onState = (event: Event) => {
-    try {
-      state = JSON.parse(String((event as CustomEvent).detail)) as EditorStateMessage;
-    } catch {
-      return;
-    }
-    resolveReady(state);
-    listeners.forEach((listener) => listener(state!));
+    const next = readDetail(event);
+    if (!isEditorStateMessage(next)) return;
+    state = next;
+    resolveReady(next);
+    listeners.forEach((listener) => listener(next));
   };
 
   const request = (
@@ -53,12 +54,8 @@ export function connectEditor(doc: Document = document): EditorClient {
     const id = nextId++;
     let response: BridgeResponse | null = null;
     const onResponse = (event: Event) => {
-      try {
-        const parsed = JSON.parse(String((event as CustomEvent).detail)) as BridgeResponse;
-        if (parsed.id === id) response = parsed;
-      } catch {
-        // not ours
-      }
+      const parsed = readDetail(event);
+      if (isBridgeResponse(parsed) && parsed.id === id) response = parsed;
     };
     doc.addEventListener(RESPONSE_EVENT, onResponse);
     try {
