@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DEFAULT_MARKERS, DEFAULT_SETTINGS } from '../../lib/defaults';
 import type { Settings } from '../../lib/types';
 
@@ -37,7 +37,9 @@ describe('options page', () => {
     render(<App />);
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Confirm card deletion' }));
     expect(setSettings).toHaveBeenCalledWith({ confirmDelete: !DEFAULT_SETTINGS.confirmDelete });
-    expect(await screen.findByRole('status')).toHaveProperty('textContent', 'Saved');
+    // The status region is always rendered; its text only appears once the save resolves.
+    const status = screen.getByRole('status');
+    await waitFor(() => expect(status).toHaveProperty('textContent', 'Saved'));
   });
 
   it('ties each hint to its control', async () => {
