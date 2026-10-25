@@ -86,6 +86,7 @@ import { useBoardOverlay } from './board/useBoardOverlay';
 import { useBoardSelection } from './board/useBoardSelection';
 import { useDetailsNavigation } from './board/useDetailsNavigation';
 import { useBoardDnd } from './board/useBoardDnd';
+import { useBoardShortcuts } from './board/useBoardShortcuts';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -564,144 +565,42 @@ export function EditableBoard(props: EditableBoardProps) {
   const anyOverlayOpen =
     overlayOpen || paletteOpen || pendingStatusDelete != null || orphans.length > 0;
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    const target = e.target as HTMLElement;
-    const typing =
-      target.tagName === 'INPUT' ||
-      target.tagName === 'TEXTAREA' ||
-      target.tagName === 'SELECT' ||
-      target.isContentEditable;
-    const mod = e.metaKey || e.ctrlKey;
-    // Card shortcuts (Enter, E, M, X, Space, Delete) act only on a card that
-    // actually has focus — never on a button that happens to follow one.
-    const cardId = target.classList.contains('pdt-taskcard') ? focusedCardId : null;
-
-    // Always-available shortcuts (work even while typing).
-    if (mod && (e.key === 'k' || e.key === 'K')) {
-      e.preventDefault();
-      setPaletteOpen(true);
-      return;
-    }
-
-    if (anyOverlayOpen) return; // sub-dialogs handle their own keys
-
-    if (e.key === 'Escape') {
-      if (colorMenuFor) return setColorMenuFor(null);
-      if (sortOpen) return setSortOpen(false);
-      if (details) return closeDetails();
-      if (selectionMode) return exitSelection();
-      return;
-    }
-
-    if (typing) return; // remaining shortcuts never fire while typing
-
-    if (mod && (e.key === 'z' || e.key === 'Z')) {
-      if (undoLabel) {
-        e.preventDefault();
-        onUndo();
-      }
-      return;
-    }
-    if (mod && (e.key === 'a' || e.key === 'A')) {
-      e.preventDefault();
-      selectAllVisible();
-      return;
-    }
-    if (mod) return; // leave other browser combos alone
-
-    switch (e.key) {
-      case 'n':
-      case 'N':
-        e.preventDefault();
-        openQuickAdd();
-        break;
-      case '/':
-        e.preventDefault();
-        searchRef.current?.focus();
-        break;
-      case 'f':
-      case 'F':
-        e.preventDefault();
-        filterBtnRef.current?.click();
-        break;
-      case 'v':
-      case 'V':
-        e.preventDefault();
-        cycleView();
-        break;
-      case 's':
-      case 'S':
-        e.preventDefault();
-        setSortOpen((v) => !v);
-        break;
-      case 'j':
-      case 'J':
-        e.preventDefault();
-        focusCardAt(1);
-        break;
-      case 'k':
-      case 'K':
-        e.preventDefault();
-        focusCardAt(-1);
-        break;
-      case 'Enter':
-        if (cardId) {
-          e.preventDefault();
-          openDetails(cardId);
-        }
-        break;
-      case 'e':
-      case 'E':
-        if (cardId) {
-          e.preventDefault();
-          openDetails(cardId, 'title');
-        }
-        break;
-      case 'm':
-      case 'M':
-        if (cardId) {
-          e.preventDefault();
-          openDetails(cardId, 'section');
-        }
-        break;
-      case 'x':
-      case 'X': {
-        const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
-        if (task) {
-          e.preventDefault();
-          toggleDone(task);
-        }
-        break;
-      }
-      case ' ': {
-        const meta = cardId ? layout.places.get(cardId) : undefined;
-        const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
-        if (task && meta) {
-          e.preventDefault();
-          toggleSelect(task, meta.colKey, meta.ids, false);
-        }
-        break;
-      }
-      case 'Delete':
-      case 'Backspace': {
-        const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
-        if (selectionMode && selected.size > 0) {
-          e.preventDefault();
-          openOverlay({ kind: 'deleteBulk' });
-        } else if (task) {
-          e.preventDefault();
-          requestDelete(task);
-        }
-        break;
-      }
-      case '?':
-        e.preventDefault();
-        openOverlay({ kind: 'help' });
-        break;
-      default:
-        break;
-    }
-  };
+  const handleKeyDown = useBoardShortcuts({
+    overlayOpen: anyOverlayOpen,
+    focusedCardId,
+    tasks: model.tasks,
+    places: layout.places,
+    colorMenuOpen: colorMenuFor !== null,
+    sortOpen,
+    detailsOpen: details !== null,
+    selectionMode,
+    selectedCount: selected.size,
+    canUndo: undoLabel !== null,
+    actions: {
+      openPalette: () => setPaletteOpen(true),
+      closeColorMenu: () => setColorMenuFor(null),
+      closeSort: () => setSortOpen(false),
+      closeDetails,
+      exitSelection,
+      undo: onUndo,
+      selectAll: selectAllVisible,
+      addTask: openQuickAdd,
+      focusSearch: () => searchRef.current?.focus(),
+      openFilters: () => filterBtnRef.current?.click(),
+      cycleView,
+      toggleSort: () => setSortOpen((v) => !v),
+      focusCard: focusCardAt,
+      openDetails,
+      toggleDone,
+      toggleSelect: (task) => {
+        const place = layout.places.get(task.id);
+        if (place) toggleSelect(task, place.colKey, place.ids, false);
+      },
+      requestBulkDelete: () => openOverlay({ kind: 'deleteBulk' }),
+      requestDelete,
+      openHelp: () => openOverlay({ kind: 'help' }),
+    },
+  });
 
   const commands = buildCommands(t, {
     filtersActive,
