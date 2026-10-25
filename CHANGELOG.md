@@ -3,6 +3,57 @@
 All notable changes to this project are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.2.1...v1.2.2) (2026-10-25)
+
+
+### Bug fixes
+
+* **a11y:** give the board and sort menus arrow-key navigation ([2311dd6](https://github.com/josselinonduty/proton-docs-as-task/commit/2311dd6b8c5cf0244c53ecaef2c4a8b12d882949))
+* **a11y:** make the view switcher keyboard-operable tabs ([b244977](https://github.com/josselinonduty/proton-docs-as-task/commit/b24497709a0132e46715bb553623493acba76c01))
+* **board:** show pressed state on the List view section toggle ([#80](https://github.com/josselinonduty/proton-docs-as-task/issues/80)) ([89dc3f7](https://github.com/josselinonduty/proton-docs-as-task/commit/89dc3f7ace98806151b8e4e15465d4fa77f850ef))
+* **bridge:** validate editor bridge payloads before using them ([fd770b1](https://github.com/josselinonduty/proton-docs-as-task/commit/fd770b151ff2750ed01cc533a62de8ce22bb5860))
+* **deps:** apply npm audit fix for vite, brace-expansion, source-map-js and zod ([7d88e84](https://github.com/josselinonduty/proton-docs-as-task/commit/7d88e841f353095bcaa1bad7cabb050bea37a8fe))
+* **deps:** bump i18next to 26.5.10 and react-i18next to 17.1.8 ([e11c927](https://github.com/josselinonduty/proton-docs-as-task/commit/e11c927f8bc9362bcee1095c55b70e3fa38f570a))
+* **deps:** override happy-dom and vite to patched versions ([b2c440c](https://github.com/josselinonduty/proton-docs-as-task/commit/b2c440ce2c21a67a351282d3c2e5f91fcd1fea7b))
+* **playground:** restrict dev server hosts to localhost and cloudflared tunnels ([d1a9164](https://github.com/josselinonduty/proton-docs-as-task/commit/d1a91647babffb46e9ea05abcc93f335b2feaff9))
+
+
+### Performance
+
+* **bridge:** stop polling for the editor in frames without one ([3f5ad3f](https://github.com/josselinonduty/proton-docs-as-task/commit/3f5ad3ff01e1c525a0b96edce9b234447e6bce58))
+
+
+### Refactoring
+
+* **board:** drive keyboard shortcuts from a key map ([d074222](https://github.com/josselinonduty/proton-docs-as-task/commit/d07422238a29560a4144c35e23f2949c085aed2b))
+* **board:** extract card drag and drop into useBoardDnd ([b541639](https://github.com/josselinonduty/proton-docs-as-task/commit/b54163977e595373a26f25f920ceac4de6e8b47a))
+* **board:** extract card selection into useBoardSelection ([a7e7aca](https://github.com/josselinonduty/proton-docs-as-task/commit/a7e7aca184118ac03a95ae65676d380378b63109))
+* **board:** extract the details panel and its trail into useDetailsNavigation ([9a6949e](https://github.com/josselinonduty/proton-docs-as-task/commit/9a6949e4aa729113d11e16cc0e168046f33dd0d3))
+* **board:** lay out columns and cards with useMemo, not during render ([15e30d3](https://github.com/josselinonduty/proton-docs-as-task/commit/15e30d34d9d729de4070aac234bd04d11c313f33))
+* **board:** split EditableBoard into header, view, card and dialog components ([adaf980](https://github.com/josselinonduty/proton-docs-as-task/commit/adaf9802eea188ba711db9d4360fb29d47a42300))
+* **board:** track the board's dialogs as one overlay state ([b474156](https://github.com/josselinonduty/proton-docs-as-task/commit/b474156628effe715a3607d7e0e6a8c96eb7349d))
+* **components:** derive state instead of syncing it in effects ([112b459](https://github.com/josselinonduty/proton-docs-as-task/commit/112b459c7874b382d38bf2c39cf87fb5c2d2178b))
+* **dialog:** render modals as native &lt;dialog&gt; elements ([1942d7f](https://github.com/josselinonduty/proton-docs-as-task/commit/1942d7fde169e38acf740981ce754027de339d27))
+* **eslint:** migrate from tseslint.config() to defineConfig() ([4e002b5](https://github.com/josselinonduty/proton-docs-as-task/commit/4e002b5869cf33ce3c8f4c949e0b790061b7b6ae))
+* import across folders through the @/ alias ([a643ac9](https://github.com/josselinonduty/proton-docs-as-task/commit/a643ac9f466d857f4be4a5408340685cebec4f89))
+* **messaging:** type extension messages with @webext-core/messaging ([12bf78f](https://github.com/josselinonduty/proton-docs-as-task/commit/12bf78fe39679514913e320cef7588131350cbe7))
+* **model:** split model.ts into a lib/model/ module per concern ([d928c7d](https://github.com/josselinonduty/proton-docs-as-task/commit/d928c7d1be89e32444e19edd66fc9dc368e61243))
+* **overlay:** drive document sync through useBoardSession ([815ec11](https://github.com/josselinonduty/proton-docs-as-task/commit/815ec11a8a5039554f238abacefefa70eb649bf8))
+* **overlay:** extract per-document session prefs into useSessionPrefs ([0754ec1](https://github.com/josselinonduty/proton-docs-as-task/commit/0754ec1db85d00bd9e3ec37aedcf5bb93d6bc1bf))
+* **overlay:** register the popup command listener once ([c880128](https://github.com/josselinonduty/proton-docs-as-task/commit/c8801288586ffcab68195c500fbc5734b24b85f1))
+* **styles:** put every stylesheet in explicit cascade layers ([7559a51](https://github.com/josselinonduty/proton-docs-as-task/commit/7559a51dac4a01529f509bbe5e011a50082e15a2))
+* **styles:** split the board stylesheet into src/styles/board/ ([855ef8a](https://github.com/josselinonduty/proton-docs-as-task/commit/855ef8a47e99bd62035b18a3ace0023b6181453c))
+* **sync:** add a React-free board session store ([229b699](https://github.com/josselinonduty/proton-docs-as-task/commit/229b699086c0f2b49e7b9e374e69f86568ff0494))
+
+
+### Documentation
+
+* **architecture:** describe the board session ([200fa78](https://github.com/josselinonduty/proton-docs-as-task/commit/200fa78aefca7bd2540594fec74b0215f38c0b3c))
+* **architecture:** describe the board's layout, hooks and components ([2f2fc1f](https://github.com/josselinonduty/proton-docs-as-task/commit/2f2fc1f1dc0d0379d516dc9077e605e6096a6003))
+* **architecture:** describe typed messaging and the bridge's editor watch ([fe5e67d](https://github.com/josselinonduty/proton-docs-as-task/commit/fe5e67d160a19c06f97dc5f6953f632c9b730827))
+* describe native dialogs, the menu button and tab patterns ([53c3b15](https://github.com/josselinonduty/proton-docs-as-task/commit/53c3b15386b557496443f08a5a4241965baef3cb))
+* describe the model modules, the @/ alias and the cascade layers ([4e159cc](https://github.com/josselinonduty/proton-docs-as-task/commit/4e159cc3df0db8b93fdda2e8e84586d81521dbbc))
+
 ## [1.2.1](https://github.com/josselinonduty/proton-docs-as-task/compare/v1.2.0...v1.2.1) (2026-10-24)
 
 
