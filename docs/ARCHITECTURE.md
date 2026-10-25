@@ -79,8 +79,9 @@ src/
 │  ├─ options/                    # settings page
 │  └─ welcome/                    # first-run setup: layout, status flow, preferences
 ├─ components/                    # React UI: OverlayApp, EditableBoard, cards, dialogs,
-│                                 #   filters, command palette, sub-tasks, board settings…
-│                                 #   and hooks (useBoardSession, usePopupCommands, useSessionPrefs)
+│  │                              #   filters, command palette, sub-tasks, board settings…
+│  │                              #   and hooks (useBoardSession, usePopupCommands, useSessionPrefs)
+│  └─ board/                      # EditableBoard's pieces (see below)
 ├─ i18n/                          # i18next setup and locales/*.json (en is the source)
 ├─ styles/                        # shared design tokens and components (see STYLEGUIDE.md)
 └─ lib/
@@ -104,6 +105,31 @@ src/
 playground/                       # dev-only harness: real UI on a fake Proton page
 scripts/generate-screenshots      # store and README images from the playground
 ```
+
+### The board
+
+`EditableBoard` owns the open board's UI state and actions; its pieces live in
+[`components/board/`](../src/components/board):
+
+- **Layout.** [`layoutBoard()`](../src/components/board/boardLayout.ts) is a
+  pure function of the model, view, filters, sort and collapsed columns: the
+  columns or swimlane rows, the cards each shows, the keyboard order (J / K)
+  and each card's place in its column. The board memoises it, and rendering,
+  shortcuts and the details panel all read the same result.
+- **State hooks.** `useBoardOverlay` holds the one modal open at a time (quick
+  add, a delete confirmation, Board settings, shortcut help) as a
+  discriminated union. The command palette and the status delete confirmation
+  stack on top of it, so they're separate. `useBoardSelection`,
+  `useDetailsNavigation` (the panel and its Back trail) and `useBoardDnd` hold
+  the rest; `useTaskActions` turns card edits and drops into model changes.
+- **Shortcuts.** [`shortcuts.ts`](../src/components/board/shortcuts.ts) is a
+  key map: each entry names its keys, modifiers, whether it fires while typing
+  or over a dialog, a guard and an action. `useBoardShortcuts` matches key
+  presses against it, and the shortcut help is generated from it.
+- **Components.** `BoardHeader` (with `BoardMenu`), `BoardColumns` and
+  `BoardColumn` (Workflow, Sections, List), `BoardSwimlane`, `BoardCard`,
+  `BoardDetails` and `BoardConfirmDialogs`. They read the board and its
+  actions from `BoardContext`.
 
 Logic in `src/lib` and the interactive components have unit tests next to them
 (`*.test.ts(x)`).
