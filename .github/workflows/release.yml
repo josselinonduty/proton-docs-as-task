@@ -50,6 +50,12 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.tag }}
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
       - name: Type-check
         run: npm run compile
 
