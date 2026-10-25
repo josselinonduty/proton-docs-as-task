@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@lexical/headless": "0.52.0",
     "@lexical/list": "0.52.0",
     "@lexical/rich-text": "0.52.0",
     "@lexical/yjs": "0.52.0",
@@ -65,7 +64,6 @@
     "yjs": "13.6.33"
   },
   "overrides": {
-    "happy-dom": "21.0.4",
     "vite": "$vite"
   }
 }
