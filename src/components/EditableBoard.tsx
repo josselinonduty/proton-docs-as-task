@@ -82,6 +82,7 @@ import { useDismiss } from './useDismiss';
 import { useStatusActions } from './useStatusActions';
 import { isTaskShown, layoutBoard, type LaidOutBoardColumn } from './board/boardLayout';
 import { useNow } from './board/useNow';
+import { useBoardOverlay } from './board/useBoardOverlay';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -111,7 +112,6 @@ interface EditableBoardProps {
   onClose: () => void;
 }
 
-type PendingSectionDelete = { name: string; count: number };
 type PendingStatusDelete = { key: StatusKey; count: number };
 
 export function EditableBoard(props: EditableBoardProps) {
@@ -175,22 +175,17 @@ export function EditableBoard(props: EditableBoardProps) {
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  const [quickAddOpen, setQuickAddOpen] = useState(false);
-  // Section/status preselected when the dialog is opened from a column footer.
-  const [quickAddPreset, setQuickAddPreset] = useState<{
-    section?: string;
-    status?: StatusKey;
-  } | null>(null);
   const [hiddenNotice, setHiddenNotice] = useState(false);
-  const [pendingSectionDelete, setPendingSectionDelete] = useState<PendingSectionDelete | null>(
-    null,
-  );
-  const [pendingCardDelete, setPendingCardDelete] = useState<BoardTask | null>(null);
-  const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
+  const {
+    overlay,
+    open: openOverlay,
+    close: closeOverlay,
+    isOpen: overlayOpen,
+  } = useBoardOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  // Outside the overlay union: both stack on top of an open overlay.
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [details, setDetails] = useState<{ id: string; focus: DetailsFocus; nonce: number } | null>(
@@ -200,7 +195,6 @@ export function EditableBoard(props: EditableBoardProps) {
   const [blockedNotice, setBlockedNotice] = useState<string | null>(null);
   const [focusSection, setFocusSection] = useState<string | null>(null);
   const [focusStatus, setFocusStatus] = useState<StatusKey | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [pendingStatusDelete, setPendingStatusDelete] = useState<PendingStatusDelete | null>(null);
   const [colorMenuFor, setColorMenuFor] = useState<StatusKey | null>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
@@ -309,14 +303,14 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const requestDelete = (task: BoardTask) => {
-    if (settings.confirmDelete) setPendingCardDelete(task);
+    if (settings.confirmDelete) openOverlay({ kind: 'deleteCard', task });
     else confirmDeleteCard(task);
   };
 
   const confirmDeleteCard = (task: BoardTask) => {
     onChange(removeTask(model, task.id), t('board.undo.deleted'));
     announce(t('board.deleted', { title: taskName(task) }));
-    setPendingCardDelete(null);
+    closeOverlay('deleteCard');
     // The card (and maybe the details panel) is gone; keep keyboard focus on the board.
     if (details?.id === task.id) setDetails(null);
     requestAnimationFrame(() => boardRef.current?.focus());
@@ -414,21 +408,20 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   // ---- Quick add (per column) --------------------------------------------
-  const openColumnQuickAdd = (col: BoardColumn) => {
-    setQuickAddPreset(
-      view === 'sections'
-        ? { section: col.section }
-        : view === 'workflow'
-          ? { status: col.status }
-          : null,
-    );
-    setQuickAddOpen(true);
-  };
+  const openQuickAdd = () => openOverlay({ kind: 'quickAdd', preset: null });
 
-  const closeQuickAdd = () => {
-    setQuickAddOpen(false);
-    setQuickAddPreset(null);
-  };
+  const openColumnQuickAdd = (col: BoardColumn) =>
+    openOverlay({
+      kind: 'quickAdd',
+      preset:
+        view === 'sections'
+          ? { section: col.section }
+          : view === 'workflow'
+            ? { status: col.status }
+            : null,
+    });
+
+  const closeQuickAdd = () => closeOverlay('quickAdd');
 
   // ---- Quick add (header form) -------------------------------------------
   const submitHeaderQuickAdd = (payload: QuickAddPayload) => {
@@ -535,7 +528,7 @@ export function EditableBoard(props: EditableBoardProps) {
       announce(t('board.sectionDeleted', { name }));
       return;
     }
-    setPendingSectionDelete({ name, count });
+    openOverlay({ kind: 'deleteSection', name, count });
   };
 
   // ---- Status management --------------------------------------------------
@@ -658,15 +651,7 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   const anyOverlayOpen =
-    paletteOpen ||
-    helpOpen ||
-    quickAddOpen ||
-    pendingCardDelete != null ||
-    pendingBulkDelete ||
-    pendingSectionDelete != null ||
-    settingsOpen ||
-    pendingStatusDelete != null ||
-    orphans.length > 0;
+    overlayOpen || paletteOpen || pendingStatusDelete != null || orphans.length > 0;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const target = e.target as HTMLElement;
@@ -717,7 +702,7 @@ export function EditableBoard(props: EditableBoardProps) {
       case 'n':
       case 'N':
         e.preventDefault();
-        setQuickAddOpen(true);
+        openQuickAdd();
         break;
       case '/':
         e.preventDefault();
@@ -791,7 +776,7 @@ export function EditableBoard(props: EditableBoardProps) {
         const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
         if (selectionMode && selected.size > 0) {
           e.preventDefault();
-          setPendingBulkDelete(true);
+          openOverlay({ kind: 'deleteBulk' });
         } else if (task) {
           e.preventDefault();
           requestDelete(task);
@@ -800,7 +785,7 @@ export function EditableBoard(props: EditableBoardProps) {
       }
       case '?':
         e.preventDefault();
-        setHelpOpen(true);
+        openOverlay({ kind: 'help' });
         break;
       default:
         break;
@@ -812,7 +797,7 @@ export function EditableBoard(props: EditableBoardProps) {
     saveState,
     hideCompleted,
     doneCollapsed,
-    setQuickAddOpen,
+    addTask: openQuickAdd,
     focusSearch: () => searchRef.current?.focus(),
     cycleView,
     clearFilters: () => onFiltersChange({ ...EMPTY_FILTERS }),
@@ -820,10 +805,10 @@ export function EditableBoard(props: EditableBoardProps) {
     toggleHideCompleted: () =>
       onSettingsChange({ completedDisplay: hideCompleted ? 'show' : 'hide' }),
     toggleDoneCollapsed,
-    openBoardSettings: () => setSettingsOpen(true),
+    openBoardSettings: () => openOverlay({ kind: 'boardSettings' }),
     openSettings: onOpenSettings,
     back: onClose,
-    openHelp: () => setHelpOpen(true),
+    openHelp: () => openOverlay({ kind: 'help' }),
     retry: onRetry,
   });
 
@@ -868,10 +853,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
           <button
             className="pdt-btn pdt-btn-primary"
-            onClick={() => {
-              setQuickAddPreset(null);
-              setQuickAddOpen(true);
-            }}
+            onClick={openQuickAdd}
             aria-haspopup="dialog"
             title={t('board.addTaskKey')}
           >
@@ -905,7 +887,7 @@ export function EditableBoard(props: EditableBoardProps) {
                 <MenuItem
                   label={t('settings.title')}
                   onClick={() => {
-                    setSettingsOpen(true);
+                    openOverlay({ kind: 'boardSettings' });
                     setMenuOpen(false);
                   }}
                 />
@@ -930,7 +912,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   label={t('shortcuts.title')}
                   hint="?"
                   onClick={() => {
-                    setHelpOpen(true);
+                    openOverlay({ kind: 'help' });
                     setMenuOpen(false);
                   }}
                 />
@@ -1023,7 +1005,7 @@ export function EditableBoard(props: EditableBoardProps) {
         </div>
       </header>
 
-      {quickAddOpen && (
+      {overlay.kind === 'quickAdd' && (
         <Dialog title={t('board.newTask')} size="lg" onClose={closeQuickAdd}>
           <QuickAddForm
             sections={model.sections}
@@ -1031,13 +1013,13 @@ export function EditableBoard(props: EditableBoardProps) {
             assigneeSuggestions={assigneeSuggestions}
             labelSuggestions={labelSuggestions}
             defaultSection={
-              quickAddPreset?.section && model.sections.includes(quickAddPreset.section)
-                ? quickAddPreset.section
+              overlay.preset?.section && model.sections.includes(overlay.preset.section)
+                ? overlay.preset.section
                 : lastQuickAddSection && model.sections.includes(lastQuickAddSection)
                   ? lastQuickAddSection
                   : (model.sections[0] ?? 'Tasks')
             }
-            defaultStatusKey={quickAddPreset?.status}
+            defaultStatusKey={overlay.preset?.status}
             now={now}
             dateFormat={settings.dateFormat}
             onSubmit={submitHeaderQuickAdd}
@@ -1170,7 +1152,7 @@ export function EditableBoard(props: EditableBoardProps) {
           now={now}
           dateFormat={settings.dateFormat}
           onAction={runBulk}
-          onRequestDelete={() => setPendingBulkDelete(true)}
+          onRequestDelete={() => openOverlay({ kind: 'deleteBulk' })}
           onSelectAll={selectAllVisible}
           onClear={() => setSelected(new Set())}
           onExit={exitSelection}
@@ -1186,18 +1168,18 @@ export function EditableBoard(props: EditableBoardProps) {
         </div>
       )}
 
-      {pendingCardDelete && (
-        <Dialog title={t('details.delete')} onClose={() => setPendingCardDelete(null)}>
+      {overlay.kind === 'deleteCard' && (
+        <Dialog title={t('details.delete')} onClose={() => closeOverlay('deleteCard')}>
           <p className="pdt-modal__text">
-            {t('board.confirmDelete', { title: pendingCardDelete.title || t('board.thisTask') })}
+            {t('board.confirmDelete', { title: overlay.task.title || t('board.thisTask') })}
           </p>
           <div className="pdt-modal__actions">
-            <button className="pdt-btn" onClick={() => setPendingCardDelete(null)}>
+            <button className="pdt-btn" onClick={() => closeOverlay('deleteCard')}>
               {t('common.cancel')}
             </button>
             <button
               className="pdt-btn pdt-btn-danger-solid"
-              onClick={() => confirmDeleteCard(pendingCardDelete)}
+              onClick={() => confirmDeleteCard(overlay.task)}
             >
               {t('common.delete')}
             </button>
@@ -1205,18 +1187,18 @@ export function EditableBoard(props: EditableBoardProps) {
         </Dialog>
       )}
 
-      {pendingBulkDelete && (
-        <Dialog title={t('board.deleteSelected')} onClose={() => setPendingBulkDelete(false)}>
+      {overlay.kind === 'deleteBulk' && (
+        <Dialog title={t('board.deleteSelected')} onClose={() => closeOverlay('deleteBulk')}>
           <p className="pdt-modal__text">{t('board.confirmBulk', { count: selected.size })}</p>
           <div className="pdt-modal__actions">
-            <button className="pdt-btn" onClick={() => setPendingBulkDelete(false)}>
+            <button className="pdt-btn" onClick={() => closeOverlay('deleteBulk')}>
               {t('common.cancel')}
             </button>
             <button
               className="pdt-btn pdt-btn-danger-solid"
               onClick={() => {
                 runBulk({ kind: 'delete' });
-                setPendingBulkDelete(false);
+                closeOverlay('deleteBulk');
               }}
             >
               {t('common.delete')}
@@ -1225,34 +1207,34 @@ export function EditableBoard(props: EditableBoardProps) {
         </Dialog>
       )}
 
-      {pendingSectionDelete && (
+      {overlay.kind === 'deleteSection' && (
         <SectionDeleteDialog
-          info={pendingSectionDelete}
-          sections={model.sections.filter((s) => s !== pendingSectionDelete.name)}
-          onCancel={() => setPendingSectionDelete(null)}
+          info={overlay}
+          sections={model.sections.filter((s) => s !== overlay.name)}
+          onCancel={() => closeOverlay('deleteSection')}
           onMove={(target) => {
             onChange(
-              removeSectionMovingTasks(model, pendingSectionDelete.name, target),
+              removeSectionMovingTasks(model, overlay.name, target),
               t('board.undo.sectionMoved'),
             );
-            announce(t('board.sectionMoved', { name: pendingSectionDelete.name, target }));
-            setPendingSectionDelete(null);
+            announce(t('board.sectionMoved', { name: overlay.name, target }));
+            closeOverlay('deleteSection');
           }}
           onDeleteAll={() => {
-            onChange(removeSection(model, pendingSectionDelete.name), t('board.undo.sectionAll'));
-            announce(t('board.sectionAll', { name: pendingSectionDelete.name }));
-            setPendingSectionDelete(null);
+            onChange(removeSection(model, overlay.name), t('board.undo.sectionAll'));
+            announce(t('board.sectionAll', { name: overlay.name }));
+            closeOverlay('deleteSection');
           }}
         />
       )}
 
-      {settingsOpen && (
+      {overlay.kind === 'boardSettings' && (
         <BoardSettingsDialog
           model={model}
           announce={announce}
           onChange={onChange}
           onRequestDelete={requestStatusDelete}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => closeOverlay('boardSettings')}
         />
       )}
 
@@ -1275,17 +1257,17 @@ export function EditableBoard(props: EditableBoardProps) {
         />
       )}
 
-      {orphans.length > 0 && !settingsOpen && (
+      {orphans.length > 0 && overlay.kind !== 'boardSettings' && (
         <MissingStatusDialog
           orphans={orphans}
           statuses={statuses}
           onMove={moveOrphans}
-          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenSettings={() => openOverlay({ kind: 'boardSettings' })}
         />
       )}
 
       {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
-      {helpOpen && <ShortcutHelp onClose={() => setHelpOpen(false)} />}
+      {overlay.kind === 'help' && <ShortcutHelp onClose={() => closeOverlay('help')} />}
     </section>
   );
 
@@ -1604,7 +1586,7 @@ export function EditableBoard(props: EditableBoardProps) {
                 className="pdt-link"
                 onClick={() => {
                   setColorMenuFor(null);
-                  setSettingsOpen(true);
+                  openOverlay({ kind: 'boardSettings' });
                 }}
               >
                 {t('board.allSettings')}
@@ -1752,7 +1734,7 @@ interface BuildCommandsArgs {
   saveState: SaveState;
   hideCompleted: boolean;
   doneCollapsed: boolean;
-  setQuickAddOpen: (v: boolean) => void;
+  addTask: () => void;
   focusSearch: () => void;
   cycleView: () => void;
   clearFilters: () => void;
@@ -1768,7 +1750,7 @@ interface BuildCommandsArgs {
 
 function buildCommands(t: TFunction, a: BuildCommandsArgs): Command[] {
   return [
-    { id: 'add', title: t('quickAdd.add'), hint: 'N', run: () => a.setQuickAddOpen(true) },
+    { id: 'add', title: t('quickAdd.add'), hint: 'N', run: a.addTask },
     { id: 'search', title: t('board.search'), hint: '/', keywords: 'find', run: a.focusSearch },
     {
       id: 'view',
@@ -1876,7 +1858,7 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
 }
 
 interface SectionDeleteDialogProps {
-  info: PendingSectionDelete;
+  info: { name: string; count: number };
   sections: string[];
   onCancel: () => void;
   onMove: (target: string) => void;
