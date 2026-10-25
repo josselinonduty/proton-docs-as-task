@@ -102,6 +102,48 @@ describe('EditableBoard views', () => {
   });
 });
 
+describe('EditableBoard view tabs', () => {
+  it('are tabs with one tab stop, controlling the board panel', () => {
+    setup('sections');
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([-1, 0, -1, -1]);
+    const selected = screen.getByRole('tab', { selected: true });
+    expect(selected.textContent).toBe('Sections');
+    const panel = screen.getByRole('tabpanel', { name: 'Sections' });
+    expect(selected.getAttribute('aria-controls')).toBe(panel.id);
+  });
+
+  it('move and select with the arrows, wrapping, and Home / End', () => {
+    const { onViewChange } = setup('workflow');
+    const tablist = screen.getByRole('tablist', { name: 'Board view' });
+    const tabs = screen.getAllByRole('tab');
+    tabs[0]!.focus();
+    fireEvent.keyDown(tabs[0]!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(onViewChange).toHaveBeenLastCalledWith('sections');
+    fireEvent.keyDown(tablist, { key: 'End' });
+    expect(document.activeElement).toBe(tabs[3]);
+    expect(onViewChange).toHaveBeenLastCalledWith('list');
+    fireEvent.keyDown(tablist, { key: 'ArrowRight' });
+    expect(onViewChange).toHaveBeenLastCalledWith('workflow');
+    fireEvent.keyDown(tablist, { key: 'ArrowLeft' });
+    expect(onViewChange).toHaveBeenLastCalledWith('list');
+    fireEvent.keyDown(tablist, { key: 'Home' });
+    expect(document.activeElement).toBe(tabs[0]);
+    expect(onViewChange).toHaveBeenLastCalledWith('workflow');
+    // Up and Down aren't the tabs' keys.
+    onViewChange.mockClear();
+    fireEvent.keyDown(tablist, { key: 'ArrowDown' });
+    expect(onViewChange).not.toHaveBeenCalled();
+  });
+
+  it('select with a click', () => {
+    const { onViewChange } = setup('workflow');
+    fireEvent.click(screen.getByRole('tab', { name: 'List' }));
+    expect(onViewChange).toHaveBeenCalledWith('list');
+  });
+});
+
 describe('EditableBoard keyboard and dialogs', () => {
   it('moves card focus with J / K in column order', () => {
     const { board } = setup('workflow');

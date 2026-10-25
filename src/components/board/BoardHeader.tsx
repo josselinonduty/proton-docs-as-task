@@ -7,6 +7,7 @@ import { FilterBar } from '@/components/FilterBar';
 import { FilterPanel } from '@/components/FilterPanel';
 import { Icon } from '@/components/Icon';
 import { SortMenu } from '@/components/SortMenu';
+import { moveFocus } from '@/components/rovingFocus';
 import { BoardMenu } from './BoardMenu';
 
 interface BoardHeaderProps {
@@ -14,6 +15,8 @@ interface BoardHeaderProps {
   progress: { done: number; total: number };
   saveState: SaveState;
   view: BoardView;
+  /** The id of the board's view panel, which the view tabs control. */
+  panelId: string;
   filters: FilterState;
   facets: Facets;
   presets: Preset[];
@@ -75,12 +78,25 @@ export function BoardHeader({ searchRef, filterBtnRef, ...props }: BoardHeaderPr
       </div>
 
       <div className="pdt-board__row pdt-board__row--tools">
-        <div className="pdt-segment" role="tablist" aria-label={t('board.viewLabel')}>
+        <div
+          className="pdt-segment"
+          role="tablist"
+          aria-label={t('board.viewLabel')}
+          onKeyDown={(e) => {
+            // Tabs with automatic activation: the focused view is the one shown.
+            const moved = moveFocus(e, '[role="tab"]', 'horizontal');
+            if (moved) props.onViewChange(BOARD_VIEWS[moved.index]!);
+          }}
+        >
           {BOARD_VIEWS.map((v) => (
             <button
               key={v}
+              type="button"
               role="tab"
+              id={viewTabId(props.panelId, v)}
               aria-selected={props.view === v}
+              aria-controls={props.panelId}
+              tabIndex={props.view === v ? 0 : -1}
               className={`pdt-segment__btn ${props.view === v ? 'is-active' : ''}`}
               title={t(`views.${v}.hint`)}
               onClick={() => props.onViewChange(v)}
@@ -151,6 +167,11 @@ export function BoardHeader({ searchRef, filterBtnRef, ...props }: BoardHeaderPr
       </div>
     </header>
   );
+}
+
+/** The id of the tab for `view`, which labels the panel while it's shown. */
+export function viewTabId(panelId: string, view: BoardView): string {
+  return `${panelId}-tab-${view}`;
 }
 
 /** Board completion summary next to the title: "4 of 12 done" with a bar. */
