@@ -131,6 +131,22 @@ scripts/generate-screenshots      # store and README images from the playground
   `BoardColumn` (Workflow, Sections, List), `BoardSwimlane`, `BoardCard`,
   `BoardDetails` and `BoardConfirmDialogs`. They read the board and its
   actions from `BoardContext`.
+- **Dialogs, menus and tabs.** Every modal goes through
+  [`Modal`](../src/components/Modal.tsx) (and `Dialog`, its titled panel): a
+  native `<dialog>` opened with `showModal()`. The browser puts it in the top
+  layer, makes the rest of the page inert and draws `::backdrop`, so stacking
+  follows opening order: the status delete confirmation or the palette opened
+  over Board settings lands on top, and Escape (handled by the dialog, after
+  any nested control had its chance) closes only that one. Focus goes to the
+  first control or `initialFocus`, and back to what had it on close. The
+  board and sort menus follow the menu button pattern through
+  [`useMenuButton`](../src/components/useMenuButton.ts) (arrow keys,
+  Home / End, Escape and Tab return to the button; an item closes the menu
+  before it acts, so a dialog it opens returns focus to the button). The view
+  switcher is a tablist with a roving tab stop over the board's tabpanel. Both
+  move focus with [`moveFocus`](../src/components/rovingFocus.ts). Menus and
+  popovers stay positioned under their trigger and close on outside clicks
+  through `useDismiss`, not the Popover API (see Limitations).
 
 ### The model
 
@@ -163,6 +179,12 @@ up by WXT, Vitest and the playground); same-folder imports stay relative. See
   (`__lexicalEditor`, the node registry). A Proton update can break it until
   the extension is updated. It needs Chrome 111+ or Firefox 128+ for
   page-world content scripts.
+- Menus and popovers don't use the Popover API: it would raise the Chrome
+  floor to 114 for no gain, since a popover in the top layer would still need
+  script positioning under its trigger (Firefox 128 has no CSS anchor
+  positioning). They stay absolutely positioned and close through
+  `useDismiss`. Modal dialogs use native `<dialog>`, which both floors
+  support.
 - A board written by a version before 1.0 (plain-text lines) is converted to
   native headings and check-list items the first time the board edits it; the
   text stays the same.
