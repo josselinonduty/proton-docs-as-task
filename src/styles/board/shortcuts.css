@@ -1,0 +1,54 @@
+/* Keyboard shortcut reference, and keys shown in menus. */
+.pdt-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--pdt-space-4);
+}
+.pdt-shortcuts__title {
+  margin: 0 0 6px;
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+.pdt-shortcuts__list {
+  margin: 0;
+}
+.pdt-shortcuts__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-3);
+  padding: 3px 0;
+}
+.pdt-shortcuts__row dt {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+.pdt-shortcuts__row dd {
+  margin: 0;
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+  text-align: right;
+}
+.pdt-shortcuts__note {
+  margin-top: var(--pdt-space-3);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+
+.pdt-host kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-sm);
+  background: var(--pdt-background-weak);
+  color: var(--pdt-text-weak);
+  font-family: inherit;
+  font-size: var(--pdt-text-xs);
+  line-height: 18px;
+  text-align: center;
+}
+.pdt-menu__hint {
+  flex: 0 0 auto;
+}

@@ -1,0 +1,12 @@
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .pdt-host *,
+  .pdt-host *::before,
+  .pdt-host *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+  .pdt-taskcard.is-new {
+    outline: 2px solid var(--pdt-primary);
+  }
+}

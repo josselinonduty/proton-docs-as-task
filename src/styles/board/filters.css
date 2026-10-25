@@ -1,0 +1,77 @@
+/* ---------- Filter bar (presets + active chips) ---------- */
+.pdt-filterbar {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 6px;
+}
+.pdt-filterbar__presets,
+.pdt-filterbar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- Chips ---------- */
+.pdt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--pdt-radius-pill);
+  font-family: inherit;
+  font-size: var(--pdt-text-sm);
+  line-height: 18px;
+}
+.pdt-chip--preset {
+  border-color: var(--pdt-border-norm);
+  background: var(--pdt-background-norm);
+  color: var(--pdt-text-norm);
+  cursor: pointer;
+}
+.pdt-chip--preset:hover {
+  background: var(--pdt-interaction-hover);
+}
+.pdt-chip--preset.is-active {
+  border-color: var(--pdt-primary);
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary-text);
+}
+.pdt-chip--preset[aria-disabled='true'] {
+  border-style: dashed;
+  color: var(--pdt-text-hint);
+}
+.pdt-chip--preset:focus-visible {
+  outline: none;
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.pdt-chip--filter {
+  background: var(--pdt-primary-weak);
+  color: var(--pdt-primary-text);
+  padding-right: 4px;
+}
+.pdt-chip--label {
+  background: var(--pdt-signal-info-weak);
+  color: var(--pdt-signal-info-text);
+  padding-right: 4px;
+}
+.pdt-chip__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.pdt-chip__x:hover {
+  background: var(--pdt-interaction-hover);
+}

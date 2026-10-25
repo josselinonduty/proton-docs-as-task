@@ -1,0 +1,134 @@
+/* ---- Status colours (Workflow / Swimlane columns, board settings) -------
+ * A status exposes its colours as --pdt-status-text / --pdt-status-bg; the
+ * header shows its name as a pill and the column body takes a light tint of
+ * the background, so cards stay readable on top of it. */
+.pdt-column--tinted {
+  background: color-mix(in srgb, var(--pdt-status-bg) 40%, var(--pdt-background-column));
+}
+.pdt-swimlane__cell.pdt-swimlane__cell--tinted {
+  background: color-mix(in srgb, var(--pdt-status-bg) 40%, var(--pdt-background-weak));
+}
+/* The colour menu must overflow the (otherwise clipped) column. */
+.pdt-column--menu-open {
+  position: relative;
+  z-index: 5;
+  overflow: visible;
+}
+.pdt-status-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.pdt-status-name .pdt-column__name-input,
+.pdt-status-pill {
+  max-width: 100%;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-status-bg, transparent);
+  color: var(--pdt-status-text, var(--pdt-text-norm));
+}
+.pdt-status-name .pdt-column__name-input {
+  flex: 0 1 auto;
+  field-sizing: content;
+  min-width: 4ch;
+  padding: 3px 10px;
+}
+.pdt-status-name .pdt-column__name-input:hover {
+  box-shadow: inset 0 0 0 100px var(--pdt-interaction-hover);
+}
+.pdt-status-pill {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0 8px;
+  line-height: 22px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdt-swimlane__colhead .pdt-status-pill {
+  color: var(--pdt-status-text, var(--pdt-text-weak));
+}
+
+.pdt-colorpicker {
+  position: relative;
+}
+.pdt-colorpicker__trigger {
+  gap: 6px;
+}
+.pdt-colorpicker__preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-sm);
+  font-size: var(--pdt-text-xs);
+  font-weight: var(--pdt-font-weight-bold);
+}
+.pdt-colorpicker__panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pdt-space-2);
+  padding: var(--pdt-space-3);
+  background: var(--pdt-background-elevated);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-md);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-colorpicker__panel--end {
+  right: 0;
+  left: auto;
+}
+.pdt-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-2);
+}
+.pdt-swatches__row {
+  display: flex;
+  gap: 6px;
+}
+.pdt-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-pill);
+  cursor: pointer;
+}
+.pdt-swatch[aria-checked='true'] {
+  box-shadow:
+    0 0 0 2px var(--pdt-background-elevated),
+    0 0 0 4px var(--pdt-primary);
+}
+/* "No colour": a struck-through empty swatch. */
+.pdt-swatch--none {
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--pdt-signal-danger) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+.pdt-swatches__custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pdt-swatches__native {
+  width: 32px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--pdt-border-norm);
+  border-radius: var(--pdt-radius-sm);
+  background: var(--pdt-background-norm);
+  cursor: pointer;
+}
+.pdt-swatches__hex {
+  width: 96px;
+  font-family: var(--pdt-font-mono);
+}

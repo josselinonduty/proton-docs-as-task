@@ -1,0 +1,188 @@
+/* ==========================================================================
+ * Board shell
+ * ======================================================================== */
+.pdt-board {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  background: var(--pdt-background-lowered);
+  overflow: hidden;
+}
+/* The board container receives programmatic focus on open (so keyboard
+ * shortcuts work immediately); it is not an interactive control itself, so it
+ * shows no focus ring. */
+.pdt-board:focus {
+  outline: none;
+}
+
+.pdt-board__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-3);
+  padding: var(--pdt-space-3) var(--pdt-space-5);
+  background: var(--pdt-background-norm);
+  border-bottom: 1px solid var(--pdt-border-weak);
+}
+.pdt-board__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pdt-space-2);
+}
+.pdt-board__row--top {
+  flex-wrap: nowrap;
+  gap: var(--pdt-space-3);
+}
+.pdt-board__spacer {
+  flex: 1;
+}
+.pdt-board__back {
+  flex: 0 0 auto;
+  color: var(--pdt-text-weak);
+}
+.pdt-board__titlewrap {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-4);
+  min-width: 0;
+}
+.pdt-board__title {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--pdt-text-xl);
+  font-weight: var(--pdt-font-weight-bold);
+  line-height: 28px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Completion summary next to the title. */
+.pdt-progress {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--pdt-space-2);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+  white-space: nowrap;
+}
+.pdt-progress__bar {
+  width: 72px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-background-strong);
+}
+.pdt-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pdt-signal-success);
+  transition: width var(--pdt-transition-base);
+}
+
+/* View switcher (Proton's segmented "button group"). */
+.pdt-segment {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-background-weak);
+  border: 1px solid var(--pdt-border-weak);
+}
+.pdt-segment__btn {
+  min-height: 28px;
+  padding: 3px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--pdt-text-weak);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background var(--pdt-transition-fast),
+    color var(--pdt-transition-fast);
+}
+.pdt-segment__btn:hover {
+  color: var(--pdt-text-norm);
+}
+.pdt-segment__btn.is-active {
+  background: var(--pdt-background-norm);
+  color: var(--pdt-text-norm);
+  font-weight: var(--pdt-font-weight-medium);
+  box-shadow: var(--pdt-shadow-sm);
+}
+.pdt-segment__btn:focus-visible {
+  outline: none;
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+
+/* Search with a leading icon and a "/" hint. */
+.pdt-search {
+  position: relative;
+  flex: 0 1 280px;
+  min-width: 180px;
+}
+.pdt-search__icon {
+  position: absolute;
+  top: 50%;
+  left: 11px;
+  transform: translateY(-50%);
+  color: var(--pdt-text-hint);
+  pointer-events: none;
+}
+.pdt-search__input {
+  padding-left: 34px;
+  padding-right: 32px;
+}
+.pdt-search__kbd {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.pdt-search__input:focus + .pdt-search__kbd,
+.pdt-search__input:not(:placeholder-shown) + .pdt-search__kbd {
+  display: none;
+}
+
+/* Save indicator: only failure/paused states render (Proton shows "Saved"). */
+.pdt-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--pdt-radius-pill);
+  font-size: var(--pdt-text-sm);
+  white-space: nowrap;
+}
+.pdt-save--error {
+  color: var(--pdt-signal-danger-text);
+  background: var(--pdt-signal-danger-weak);
+}
+.pdt-save--warning {
+  color: var(--pdt-signal-warning-text);
+  background: var(--pdt-signal-warning-weak);
+}
+.pdt-save .pdt-link {
+  font-size: var(--pdt-text-sm);
+  color: inherit;
+}
+
+/* Board body: columns + optional details panel side by side. */
+.pdt-board__body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.pdt-board__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}

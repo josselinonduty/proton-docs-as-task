@@ -1,0 +1,7 @@
+/* List view: one centred column. */
+.pdt-columns--list {
+  justify-content: center;
+}
+.pdt-columns--list .pdt-column {
+  flex: 0 1 640px;
+}

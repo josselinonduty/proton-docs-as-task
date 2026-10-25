@@ -1,0 +1,79 @@
+/* ==========================================================================
+ * Columns
+ * ======================================================================== */
+.pdt-columns {
+  flex: 1;
+  display: flex;
+  gap: var(--pdt-space-3);
+  padding: var(--pdt-space-4) var(--pdt-space-5);
+  overflow: auto;
+  align-items: flex-start;
+}
+.pdt-column {
+  flex: 0 0 300px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--pdt-background-column);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-lg);
+  overflow: hidden;
+}
+.pdt-column--collapsed {
+  flex-basis: 220px;
+}
+.pdt-column__head {
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-1);
+  min-height: 48px;
+  padding: var(--pdt-space-2) var(--pdt-space-2) var(--pdt-space-2) var(--pdt-space-1);
+}
+.pdt-column__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 4px;
+  font-weight: var(--pdt-font-weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdt-column__name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--pdt-radius-sm);
+  background: transparent;
+  color: var(--pdt-text-norm);
+  font: inherit;
+  font-weight: var(--pdt-font-weight-bold);
+  text-overflow: ellipsis;
+  cursor: text;
+}
+.pdt-column__name-input:hover {
+  background: var(--pdt-interaction-hover);
+}
+.pdt-column__name-input:focus {
+  outline: none;
+  background: var(--pdt-background-norm);
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.pdt-column__name-input[aria-invalid='true'] {
+  border-color: var(--pdt-signal-danger);
+}
+.pdt-column__count {
+  min-width: 22px;
+  padding: 0 7px;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-background-strong);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-xs);
+  line-height: 20px;
+  text-align: center;
+}
+.pdt-column__ops {
+  display: inline-flex;
+  gap: 0;
+}

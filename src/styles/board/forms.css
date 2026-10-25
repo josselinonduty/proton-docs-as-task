@@ -1,0 +1,174 @@
+/* ==========================================================================
+ * Forms inside the board
+ * ======================================================================== */
+.pdt-field--row {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--pdt-space-2);
+}
+.pdt-field--grow {
+  flex: 1;
+}
+
+/* Combobox / autocomplete */
+.pdt-combobox,
+.pdt-labelinput,
+.pdt-duedate {
+  position: relative;
+}
+.pdt-combobox__list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--pdt-background-elevated);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-md);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-combobox__opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-2);
+  padding: 6px 8px;
+  border-radius: var(--pdt-radius-sm);
+  cursor: pointer;
+}
+.pdt-combobox__opt.is-active,
+.pdt-combobox__opt:hover {
+  background: var(--pdt-interaction-hover);
+}
+.pdt-combobox__opt-count {
+  flex: 0 0 auto;
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: var(--pdt-radius-pill);
+  background: var(--pdt-background-strong);
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-xs);
+  text-align: center;
+}
+
+/* Label token input */
+.pdt-labelinput__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--pdt-control-md);
+  padding: 4px 6px;
+  border: 1px solid var(--pdt-field-norm);
+  border-radius: var(--pdt-radius-md);
+  background: var(--pdt-background-norm);
+  transition:
+    border-color var(--pdt-transition-fast),
+    box-shadow var(--pdt-transition-fast);
+}
+.pdt-labelinput__chips:hover {
+  border-color: var(--pdt-field-hover);
+}
+.pdt-labelinput__chips:focus-within {
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.pdt-labelinput__input {
+  flex: 1 1 80px;
+  min-width: 80px;
+  border: none;
+  background: transparent;
+  color: var(--pdt-text-norm);
+  font: inherit;
+  outline: none;
+}
+
+/* Due date control */
+.pdt-duedate {
+  width: 100%;
+}
+.pdt-duedate__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-2);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--pdt-text-norm);
+}
+.pdt-duedate__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdt-duedate__trigger--overdue .pdt-duedate__value {
+  color: var(--pdt-signal-danger-text);
+}
+.pdt-duedate__trigger--today .pdt-duedate__value {
+  color: var(--pdt-signal-warning-text);
+}
+.pdt-duedate__panel {
+  /* Positioned via inline `position: fixed` + top/left so it floats above the
+   * scrolling card body instead of being clipped inside it. */
+  z-index: 2147483003;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-3);
+  padding: var(--pdt-space-3);
+  background: var(--pdt-background-elevated);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-md);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-duedate__quick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.pdt-duedate__foot {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--pdt-border-weak);
+  padding-top: var(--pdt-space-2);
+}
+
+/* Quick-add form (rendered inside the "New task" dialog) */
+.pdt-quickadd-form__title {
+  min-height: 44px;
+  font-size: var(--pdt-text-lg);
+}
+.pdt-quickadd-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--pdt-space-3);
+  margin-top: var(--pdt-space-4);
+}
+.pdt-quickadd-form__labels {
+  grid-column: 1 / -1;
+}
+.pdt-quickadd-form__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-3);
+  margin-top: var(--pdt-space-5);
+}
+.pdt-quickadd-form__hint {
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-sm);
+}
+.pdt-quickadd-form__actions {
+  display: flex;
+  gap: var(--pdt-space-2);
+}
+.pdt-quickadd {
+  margin-top: 2px;
+}
