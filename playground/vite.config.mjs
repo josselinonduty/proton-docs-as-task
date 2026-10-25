@@ -23,6 +23,9 @@ export default defineConfig({
     host: true,
     port: 5199,
     strictPort: true,
-    allowedHosts: true,
+    // Only localhost and cloudflared quick tunnels (*.trycloudflare.com), used to
+    // share the playground for user testing. Any other Host header is rejected,
+    // which keeps DNS-rebinding attacks away from the dev server.
+    allowedHosts: ['localhost', '.trycloudflare.com'],
   },
 });
