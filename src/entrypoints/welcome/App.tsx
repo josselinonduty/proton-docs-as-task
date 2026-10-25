@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DEFAULT_MARKERS } from '../../lib/defaults';
-import { setLanguage } from '../../i18n';
+import { DEFAULT_MARKERS } from '@/lib/defaults';
+import { setLanguage } from '@/i18n';
 import {
   LAYOUTS,
   LAYOUT_PRESETS,
@@ -9,10 +9,10 @@ import {
   onboardingPatch,
   type Layout,
   type Preferences,
-} from '../../lib/onboarding';
-import { getSettings, setSettings } from '../../lib/settings';
-import { flowSummary } from '../../lib/statuses';
-import { STATUS_FLOWS, type StatusFlow } from '../../lib/types';
+} from '@/lib/onboarding';
+import { getSettings, setSettings } from '@/lib/settings';
+import { flowSummary } from '@/lib/statuses';
+import { STATUS_FLOWS, type StatusFlow } from '@/lib/types';
 import { ChoiceGroup, Progress } from './Choices';
 import { Done } from './Done';
 import { PreferenceFields } from './PreferenceFields';

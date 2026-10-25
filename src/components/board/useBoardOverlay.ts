@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { BoardTask } from '../../lib/model';
-import type { StatusKey } from '../../lib/types';
+import type { BoardTask } from '@/lib/model';
+import type { StatusKey } from '@/lib/types';
 
 /** Section or status preselected when quick add opens from a column footer. */
 export interface QuickAddPreset {

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { modLabel } from '../lib/platform';
+import { modLabel } from '@/lib/platform';
 import { Dialog } from './Dialog';
 import { shortcutHelp } from './board/shortcuts';
 

@@ -1,6 +1,6 @@
 import { defineBackground } from '#imports';
 import { browser } from 'wxt/browser';
-import { onMessage } from '../lib/messaging';
+import { onMessage } from '@/lib/messaging';
 
 export default defineBackground(() => {
   // Greet new installs with the welcome page, which sets up their layout and

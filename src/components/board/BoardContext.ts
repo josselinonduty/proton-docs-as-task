@@ -5,10 +5,10 @@ import {
   type RefObject,
   type SetStateAction,
 } from 'react';
-import type { BoardColumn, BoardModel, BoardTask } from '../../lib/model';
-import type { BoardView, Settings, StatusDef, StatusKey } from '../../lib/types';
-import type { useStatusActions } from '../useStatusActions';
-import type { DetailsFocus } from '../TaskDetailsPanel';
+import type { BoardColumn, BoardModel, BoardTask } from '@/lib/model';
+import type { BoardView, Settings, StatusDef, StatusKey } from '@/lib/types';
+import type { useStatusActions } from '@/components/useStatusActions';
+import type { DetailsFocus } from '@/components/TaskDetailsPanel';
 import type { BoardDnd } from './useBoardDnd';
 import type { TaskActions } from './useTaskActions';
 

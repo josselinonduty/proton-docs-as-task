@@ -1,6 +1,6 @@
 import type { ParseKeys } from 'i18next';
-import type { BoardTask } from '../../lib/model';
-import type { DetailsFocus } from '../TaskDetailsPanel';
+import type { BoardTask } from '@/lib/model';
+import type { DetailsFocus } from '@/components/TaskDetailsPanel';
 
 /** What the board can do from the keyboard. */
 export interface ShortcutActions {

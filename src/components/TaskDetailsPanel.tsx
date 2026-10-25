@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { BoardTask, LinkKind, TaskLinks } from '../lib/model';
-import type { Suggestion } from '../lib/suggestions';
-import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
-import { findStatus, isDoneStatus } from '../lib/statuses';
+import type { BoardTask, LinkKind, TaskLinks } from '@/lib/model';
+import type { Suggestion } from '@/lib/suggestions';
+import type { DateFormat, Priority, StatusDef, StatusKey } from '@/lib/types';
+import { findStatus, isDoneStatus } from '@/lib/statuses';
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { OrphanStatus } from '../lib/model';
-import { defaultStatus } from '../lib/statuses';
-import type { StatusDef, StatusKey } from '../lib/types';
+import type { OrphanStatus } from '@/lib/model';
+import { defaultStatus } from '@/lib/statuses';
+import type { StatusDef, StatusKey } from '@/lib/types';
 import { Dialog } from './Dialog';
 
 function StatusSelect({

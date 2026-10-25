@@ -10,7 +10,7 @@ import {
   type DateFormat,
   type DueState,
   type QuickDateOption,
-} from '../lib/dates';
+} from '@/lib/dates';
 import { Icon } from './Icon';
 
 interface DueDateControlProps {

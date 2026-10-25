@@ -1,12 +1,12 @@
 import { useEffect, useEffectEvent, useState, useSyncExternalStore } from 'react';
-import type { EditorStateMessage } from '../lib/bridgeProtocol';
-import type { EditorClient } from '../lib/editorClient';
+import type { EditorStateMessage } from '@/lib/bridgeProtocol';
+import type { EditorClient } from '@/lib/editorClient';
 import {
   createBoardSession,
   type BoardNotice,
   type BoardSession,
   type BoardSessionSnapshot,
-} from '../lib/boardSession';
+} from '@/lib/boardSession';
 
 interface BoardSessionProps {
   /** Fixed for the component's lifetime, like `initialState`. */

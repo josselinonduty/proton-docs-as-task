@@ -32,6 +32,19 @@ export default defineConfig(
       ...reactHooks.configs.flat['recommended-latest'].rules,
       // `t` is the translation function almost everywhere; don't let a local hide it.
       '@typescript-eslint/no-shadow': 'error',
+      // Reach outside the current folder through the `@/` alias (`@/lib/model`),
+      // never `../`; same-folder imports stay relative (`./BoardCard`).
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../*'],
+              message: 'Import from outside this folder with the `@/` alias (`@/` is `src/`).',
+            },
+          ],
+        },
+      ],
     },
   },
   {

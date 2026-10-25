@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { BoardTask } from '../lib/model';
-import { dueBadgeText, dueState, dueStateLabel } from '../lib/dates';
+import type { BoardTask } from '@/lib/model';
+import { dueBadgeText, dueState, dueStateLabel } from '@/lib/dates';
 import type {
   BoardView,
   CardDensity,
   CardFieldVisibility,
   DateFormat,
   StatusDef,
-} from '../lib/types';
-import { findStatus } from '../lib/statuses';
+} from '@/lib/types';
+import { findStatus } from '@/lib/statuses';
 import { Icon } from './Icon';
 import { PRIORITY_ICON, priorityLabel } from './taskFields';
 

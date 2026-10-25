@@ -1,8 +1,8 @@
 import type { SelectHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LANGUAGE_SETTINGS, LANGUAGES } from '../i18n/languages';
-import { DATE_FORMATS } from '../lib/dates';
-import { CARD_DENSITIES, THEMES, type Settings } from '../lib/types';
+import { LANGUAGE_SETTINGS, LANGUAGES } from '@/i18n/languages';
+import { DATE_FORMATS } from '@/lib/dates';
+import { CARD_DENSITIES, THEMES, type Settings } from '@/lib/types';
 
 interface SettingSelectProps<T extends string> extends Omit<
   SelectHTMLAttributes<HTMLSelectElement>,

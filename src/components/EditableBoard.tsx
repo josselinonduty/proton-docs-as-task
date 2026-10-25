@@ -17,7 +17,7 @@ import {
   type BoardColumn,
   type BoardModel,
   type BoardTask,
-} from '../lib/model';
+} from '@/lib/model';
 import {
   buildPresets,
   collectFacets,
@@ -25,10 +25,10 @@ import {
   matchesFilters,
   EMPTY_FILTERS,
   type FilterState,
-} from '../lib/filters';
-import { applySortToModel, isActiveSort, MANUAL_SORT, type SortState } from '../lib/sorting';
-import { findStatus } from '../lib/statuses';
-import { buildAssigneeIndex, buildLabelIndex } from '../lib/suggestions';
+} from '@/lib/filters';
+import { applySortToModel, isActiveSort, MANUAL_SORT, type SortState } from '@/lib/sorting';
+import { findStatus } from '@/lib/statuses';
+import { buildAssigneeIndex, buildLabelIndex } from '@/lib/suggestions';
 import {
   BOARD_VIEWS,
   type BoardView,
@@ -36,7 +36,7 @@ import {
   type Settings,
   type StatusDef,
   type StatusKey,
-} from '../lib/types';
+} from '@/lib/types';
 import { QuickAddForm, type QuickAddPayload } from './QuickAddForm';
 import { BulkBar } from './BulkBar';
 import { CommandPalette } from './CommandPalette';

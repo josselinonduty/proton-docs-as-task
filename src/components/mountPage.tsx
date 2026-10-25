@@ -1,7 +1,7 @@
 import { StrictMode, type ComponentType } from 'react';
 import ReactDOM from 'react-dom/client';
-import i18n from '../i18n';
-import { syncLanguage } from '../lib/settings';
+import i18n from '@/i18n';
+import { syncLanguage } from '@/lib/settings';
 
 /**
  * Render an extension page (popup, options). It must render synchronously:

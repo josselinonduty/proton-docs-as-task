@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { createTask, type BoardTask } from '../../lib/model';
+import { createTask, type BoardTask } from '@/lib/model';
 import { useDetailsNavigation } from './useDetailsNavigation';
 
 const task = (id: string): BoardTask => ({ ...createTask('Tasks', 'todo', id), id });

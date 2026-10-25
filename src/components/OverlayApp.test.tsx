@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import type { ApplyResult, EditorStateMessage } from '../lib/bridgeProtocol';
-import type { EditorClient } from '../lib/editorClient';
-import type { AddTaskResponse, QuickAddTask } from '../lib/messaging';
-import { DEFAULT_SETTINGS } from '../lib/defaults';
+import type { ApplyResult, EditorStateMessage } from '@/lib/bridgeProtocol';
+import type { EditorClient } from '@/lib/editorClient';
+import type { AddTaskResponse, QuickAddTask } from '@/lib/messaging';
+import { DEFAULT_SETTINGS } from '@/lib/defaults';
 
 /** The popup command listeners the overlay registered, by message type. */
 const messageListeners = vi.hoisted(
@@ -20,12 +20,12 @@ vi.mock('@webext-core/messaging', () => ({
     },
   }),
 }));
-vi.mock('../lib/settings', () => ({
+vi.mock('@/lib/settings', () => ({
   settingsItem: { watch: () => () => {} },
   setSettings: vi.fn(),
 }));
-vi.mock('../lib/sessionStore', async () => {
-  const session = await import('../lib/session');
+vi.mock('@/lib/sessionStore', async () => {
+  const session = await import('@/lib/session');
   return {
     readDocPrefs: async () => session.DEFAULT_SESSION,
     writeDocPrefs: async () => {},

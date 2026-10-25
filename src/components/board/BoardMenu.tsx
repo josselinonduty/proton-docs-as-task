@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { modLabel } from '../../lib/platform';
-import { Icon } from '../Icon';
-import { useDismiss } from '../useDismiss';
+import { modLabel } from '@/lib/platform';
+import { Icon } from '@/components/Icon';
+import { useDismiss } from '@/components/useDismiss';
 
 interface BoardMenuProps {
   selectionMode: boolean;

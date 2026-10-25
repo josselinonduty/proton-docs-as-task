@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Icon } from '../Icon';
-import { statusStyle } from '../StatusColorPicker';
+import { Icon } from '@/components/Icon';
+import { statusStyle } from '@/components/StatusColorPicker';
 import { useBoard } from './BoardContext';
 import { BoardCard } from './BoardCard';
 import { DropPlaceholder } from './BoardColumn';

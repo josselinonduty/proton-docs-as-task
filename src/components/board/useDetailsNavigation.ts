@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { BoardTask } from '../../lib/model';
-import type { DetailsFocus } from '../TaskDetailsPanel';
+import type { BoardTask } from '@/lib/model';
+import type { DetailsFocus } from '@/components/TaskDetailsPanel';
 
 /** The task in the details panel, what to focus there, and a nonce to re-request focus. */
 export interface DetailsTarget {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import type { BulkAction } from '../lib/model';
-import type { Suggestion } from '../lib/suggestions';
-import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
+import type { BulkAction } from '@/lib/model';
+import type { Suggestion } from '@/lib/suggestions';
+import type { DateFormat, Priority, StatusDef, StatusKey } from '@/lib/types';
 import { DueDateControl } from './DueDateControl';
 
 interface BulkBarProps {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { BoardTask } from '../lib/model';
+import type { BoardTask } from '@/lib/model';
 import { Icon } from './Icon';
 
 export interface TaskSubtasksProps {

@@ -4,10 +4,10 @@ import {
   type BoardColumn,
   type BoardModel,
   type BoardTask,
-} from '../../lib/model';
-import { hasActiveFilters, matchesFilters, type FilterState } from '../../lib/filters';
-import { isActiveSort, sortTasks, type SortState } from '../../lib/sorting';
-import type { BoardView, StatusDef } from '../../lib/types';
+} from '@/lib/model';
+import { hasActiveFilters, matchesFilters, type FilterState } from '@/lib/filters';
+import { isActiveSort, sortTasks, type SortState } from '@/lib/sorting';
+import type { BoardView, StatusDef } from '@/lib/types';
 
 /** What decides which cards the board shows, and where. */
 export interface LayoutInput {

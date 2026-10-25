@@ -8,7 +8,7 @@
  * out of scope: the quick options below map to exact calendar dates.
  */
 
-import i18n, { t } from '../i18n';
+import i18n, { t } from '@/i18n';
 
 export type QuickDateOption = 'today' | 'tomorrow' | 'weekend' | 'next-week';
 

@@ -1,4 +1,4 @@
-import { isLanguage } from '../i18n/languages';
+import { isLanguage } from '@/i18n/languages';
 import { DATE_FORMATS } from './dates';
 import {
   BOARD_VIEWS,

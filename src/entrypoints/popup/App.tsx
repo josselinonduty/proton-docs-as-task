@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { getSettings, setSettings } from '../../lib/settings';
-import type { Settings } from '../../lib/types';
-import { sendMessage, type StatusResponse } from '../../lib/messaging';
+import { getSettings, setSettings } from '@/lib/settings';
+import type { Settings } from '@/lib/types';
+import { sendMessage, type StatusResponse } from '@/lib/messaging';
 
 type TabStatus =
   | { state: 'loading' }

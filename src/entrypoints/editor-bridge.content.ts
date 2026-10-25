@@ -1,5 +1,5 @@
 import { defineContentScript } from '#imports';
-import { startEditorBridge } from '../lib/editorBridge';
+import { startEditorBridge } from '@/lib/editorBridge';
 
 /**
  * Runs in the page's own JavaScript world, next to Proton's code, so it can

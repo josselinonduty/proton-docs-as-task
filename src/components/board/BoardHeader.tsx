@@ -1,12 +1,12 @@
 import type { ComponentProps, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EMPTY_FILTERS, type Facets, type FilterState, type Preset } from '../../lib/filters';
-import type { SortState } from '../../lib/sorting';
-import { BOARD_VIEWS, type BoardView, type SaveState, type StatusDef } from '../../lib/types';
-import { FilterBar } from '../FilterBar';
-import { FilterPanel } from '../FilterPanel';
-import { Icon } from '../Icon';
-import { SortMenu } from '../SortMenu';
+import { EMPTY_FILTERS, type Facets, type FilterState, type Preset } from '@/lib/filters';
+import type { SortState } from '@/lib/sorting';
+import { BOARD_VIEWS, type BoardView, type SaveState, type StatusDef } from '@/lib/types';
+import { FilterBar } from '@/components/FilterBar';
+import { FilterPanel } from '@/components/FilterPanel';
+import { Icon } from '@/components/Icon';
+import { SortMenu } from '@/components/SortMenu';
 import { BoardMenu } from './BoardMenu';
 
 interface BoardHeaderProps {

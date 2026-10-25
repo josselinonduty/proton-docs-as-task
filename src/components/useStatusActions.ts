@@ -1,12 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import {
-  addStatus,
-  canRemoveStatus,
-  moveStatus,
-  updateStatus,
-  type BoardModel,
-} from '../lib/model';
-import type { StatusDef, StatusKey } from '../lib/types';
+import { addStatus, canRemoveStatus, moveStatus, updateStatus, type BoardModel } from '@/lib/model';
+import type { StatusDef, StatusKey } from '@/lib/types';
 
 interface StatusActionsOptions {
   model: BoardModel;

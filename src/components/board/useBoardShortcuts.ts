@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react';
-import type { BoardTask } from '../../lib/model';
+import type { BoardTask } from '@/lib/model';
 import type { CardPlace } from './boardLayout';
 import { findShortcut, type ShortcutContext } from './shortcuts';
 

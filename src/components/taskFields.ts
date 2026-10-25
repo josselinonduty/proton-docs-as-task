@@ -1,5 +1,5 @@
-import { t } from '../i18n';
-import type { Priority } from '../lib/types';
+import { t } from '@/i18n';
+import type { Priority } from '@/lib/types';
 import type { IconName } from './Icon';
 
 /** Priority choices for selects, "none" first. */

@@ -7,12 +7,12 @@ import {
   removeStatus,
   type BoardTask,
   type OrphanStatus,
-} from '../../lib/model';
-import { findStatus } from '../../lib/statuses';
-import type { StatusKey } from '../../lib/types';
-import { BoardSettingsDialog } from '../BoardSettingsDialog';
-import { Dialog } from '../Dialog';
-import { MissingStatusDialog, StatusDeleteDialog } from '../StatusDialogs';
+} from '@/lib/model';
+import { findStatus } from '@/lib/statuses';
+import type { StatusKey } from '@/lib/types';
+import { BoardSettingsDialog } from '@/components/BoardSettingsDialog';
+import { Dialog } from '@/components/Dialog';
+import { MissingStatusDialog, StatusDeleteDialog } from '@/components/StatusDialogs';
 import { useBoard } from './BoardContext';
 import type { BoardOverlay, BoardOverlayKind } from './useBoardOverlay';
 

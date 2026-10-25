@@ -1,8 +1,8 @@
 import { createShadowRootUi, defineContentScript } from '#imports';
 import ReactDOM from 'react-dom/client';
-import { OverlayApp } from '../../components/OverlayApp';
-import { connectEditor } from '../../lib/editorClient';
-import { getSettings, syncLanguage } from '../../lib/settings';
+import { OverlayApp } from '@/components/OverlayApp';
+import { connectEditor } from '@/lib/editorClient';
+import { getSettings, syncLanguage } from '@/lib/settings';
 import './style.css';
 
 export default defineContentScript({

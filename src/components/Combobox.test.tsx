@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Combobox } from './Combobox';
-import type { Suggestion } from '../lib/suggestions';
+import type { Suggestion } from '@/lib/suggestions';
 
 const SUGGESTIONS: Suggestion[] = [
   { value: 'Sam', count: 2 },

@@ -1,4 +1,4 @@
-import type { Layout } from '../../lib/onboarding';
+import type { Layout } from '@/lib/onboarding';
 
 /** Decorative miniature of a layout; the card's text carries the meaning. */
 export function LayoutPreview({ layout }: { layout: Layout }) {

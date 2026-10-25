@@ -1,18 +1,18 @@
 import { useEffect, useId, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { Icon } from '../../components/Icon';
-import { AppearanceSelect, SettingSelect } from '../../components/SettingSelect';
-import { DEFAULT_MARKERS } from '../../lib/defaults';
-import { getSettings, setSettings } from '../../lib/settings';
-import { flowSummary } from '../../lib/statuses';
+import { Icon } from '@/components/Icon';
+import { AppearanceSelect, SettingSelect } from '@/components/SettingSelect';
+import { DEFAULT_MARKERS } from '@/lib/defaults';
+import { getSettings, setSettings } from '@/lib/settings';
+import { flowSummary } from '@/lib/statuses';
 import {
   BOARD_VIEWS,
   COMPLETED_DISPLAYS,
   STATUS_FLOWS,
   type CardFieldVisibility,
   type Settings,
-} from '../../lib/types';
+} from '@/lib/types';
 
 const CARD_FIELDS: (keyof CardFieldVisibility)[] = [
   'description',
