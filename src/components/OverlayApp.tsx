@@ -16,10 +16,7 @@ import {
   type BoardModel,
 } from '../lib/model';
 import { canonicalDoc, canonicalModel, hasRedundantStatus, reconcileIds } from '../lib/sync';
-import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
-import { MANUAL_SORT, type SortState } from '../lib/sorting';
-import { DEFAULT_SESSION, documentKey, toggleInList, type SessionPrefs } from '../lib/session';
-import { readDocPrefs, writeDocPrefs } from '../lib/sessionStore';
+import { toggleInList } from '../lib/session';
 import { withDefaults } from '../lib/defaults';
 import { settingsItem, setSettings as persistSettings } from '../lib/settings';
 import type { BoardView, SaveState, Settings } from '../lib/types';
@@ -27,6 +24,7 @@ import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/mes
 import { EditableBoard } from './EditableBoard';
 import { Icon } from './Icon';
 import { announceBoard } from '../lib/branding';
+import { useSessionPrefs } from './useSessionPrefs';
 
 interface OverlayAppProps {
   client: EditorClient;
@@ -65,12 +63,6 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   const [docState, setDocState] = useState(initialState);
   const [visible, setVisible] = useState(false);
   const [model, setModel] = useState<BoardModel | null>(null);
-  const [view, setView] = useState<BoardView>(initialSettings.defaultView);
-  const [filters, setFilters] = useState<FilterState>({ ...EMPTY_FILTERS });
-  const [sort, setSort] = useState<SortState>(MANUAL_SORT);
-  const [collapsedColumns, setCollapsedColumns] = useState<string[]>([]);
-  const [collapsedRows, setCollapsedRows] = useState<string[]>([]);
-  const [lastQuickAddSection, setLastQuickAddSection] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [undo, setUndo] = useState<UndoEntry | null>(null);
   const undoRef = useRef<UndoEntry | null>(null);
@@ -105,53 +97,13 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     host.lang = i18n.language;
   }, [host, i18n.language]);
 
-  // Per-document session preferences (view, sort, filters, collapsed sets).
-  const docKey = useMemo(
-    () => (typeof window !== 'undefined' ? documentKey(window.location.href) : null),
-    [],
-  );
-  const sessionReady = useRef(false);
-
   // Every Done-category column of the document, when completed tasks start collapsed.
-  const seedCollapsed = useCallback(() => {
+  const prefs = useSessionPrefs(initialSettings.defaultView, () => {
     if (settings.completedDisplay !== 'collapse') return [];
     const { statuses } = parseDocument(docLines.current.join('\n'), settings.markers);
     return statuses.filter((s) => s.category === 'done').map((s) => s.key);
-  }, [settings.completedDisplay, settings.markers]);
-
-  // Load stored preferences once (per document key, else start from defaults).
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const prefs = docKey ? await readDocPrefs(docKey) : DEFAULT_SESSION;
-      if (cancelled) return;
-      if (prefs.view) setView(prefs.view);
-      setSort(prefs.sort);
-      setFilters(prefs.filters);
-      setCollapsedColumns(prefs.collapsedColumns.length ? prefs.collapsedColumns : seedCollapsed());
-      setCollapsedRows(prefs.collapsedRows);
-      setLastQuickAddSection(prefs.lastQuickAddSection);
-      sessionReady.current = true;
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docKey]);
-
-  // Persist preferences whenever they change (session storage only).
-  useEffect(() => {
-    if (!sessionReady.current || !docKey) return;
-    const prefs: SessionPrefs = {
-      view,
-      sort,
-      filters,
-      collapsedColumns,
-      collapsedRows,
-      lastQuickAddSection,
-    };
-    void writeDocPrefs(docKey, prefs);
-  }, [docKey, view, sort, filters, collapsedColumns, collapsedRows, lastQuickAddSection]);
+  });
+  const { setView, setCollapsedColumns, setCollapsedRows } = prefs;
 
   const result = useMemo(() => parseDocument(text, settings.markers), [text, settings.markers]);
 
@@ -301,10 +253,13 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     return () => clearTimeout(timer);
   }, [undo]);
 
-  const handleViewChange = useCallback((next: BoardView) => {
-    setView(next);
-    void persistSettings({ defaultView: next });
-  }, []);
+  const handleViewChange = useCallback(
+    (next: BoardView) => {
+      setView(next);
+      void persistSettings({ defaultView: next });
+    },
+    [setView],
+  );
 
   const handleSettingsChange = useCallback((patch: Partial<Settings>) => {
     void persistSettings(patch);
@@ -312,11 +267,11 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
 
   const toggleColumnCollapse = useCallback(
     (key: string) => setCollapsedColumns((l) => toggleInList(l, key)),
-    [],
+    [setCollapsedColumns],
   );
   const toggleRowCollapse = useCallback(
     (key: string) => setCollapsedRows((l) => toggleInList(l, key)),
-    [],
+    [setCollapsedRows],
   );
   // Content scripts can't call `openOptionsPage` directly, so hand it off to
   // the background script.
@@ -499,25 +454,25 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
         <LiveRegion message={announcement} />
         <EditableBoard
           model={model}
-          view={view}
-          filters={filters}
-          sort={sort}
+          view={prefs.view}
+          filters={prefs.filters}
+          sort={prefs.sort}
           settings={settings}
           marker={marker}
           saveState={saveState}
           undoLabel={undo?.label ?? null}
-          collapsedColumns={collapsedColumns}
-          collapsedRows={collapsedRows}
-          lastQuickAddSection={lastQuickAddSection}
+          collapsedColumns={prefs.collapsedColumns}
+          collapsedRows={prefs.collapsedRows}
+          lastQuickAddSection={prefs.lastQuickAddSection}
           announce={announce}
           onChange={handleModelChange}
           onViewChange={handleViewChange}
-          onFiltersChange={setFilters}
-          onSortChange={setSort}
+          onFiltersChange={prefs.setFilters}
+          onSortChange={prefs.setSort}
           onSettingsChange={handleSettingsChange}
           onToggleColumnCollapse={toggleColumnCollapse}
           onToggleRowCollapse={toggleRowCollapse}
-          onQuickAddSectionChange={setLastQuickAddSection}
+          onQuickAddSectionChange={prefs.setLastQuickAddSection}
           onUndo={handleUndo}
           onRetry={retryWrite}
           onReloadFromDoc={reloadFromDoc}
