@@ -7,6 +7,9 @@ export default defineConfig({
     alias: { '@': '/src' },
   },
   test: {
+    // Runtime globals only, so Testing Library unmounts after each test on its
+    // own. They aren't typed (tsconfig.json has no `vitest/globals`): tests
+    // import what they use from `vitest`.
     globals: true,
     // Pure-logic tests run in Node; component/interaction tests opt into jsdom
     // per file via a `// @vitest-environment jsdom` pragma.
