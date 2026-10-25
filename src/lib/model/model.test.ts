@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseDocument } from './parser';
-import { DEFAULT_MARKERS } from './defaults';
+import { parseDocument } from '@/lib/parser';
+import { DEFAULT_MARKERS } from '@/lib/defaults';
 import {
   addSection,
   addSubtask,
@@ -44,7 +44,7 @@ import {
   updateStatus,
   updateTask,
   type BoardModel,
-} from './model';
+} from '@/lib/model';
 
 const MARKER = '#!tasks';
 
