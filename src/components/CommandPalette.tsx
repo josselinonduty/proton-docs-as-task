@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Modal } from './Modal';
 
 export interface Command {
   id: string;
@@ -39,7 +40,8 @@ function score(command: Command, q: string): number {
  * A searchable command palette (Cmd/Ctrl+K). Results support arrow-key
  * navigation; recently used commands surface first when the query is empty.
  * Disabled commands stay listed and explain why they can't run. Every command
- * here is also reachable elsewhere in the UI.
+ * here is also reachable elsewhere in the UI. It's a modal of its own, so it
+ * opens on top of any open dialog.
  */
 export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
   const { t } = useTranslation();
@@ -47,10 +49,6 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -95,22 +93,17 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       runAt(active);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      onClose();
     }
   };
 
   return (
-    <div className="pdt-palette__backdrop" onMouseDown={onClose}>
-      <div
-        className="pdt-palette"
-        role="dialog"
-        aria-label={t('palette.title')}
-        onMouseDown={(e) => e.stopPropagation()}
-        onKeyDown={onKeyDown}
-      >
+    <Modal
+      className="pdt-modal pdt-modal--top"
+      aria-label={t('palette.title')}
+      onClose={onClose}
+      initialFocus={inputRef}
+    >
+      <div className="pdt-palette" onKeyDown={onKeyDown}>
         <input
           ref={inputRef}
           className="pdt-palette__input"
@@ -158,6 +151,6 @@ export function CommandPalette({ commands, onClose }: CommandPaletteProps) {
           {results.length === 0 && <li className="pdt-palette__empty">{t('palette.empty')}</li>}
         </ul>
       </div>
-    </div>
+    </Modal>
   );
 }

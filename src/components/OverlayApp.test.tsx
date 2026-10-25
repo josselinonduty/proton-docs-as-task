@@ -276,6 +276,21 @@ describe('OverlayApp per-document statuses', () => {
     expect(editor.lines).toContain('- [x] Write the spec');
   });
 
+  it('stacks the status delete confirmation over board settings', () => {
+    const showModal = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
+    setup(FLOW);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Board settings' }));
+    const settings = screen.getByRole('dialog', { name: 'Board settings' });
+    fireEvent.click(within(settings).getByRole('button', { name: 'Delete status In review' }));
+    const confirm = screen.getByRole('dialog', { name: 'Delete status “In review”' });
+    expect(showModal.mock.contexts).toEqual([settings, confirm]);
+    fireEvent.keyDown(within(confirm).getByRole('combobox'), { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: /Delete status/ })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Board settings' })).toBe(settings);
+    showModal.mockRestore();
+  });
+
   it('blocks the board until tasks with a missing status are moved', () => {
     vi.useFakeTimers();
     const editor = setup([...FLOW, '- [ ] Lost one @status:qa', '- [ ] Lost two @status:qa']);

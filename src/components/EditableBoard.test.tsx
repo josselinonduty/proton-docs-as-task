@@ -131,6 +131,22 @@ describe('EditableBoard keyboard and dialogs', () => {
     expect(screen.getByRole('dialog', { name: 'Command palette' })).toBeTruthy();
   });
 
+  it('stacks the palette over an open dialog, and Escape closes only the palette', () => {
+    const showModal = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
+    const { board } = setup('workflow');
+    fireEvent.keyDown(board, { key: '?' });
+    const help = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    fireEvent.keyDown(help, { key: 'k', ctrlKey: true });
+    const palette = screen.getByRole('dialog', { name: 'Command palette' });
+    expect(showModal.mock.contexts).toEqual([help, palette]);
+    fireEvent.keyDown(screen.getByRole('combobox', { name: 'Search commands' }), {
+      key: 'Escape',
+    });
+    expect(screen.queryByRole('dialog', { name: 'Command palette' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBe(help);
+    showModal.mockRestore();
+  });
+
   it('lists the documented shortcuts in the help dialog', () => {
     const { board } = setup('workflow');
     fireEvent.keyDown(board, { key: '?' });
