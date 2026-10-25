@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { modLabel } from '@/lib/platform';
 import { Icon } from '@/components/Icon';
-import { useDismiss } from '@/components/useDismiss';
+import { useMenuButton } from '@/components/useMenuButton';
 
 interface BoardMenuProps {
   selectionMode: boolean;
@@ -15,35 +15,39 @@ interface BoardMenuProps {
   onExtensionSettings: () => void;
 }
 
-/** The header's "More actions" menu. Each item closes it. */
+/**
+ * The header's "More actions" menu (the menu button pattern, see
+ * `useMenuButton`). Each item closes it and returns focus to the button.
+ */
 export function BoardMenu(props: BoardMenuProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  useDismiss(open, [menuRef], () => setOpen(false), { escape: true });
+  const { wrapRef, triggerRef, menuRef, triggerProps, menuProps, close } = useMenuButton(
+    open,
+    setOpen,
+  );
   const mod = modLabel();
 
-  /** Run `action` from an item, then close the menu. */
+  /** Close the menu, then run `action`. */
   const item = (action: () => void) => () => {
+    close();
     action();
-    setOpen(false);
   };
 
   return (
-    <div className="pdt-menu" ref={menuRef}>
+    <div className="pdt-menu" ref={wrapRef}>
       <button
         type="button"
         className="pdt-btn pdt-btn-icon"
-        aria-haspopup="menu"
-        aria-expanded={open}
         aria-label={t('board.more')}
         title={t('board.more')}
-        onClick={() => setOpen((v) => !v)}
+        ref={triggerRef}
+        {...triggerProps}
       >
         <Icon name="dots-vertical" />
       </button>
       {open && (
-        <div className="pdt-menu__panel" role="menu">
+        <div className="pdt-menu__panel" ref={menuRef} {...menuProps}>
           <MenuItem
             label={props.selectionMode ? t('board.menu.exitSelection') : t('board.menu.select')}
             hint={`${mod} A`}
@@ -52,10 +56,7 @@ export function BoardMenu(props: BoardMenuProps) {
           <MenuItem label={t('settings.title')} onClick={item(props.onBoardSettings)} />
           <MenuItem
             label={t('board.menu.copyBoard')}
-            onClick={async () => {
-              await props.onCopyBoard();
-              setOpen(false);
-            }}
+            onClick={item(() => void props.onCopyBoard())}
           />
           <MenuItem label={t('board.menu.reload')} onClick={item(props.onReload)} />
           <div className="pdt-menu__sep" role="separator" />
@@ -70,7 +71,13 @@ export function BoardMenu(props: BoardMenuProps) {
 
 function MenuItem({ label, hint, onClick }: { label: string; hint?: string; onClick: () => void }) {
   return (
-    <button type="button" role="menuitem" className="pdt-menu__item" onClick={onClick}>
+    <button
+      type="button"
+      role="menuitem"
+      tabIndex={-1}
+      className="pdt-menu__item"
+      onClick={onClick}
+    >
       <span>{label}</span>
       {hint && <kbd className="pdt-menu__hint">{hint}</kbd>}
     </button>

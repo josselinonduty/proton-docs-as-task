@@ -190,6 +190,25 @@ describe('EditableBoard keyboard and dialogs', () => {
     expect(onViewChange).toHaveBeenCalledWith('sections');
   });
 
+  it('keeps board shortcuts from firing while the menu has focus', () => {
+    setup('workflow');
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'n' });
+    expect(screen.queryByRole('dialog', { name: 'New task' })).toBeNull();
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(screen.getByRole('menu')).toBeTruthy();
+  });
+
+  it('gives focus back to the menu button when a dialog it opened closes', () => {
+    setup('workflow');
+    const trigger = screen.getByRole('button', { name: 'More actions' });
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole('menuitem', { name: /Keyboard shortcuts/ }));
+    const help = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    fireEvent.keyDown(help, { key: 'Escape' });
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it('opens board settings from the menu and closes the menu', () => {
     setup('workflow');
     fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
