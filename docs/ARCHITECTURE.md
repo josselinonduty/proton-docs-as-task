@@ -28,6 +28,14 @@ extension:
    board. While Proton has editing locked (loading, offline, view-only), board
    edits wait and are written once it unlocks.
 
+Steps 6 and 7 live in the **board session**
+([`boardSession.ts`](../src/lib/boardSession.ts)), a small store with no React
+in it: it holds the board shown, the pending edit and the merge base,
+debounces writes, handles each editor state by its origin, and offers retry,
+reload and undo. `OverlayApp` reads it with `useSyncExternalStore`
+([`useBoardSession`](../src/components/useBoardSession.ts)) and only renders
+the board and answers the popup.
+
 ```
 docs.proton.me  (outer shell frame)    ◄── shell-branding: favicon while a board is open
 └── iframe: docs-editor.proton.me      ◄── content scripts run here
@@ -56,6 +64,7 @@ src/
 │  └─ welcome/                    # first-run setup: layout, status flow, preferences
 ├─ components/                    # React UI: OverlayApp, EditableBoard, cards, dialogs,
 │                                 #   filters, command palette, sub-tasks, board settings…
+│                                 #   and hooks (useBoardSession, usePopupCommands, useSessionPrefs)
 ├─ i18n/                          # i18next setup and locales/*.json (en is the source)
 ├─ styles/                        # shared design tokens and components (see STYLEGUIDE.md)
 └─ lib/
@@ -70,6 +79,7 @@ src/
    ├─ editorBridge.ts             # page-world bridge (tested against real Lexical + Yjs)
    ├─ editorClient.ts / bridgeProtocol.ts  # content script ↔ bridge contract
    ├─ lineMerge.ts                # LCS and three-way line merge
+   ├─ boardSession.ts             # board ↔ document sync: pending edits, debounced writes
    ├─ settings.ts / defaults.ts   # stored settings and migrations
    ├─ onboarding.ts               # first-run layouts and presets
    ├─ branding.ts / platform.ts   # shell icon; OS-aware shortcut labels
