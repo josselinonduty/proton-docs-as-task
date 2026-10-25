@@ -260,12 +260,19 @@ export function findLexicalEditor(doc: Document): LexicalEditorLike | null {
   return candidates[0]?.__lexicalEditor ?? null;
 }
 
-const REATTACH_INTERVAL_MS = 1000;
+/** How long a burst of DOM changes settles before the bridge looks again. */
+const REATTACH_DELAY_MS = 100;
 
 /**
  * Attach to the editor in `doc` (re-attaching whenever Proton remounts it),
  * broadcast its state on every change, and serve requests from the content
  * script.
+ *
+ * Remounts are found by watching the DOM rather than polling: in a frame
+ * with no editor (the Docs shell) the bridge stays idle until the page
+ * changes, and changes inside the attached editor (typing) are skipped. A
+ * newly found editor is broadcast as `initial`, so a content script that
+ * stopped asking still connects.
  */
 export function startEditorBridge(doc: Document = document): () => void {
   let editor: LexicalEditorLike | null = null;
@@ -321,12 +328,34 @@ export function startEditorBridge(doc: Document = document): () => void {
     doc.dispatchEvent(new CustomEvent(RESPONSE_EVENT, { detail: JSON.stringify(response) }));
   };
 
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const scheduleAttach = () => {
+    timer ??= setTimeout(() => {
+      timer = undefined;
+      attach();
+    }, REATTACH_DELAY_MS);
+  };
+  const observer = new MutationObserver((records) => {
+    const root = editor?.getRootElement();
+    // Edits inside the attached editor can't remount it.
+    const inside = root && records.every((r) => r.target !== root && root.contains(r.target));
+    if (!inside) scheduleAttach();
+  });
+
   doc.addEventListener(REQUEST_EVENT, onRequest);
   attach();
-  const timer = setInterval(attach, REATTACH_INTERVAL_MS);
+  observer.observe(doc, {
+    childList: true,
+    subtree: true,
+    // Lexical marks its root with `data-lexical-editor`, and the document
+    // editor is told apart by its class.
+    attributes: true,
+    attributeFilter: ['class', 'data-lexical-editor'],
+  });
 
   return () => {
-    clearInterval(timer);
+    observer.disconnect();
+    clearTimeout(timer);
     doc.removeEventListener(REQUEST_EVENT, onRequest);
     unregister.forEach((fn) => fn());
   };

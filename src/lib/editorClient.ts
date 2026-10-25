@@ -31,7 +31,13 @@ export interface EditorClient {
   stop(): void;
 }
 
-const HELLO_INTERVAL_MS = 500;
+/**
+ * Delays between `hello`s: 500 ms doubling up to 10 s, then the client stops
+ * asking. A bridge that finds an editor later broadcasts it on its own, so
+ * a late editor still connects; asking only covers a bridge that attached
+ * before this script listened.
+ */
+export const HELLO_DELAYS_MS = [500, 1000, 2000, 4000, 8000, 10_000, 10_000, 10_000];
 
 export function connectEditor(doc: Document = document): EditorClient {
   let state: EditorStateMessage | null = null;
@@ -70,13 +76,16 @@ export function connectEditor(doc: Document = document): EditorClient {
 
   doc.addEventListener(STATE_EVENT, onState);
 
-  // The bridge may load before or after us; ask until it answers with a state.
-  const hello = () => {
+  // The bridge may load before or after us; ask, backing off, until it
+  // answers with a state.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const hello = (attempt: number) => {
     if (state) return;
     request({ type: 'hello' });
+    const delay = HELLO_DELAYS_MS[attempt];
+    if (delay !== undefined) timer = setTimeout(() => hello(attempt + 1), delay);
   };
-  hello();
-  const timer = setInterval(() => (state ? clearInterval(timer) : hello()), HELLO_INTERVAL_MS);
+  hello(0);
 
   return {
     get state() {
@@ -93,7 +102,7 @@ export function connectEditor(doc: Document = document): EditorClient {
       return response.result as ApplyResult;
     },
     stop() {
-      clearInterval(timer);
+      clearTimeout(timer);
       doc.removeEventListener(STATE_EVENT, onState);
       listeners.clear();
     },
