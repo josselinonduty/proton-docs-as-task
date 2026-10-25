@@ -1,274 +1,279 @@
-@import '../../styles/tokens.css';
-@import '../../styles/components.css';
+/* Cascade layers (see STYLEGUIDE.md): tokens, then the shared components and
+ * this surface's own rules together in `app`, in that order. */
+@layer tokens, app;
+@import '@/styles/tokens.css' layer(tokens);
+@import '@/styles/components.css' layer(app);
 
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  background: var(--pdt-background-weak);
-  color: var(--pdt-text-norm);
-  font-family: var(--pdt-font-family);
-  font-size: var(--pdt-text-md);
-  line-height: var(--pdt-line-height);
-}
-code {
-  padding: 1px 5px;
-  border-radius: var(--pdt-radius-sm);
-  background: var(--pdt-background-strong);
-  font-size: var(--pdt-text-xs);
-  font-family: var(--pdt-font-mono);
-}
-.op-loading {
-  padding: var(--pdt-space-8);
-  text-align: center;
-  color: var(--pdt-text-weak);
-}
-.op {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: var(--pdt-space-8) var(--pdt-space-5) 48px;
-}
-/* Page header on Proton's light "Snow" chrome: plain surface, hairline border. */
-.op-head {
-  display: flex;
-  align-items: center;
-  gap: var(--pdt-space-3);
-  margin-bottom: var(--pdt-space-6);
-  padding: var(--pdt-space-4) var(--pdt-space-5);
-  border: 1px solid var(--pdt-border-weak);
-  border-radius: var(--pdt-radius-lg);
-  background: var(--pdt-background-norm);
-}
-/* The app icon (public/icon), already shaped as a rounded square. */
-.op-logo {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-}
-.op-head h1 {
-  margin: 0;
-  font-size: var(--pdt-text-xl);
-  font-weight: var(--pdt-font-weight-bold);
-}
-.op-sub {
-  margin: 2px 0 0;
-  color: var(--pdt-text-weak);
-}
-.op-head__aside {
-  display: flex;
-  align-items: center;
-  gap: var(--pdt-space-3);
-  margin-left: auto;
-}
-.op-head__aside a.pdt-btn {
-  text-decoration: none;
-}
-
-.op-card {
-  margin-bottom: var(--pdt-space-5);
-}
-.op-card h2 {
-  margin: 0 0 var(--pdt-space-3);
-  font-size: var(--pdt-text-lg);
-  font-weight: var(--pdt-font-weight-bold);
-}
-.op-hint {
-  margin: 0 0 var(--pdt-space-3);
-  color: var(--pdt-text-weak);
-  font-size: var(--pdt-text-sm);
-}
-
-/* A setting: label on the left, control on the right, hint under the label. */
-.op-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: var(--pdt-space-4);
-  padding: var(--pdt-space-3) 0;
-  border-top: 1px solid var(--pdt-border-weak);
-}
-.op-card h2 + .op-row,
-.op-card h2 + .op-fieldset {
-  border-top: none;
-  padding-top: 0;
-}
-.op-row__label {
-  display: block;
-  font-weight: var(--pdt-font-weight-medium);
-}
-.op-row--hinted .op-row__control {
-  grid-row: span 2;
-}
-.op-row__hint {
-  grid-column: 1;
-  margin: 2px 0 0;
-  font-size: var(--pdt-text-xs);
-  color: var(--pdt-text-weak);
-}
-.op-row select {
-  max-width: 320px;
-}
-.op-row--switch {
-  grid-template-columns: minmax(0, 1fr);
-}
-.op-row--switch .pdt-switch-row {
-  position: relative;
-}
-.op-row--switch .pdt-switch-row[aria-disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.op-row--switch .op-row__hint {
-  padding-right: 54px;
-}
-@media (max-width: 520px) {
+@layer app {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--pdt-background-weak);
+    color: var(--pdt-text-norm);
+    font-family: var(--pdt-font-family);
+    font-size: var(--pdt-text-md);
+    line-height: var(--pdt-line-height);
+  }
+  code {
+    padding: 1px 5px;
+    border-radius: var(--pdt-radius-sm);
+    background: var(--pdt-background-strong);
+    font-size: var(--pdt-text-xs);
+    font-family: var(--pdt-font-mono);
+  }
+  .op-loading {
+    padding: var(--pdt-space-8);
+    text-align: center;
+    color: var(--pdt-text-weak);
+  }
+  .op {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--pdt-space-8) var(--pdt-space-5) 48px;
+  }
+  /* Page header on Proton's light "Snow" chrome: plain surface, hairline border. */
   .op-head {
-    flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: var(--pdt-space-3);
+    margin-bottom: var(--pdt-space-6);
+    padding: var(--pdt-space-4) var(--pdt-space-5);
+    border: 1px solid var(--pdt-border-weak);
+    border-radius: var(--pdt-radius-lg);
+    background: var(--pdt-background-norm);
+  }
+  /* The app icon (public/icon), already shaped as a rounded square. */
+  .op-logo {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+  }
+  .op-head h1 {
+    margin: 0;
+    font-size: var(--pdt-text-xl);
+    font-weight: var(--pdt-font-weight-bold);
+  }
+  .op-sub {
+    margin: 2px 0 0;
+    color: var(--pdt-text-weak);
   }
   .op-head__aside {
-    width: 100%;
-    margin-left: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--pdt-space-3);
+    margin-left: auto;
   }
+  .op-head__aside a.pdt-btn {
+    text-decoration: none;
+  }
+
+  .op-card {
+    margin-bottom: var(--pdt-space-5);
+  }
+  .op-card h2 {
+    margin: 0 0 var(--pdt-space-3);
+    font-size: var(--pdt-text-lg);
+    font-weight: var(--pdt-font-weight-bold);
+  }
+  .op-hint {
+    margin: 0 0 var(--pdt-space-3);
+    color: var(--pdt-text-weak);
+    font-size: var(--pdt-text-sm);
+  }
+
+  /* A setting: label on the left, control on the right, hint under the label. */
   .op-row {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--pdt-space-2);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--pdt-space-4);
+    padding: var(--pdt-space-3) 0;
+    border-top: 1px solid var(--pdt-border-weak);
+  }
+  .op-card h2 + .op-row,
+  .op-card h2 + .op-fieldset {
+    border-top: none;
+    padding-top: 0;
+  }
+  .op-row__label {
+    display: block;
+    font-weight: var(--pdt-font-weight-medium);
   }
   .op-row--hinted .op-row__control {
-    grid-row: auto;
+    grid-row: span 2;
+  }
+  .op-row__hint {
+    grid-column: 1;
+    margin: 2px 0 0;
+    font-size: var(--pdt-text-xs);
+    color: var(--pdt-text-weak);
   }
   .op-row select {
-    max-width: none;
-    width: 100%;
+    max-width: 320px;
   }
-}
+  .op-row--switch {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .op-row--switch .pdt-switch-row {
+    position: relative;
+  }
+  .op-row--switch .pdt-switch-row[aria-disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .op-row--switch .op-row__hint {
+    padding-right: 54px;
+  }
+  @media (max-width: 520px) {
+    .op-head {
+      flex-wrap: wrap;
+    }
+    .op-head__aside {
+      width: 100%;
+      margin-left: 0;
+    }
+    .op-row {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--pdt-space-2);
+    }
+    .op-row--hinted .op-row__control {
+      grid-row: auto;
+    }
+    .op-row select {
+      max-width: none;
+      width: 100%;
+    }
+  }
 
-/* Saved confirmation; the live region stays mounted so it is announced, but
+  /* Saved confirmation; the live region stays mounted so it is announced, but
  * takes no room while empty. */
-.op-saved:empty {
-  position: absolute;
-}
-.op-saved .pdt-badge {
-  gap: 4px;
-}
+  .op-saved:empty {
+    position: absolute;
+  }
+  .op-saved .pdt-badge {
+    gap: 4px;
+  }
 
-/* Rarely needed sections, collapsed until opened. */
-.op-more summary {
-  display: flex;
-  align-items: center;
-  gap: var(--pdt-space-2);
-  cursor: pointer;
-  list-style: none;
-}
-.op-more summary::-webkit-details-marker {
-  display: none;
-}
-.op-more summary::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-right: 2px solid var(--pdt-text-weak);
-  border-bottom: 2px solid var(--pdt-text-weak);
-  transform: rotate(-45deg);
-  transition: transform var(--pdt-transition-base);
-}
-.op-more[open] summary::before {
-  transform: rotate(45deg);
-}
-.op-more summary:focus-visible {
-  outline: none;
-  border-radius: var(--pdt-radius-sm);
-  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
-}
-.op-card.op-more summary h2 {
-  margin: 0;
-}
-.op-more[open] summary {
-  margin-bottom: var(--pdt-space-3);
-}
-.op-more__link {
-  margin: var(--pdt-space-3) 0 0;
-  font-size: var(--pdt-text-sm);
-}
+  /* Rarely needed sections, collapsed until opened. */
+  .op-more summary {
+    display: flex;
+    align-items: center;
+    gap: var(--pdt-space-2);
+    cursor: pointer;
+    list-style: none;
+  }
+  .op-more summary::-webkit-details-marker {
+    display: none;
+  }
+  .op-more summary::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid var(--pdt-text-weak);
+    border-bottom: 2px solid var(--pdt-text-weak);
+    transform: rotate(-45deg);
+    transition: transform var(--pdt-transition-base);
+  }
+  .op-more[open] summary::before {
+    transform: rotate(45deg);
+  }
+  .op-more summary:focus-visible {
+    outline: none;
+    border-radius: var(--pdt-radius-sm);
+    box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+  }
+  .op-card.op-more summary h2 {
+    margin: 0;
+  }
+  .op-more[open] summary {
+    margin-bottom: var(--pdt-space-3);
+  }
+  .op-more__link {
+    margin: var(--pdt-space-3) 0 0;
+    font-size: var(--pdt-text-sm);
+  }
 
-.op-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--pdt-space-2);
-  margin-top: var(--pdt-space-2);
-}
-.op-actions__note {
-  color: var(--pdt-text-weak);
-  font-size: var(--pdt-text-sm);
-}
+  .op-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--pdt-space-2);
+    margin-top: var(--pdt-space-2);
+  }
+  .op-actions__note {
+    color: var(--pdt-text-weak);
+    font-size: var(--pdt-text-sm);
+  }
 
-.op-error {
-  margin: var(--pdt-space-2) 0 0;
-  color: var(--pdt-signal-danger-text);
-  font-size: var(--pdt-text-sm);
-  font-weight: var(--pdt-font-weight-medium);
-}
+  .op-error {
+    margin: var(--pdt-space-2) 0 0;
+    color: var(--pdt-signal-danger-text);
+    font-size: var(--pdt-text-sm);
+    font-weight: var(--pdt-font-weight-medium);
+  }
 
-.op-syntax {
-  margin: 0 0 var(--pdt-space-3);
-  padding: var(--pdt-space-4);
-  border-radius: var(--pdt-radius-md);
-  background: var(--pdt-background-weak);
-  border: 1px solid var(--pdt-border-norm);
-  font-family: var(--pdt-font-mono);
-  font-size: 12.5px;
-  overflow-x: auto;
-  white-space: pre;
-}
-.op-legend {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--pdt-text-weak);
-  font-size: var(--pdt-text-sm);
-}
-.op-legend li {
-  margin: 4px 0;
-}
+  .op-syntax {
+    margin: 0 0 var(--pdt-space-3);
+    padding: var(--pdt-space-4);
+    border-radius: var(--pdt-radius-md);
+    background: var(--pdt-background-weak);
+    border: 1px solid var(--pdt-border-norm);
+    font-family: var(--pdt-font-mono);
+    font-size: 12.5px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .op-legend {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--pdt-text-weak);
+    font-size: var(--pdt-text-sm);
+  }
+  .op-legend li {
+    margin: 4px 0;
+  }
 
-.op-foot {
-  text-align: center;
-  margin-top: var(--pdt-space-2);
-  font-size: var(--pdt-text-sm);
-}
-.op-foot a {
-  color: var(--pdt-primary);
-  text-decoration: none;
-}
-.op-foot a:hover {
-  text-decoration: underline;
-}
+  .op-foot {
+    text-align: center;
+    margin-top: var(--pdt-space-2);
+    font-size: var(--pdt-text-sm);
+  }
+  .op-foot a {
+    color: var(--pdt-primary);
+    text-decoration: none;
+  }
+  .op-foot a:hover {
+    text-decoration: underline;
+  }
 
-.op-fieldset {
-  min-width: 0;
-  margin: 0;
-  padding: var(--pdt-space-3) 0;
-  border: none;
-  border-top: 1px solid var(--pdt-border-weak);
-}
-/* A legend sits outside the box flow; float it so the hint below it lines up. */
-.op-fieldset legend {
-  float: left;
-  width: 100%;
-  padding: 0;
-}
-.op-fieldset legend + .op-row__hint {
-  clear: left;
-}
-.op-checks {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 8px 16px;
-  margin-top: var(--pdt-space-1);
-}
-.op-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--pdt-text-sm);
+  .op-fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: var(--pdt-space-3) 0;
+    border: none;
+    border-top: 1px solid var(--pdt-border-weak);
+  }
+  /* A legend sits outside the box flow; float it so the hint below it lines up. */
+  .op-fieldset legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+  }
+  .op-fieldset legend + .op-row__hint {
+    clear: left;
+  }
+  .op-checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px 16px;
+    margin-top: var(--pdt-space-1);
+  }
+  .op-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--pdt-text-sm);
+  }
 }
