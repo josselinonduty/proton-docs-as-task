@@ -1,15 +1,51 @@
 /* ==========================================================================
  * Dialogs: modal, command palette, shortcut reference
  * ======================================================================== */
+/* A modal is a native <dialog> shown with showModal() (see Modal.tsx): it sits
+ * in the top layer, covers the viewport and centres its panel. Reset the UA
+ * dialog box (inset, size limits, margin, padding, border, colours), so the
+ * element itself is invisible and only the panel and backdrop show. */
 .pdt-modal {
   position: fixed;
   inset: 0;
-  z-index: 2147483002;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: var(--pdt-space-4);
+  border: none;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+.pdt-modal[open] {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--pdt-space-4);
-  background: var(--pdt-backdrop);
+}
+.pdt-modal:focus {
+  outline: none;
+}
+/* The command palette sits high, near where the eye already is. */
+.pdt-modal--top[open] {
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+/* The backdrop's colours are spelled out here, not tokens: ::backdrop only
+ * inherits custom properties from its dialog since Chrome 122 (Firefox 120,
+ * below our Firefox floor), and the manifest allows Chrome 111. A var() would
+ * resolve to nothing there. Theme selectors on the dialog still match. */
+.pdt-modal::backdrop {
+  background: rgb(38 42 51 / 0.48);
+}
+@media (prefers-color-scheme: dark) {
+  .pdt-host:not([data-theme='light']) .pdt-modal::backdrop {
+    background: rgb(22 20 28 / 0.48);
+  }
+}
+.pdt-host[data-theme='dark'] .pdt-modal::backdrop {
+  background: rgb(22 20 28 / 0.48);
 }
 .pdt-modal__panel {
   width: 100%;
@@ -26,9 +62,6 @@
 }
 .pdt-modal__panel--lg {
   max-width: 640px;
-}
-.pdt-modal__panel:focus {
-  outline: none;
 }
 .pdt-modal__title {
   margin: 0 0 var(--pdt-space-1);

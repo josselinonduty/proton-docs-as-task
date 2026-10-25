@@ -1,14 +1,4 @@
-/* Command palette (Ctrl+K). */
-.pdt-palette__backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483002;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 12vh;
-  background: var(--pdt-backdrop);
-}
+/* Command palette (Ctrl+K), in a `.pdt-modal--top` dialog. */
 .pdt-palette {
   width: min(560px, 92vw);
   max-height: 60vh;

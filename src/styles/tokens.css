@@ -102,7 +102,6 @@
   --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
   --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.1);
   --pdt-shadow-lg: 0 8px 24px rgb(0 0 0 / 0.16);
-  --pdt-backdrop: rgb(38 42 51 / 0.48);
 
   /* ---------- Radius (Proton: --border-radius 8) ---------- */
   --pdt-radius-sm: 4px;
@@ -203,7 +202,6 @@
     --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
     --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.44);
     --pdt-shadow-lg: 0 8px 24px rgb(0 0 0 / 0.75);
-    --pdt-backdrop: rgb(22 20 28 / 0.48);
   }
 }
 
@@ -258,7 +256,6 @@
   --pdt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
   --pdt-shadow-md: 0 2px 12px rgb(0 0 0 / 0.44);
   --pdt-shadow-lg: 0 8px 24px rgb(0 0 0 / 0.75);
-  --pdt-backdrop: rgb(22 20 28 / 0.48);
 }
 
 /* Explicit "Light" theme choice keeps the light palette defined on :root above,
