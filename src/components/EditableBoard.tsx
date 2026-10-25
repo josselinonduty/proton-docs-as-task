@@ -51,13 +51,7 @@ import {
   type FilterState,
   type Preset,
 } from '../lib/filters';
-import {
-  applySortToModel,
-  isActiveSort,
-  MANUAL_SORT,
-  sortTasks,
-  type SortState,
-} from '../lib/sorting';
+import { applySortToModel, isActiveSort, MANUAL_SORT, type SortState } from '../lib/sorting';
 import { defaultStatus, findStatus } from '../lib/statuses';
 import { buildAssigneeIndex, buildLabelIndex } from '../lib/suggestions';
 import { modLabel } from '../lib/platform';
@@ -86,6 +80,8 @@ import { ColorSwatches, statusStyle } from './StatusColorPicker';
 import { MissingStatusDialog, StatusDeleteDialog } from './StatusDialogs';
 import { useDismiss } from './useDismiss';
 import { useStatusActions } from './useStatusActions';
+import { isTaskShown, layoutBoard, type LaidOutBoardColumn } from './board/boardLayout';
+import { useNow } from './board/useNow';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -162,8 +158,8 @@ export function EditableBoard(props: EditableBoardProps) {
         }
       : undefined;
   };
-  const now = new Date();
-  const facets = collectFacets(model);
+  const now = useNow();
+  const facets = useMemo(() => collectFacets(model), [model]);
   const filtersActive = hasActiveFilters(filters);
   const sortActive = isActiveSort(sort);
   const hideCompleted = settings.completedDisplay === 'hide';
@@ -249,9 +245,7 @@ export function EditableBoard(props: EditableBoardProps) {
   }, [highlightId]);
 
   // Selection is only meaningful over currently-visible cards.
-  const passesView = (task: BoardTask) =>
-    (!filtersActive || matchesFilters(task, filters, now, isDone)) &&
-    !(hideCompleted && isDone(task));
+  const passesView = (task: BoardTask) => isTaskShown(task, { model, filters, hideCompleted, now });
 
   // ---- Card mutations -----------------------------------------------------
   const patchTask = (id: string, patch: Partial<Omit<BoardTask, 'id' | 'order'>>) =>
@@ -567,7 +561,7 @@ export function EditableBoard(props: EditableBoardProps) {
       t('board.undo.colors', { label: status.label }),
     );
 
-  const orphans = orphanStatuses(model);
+  const orphans = useMemo(() => orphanStatuses(model), [model]);
 
   const moveOrphans = (targets: Record<StatusKey, StatusKey>) => {
     let next = model;
@@ -612,14 +606,26 @@ export function EditableBoard(props: EditableBoardProps) {
     announce(t('board.sortApplied'));
   };
 
-  // ---- Keyboard shortcuts -------------------------------------------------
-  const navOrderRef = useRef<string[]>([]);
-  const cardMetaRef = useRef<
-    Map<string, { colKey: string; colLabel: string; ids: string[]; tasks: BoardTask[] }>
-  >(new Map());
+  // ---- Columns, swimlane rows and the cards they show -----------------------
+  // The same layout drives rendering, J / K order and each card's place.
+  const layout = useMemo(
+    () =>
+      layoutBoard({
+        model,
+        view,
+        filters,
+        sort,
+        hideCompleted,
+        now,
+        collapsedColumns,
+        collapsedRows,
+      }),
+    [model, view, filters, sort, hideCompleted, now, collapsedColumns, collapsedRows],
+  );
 
+  // ---- Keyboard shortcuts -------------------------------------------------
   const focusCardAt = (delta: number) => {
-    const order = navOrderRef.current;
+    const order = layout.navOrder;
     if (order.length === 0) return;
     const current = focusedCardId ? order.indexOf(focusedCardId) : -1;
     const nextIdx = Math.max(0, Math.min(order.length - 1, current + delta));
@@ -772,7 +778,7 @@ export function EditableBoard(props: EditableBoardProps) {
         break;
       }
       case ' ': {
-        const meta = cardId ? cardMetaRef.current.get(cardId) : undefined;
+        const meta = cardId ? layout.places.get(cardId) : undefined;
         const task = cardId ? model.tasks.find((x) => x.id === cardId) : undefined;
         if (task && meta) {
           e.preventDefault();
@@ -801,14 +807,6 @@ export function EditableBoard(props: EditableBoardProps) {
     }
   };
 
-  // ---- Column / swimlane projection ---------------------------------------
-  const projectionView: BoardView = view === 'swimlane' ? 'sections' : view;
-  const baseColumns = columnsForView(model, projectionView);
-
-  // Build the flat keyboard-nav order + per-card selection metadata.
-  navOrderRef.current = [];
-  cardMetaRef.current = new Map();
-
   const commands = buildCommands(t, {
     filtersActive,
     saveState,
@@ -830,12 +828,11 @@ export function EditableBoard(props: EditableBoardProps) {
   });
 
   const mod = modLabel();
-  const progress = countTasks(model);
+  const progress = useMemo(() => countTasks(model), [model]);
   const statusToDelete = pendingStatusDelete && findStatus(statuses, pendingStatusDelete.key);
   const detailsTask = details ? model.tasks.find((task) => task.id === details.id) : undefined;
-  // Read after the columns render (they fill `cardMetaRef`), so it's current.
   const positionOf = (id: string) => {
-    const meta = cardMetaRef.current.get(id);
+    const meta = layout.places.get(id);
     return meta ? { index: meta.ids.indexOf(id), count: meta.ids.length } : null;
   };
 
@@ -1088,7 +1085,7 @@ export function EditableBoard(props: EditableBoardProps) {
 
       <div className="pdt-board__body">
         <div className="pdt-board__main">
-          {view === 'swimlane' ? renderSwimlane() : renderColumns(baseColumns)}
+          {view === 'swimlane' ? renderSwimlane() : renderColumns(layout.columns)}
         </div>
         {detailsTask && (
           <TaskDetailsPanel
@@ -1153,7 +1150,7 @@ export function EditableBoard(props: EditableBoardProps) {
             onSetStatus={(st) => setStatus(detailsTask, st)}
             onSetSection={(sec) => setSection(detailsTask, sec)}
             onMoveWithin={(delta) => {
-              const meta = cardMetaRef.current.get(detailsTask.id);
+              const meta = layout.places.get(detailsTask.id);
               if (meta) moveWithin(meta.tasks, meta.colLabel, detailsTask, delta);
             }}
             onDuplicate={() => duplicate(detailsTask)}
@@ -1294,7 +1291,6 @@ export function EditableBoard(props: EditableBoardProps) {
 
   // ---- Renderers ----------------------------------------------------------
 
-  /** Render one card, recording its nav order + selection metadata. */
   function renderCard(
     task: BoardTask,
     colKey: string,
@@ -1303,13 +1299,6 @@ export function EditableBoard(props: EditableBoardProps) {
     visibleTasks: BoardTask[],
     dragStart: () => void,
   ) {
-    navOrderRef.current.push(task.id);
-    cardMetaRef.current.set(task.id, {
-      colKey,
-      colLabel,
-      ids: colVisibleIds,
-      tasks: visibleTasks,
-    });
     return (
       <EditableTaskCard
         key={task.id}
@@ -1349,22 +1338,12 @@ export function EditableBoard(props: EditableBoardProps) {
     );
   }
 
-  function visibleOf(col: BoardColumn): BoardTask[] {
-    let list = sortActive ? sortTasks(col.tasks, sort) : col.tasks;
-    if (filtersActive) list = list.filter((task) => matchesFilters(task, filters, now, isDone));
-    if (hideCompleted) list = list.filter((task) => !isDone(task));
-    return list;
-  }
-
-  function renderColumns(columns: BoardColumn[]) {
+  function renderColumns(columns: LaidOutBoardColumn[]) {
     return (
       <div className={`pdt-columns ${view === 'list' ? 'pdt-columns--list' : ''}`}>
-        {columns.map((col) => {
+        {columns.map(({ col, collapsed, visible: visibleTasks, visibleIds }) => {
           const status = view === 'workflow' ? findStatus(statuses, col.key) : undefined;
           const isDoneCol = status?.category === 'done';
-          const collapsed = collapsedColumns.includes(col.key);
-          const visibleTasks = visibleOf(col);
-          const visibleIds = visibleTasks.map((task) => task.id);
           return (
             <div
               className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''} ${status?.bg ? 'pdt-column--tinted' : ''} ${colorMenuFor === col.key ? 'pdt-column--menu-open' : ''}`}
@@ -1670,9 +1649,7 @@ export function EditableBoard(props: EditableBoardProps) {
           ))}
         </div>
 
-        {model.sections.map((section) => {
-          const rowCollapsed = collapsedRows.includes(section);
-          const rowCount = model.tasks.filter((task) => task.section === section).length;
+        {layout.rows.map(({ section, collapsed: rowCollapsed, count: rowCount, cells }) => {
           return (
             <div
               key={section}
@@ -1698,18 +1675,8 @@ export function EditableBoard(props: EditableBoardProps) {
 
               {rowCollapsed
                 ? null
-                : statuses.map((c) => {
-                    const cellCol: BoardColumn = {
-                      key: `${section}::${c.key}`,
-                      label: `${section} / ${c.label}`,
-                      status: c.key,
-                      section,
-                      tasks: model.tasks.filter(
-                        (task) => task.section === section && task.status === c.key,
-                      ),
-                    };
-                    const visibleTasks = visibleOf(cellCol);
-                    const visibleIds = visibleTasks.map((task) => task.id);
+                : cells.map(({ status: c, cell }) => {
+                    const { col: cellCol, visible: visibleTasks, visibleIds } = cell;
                     return (
                       <div
                         key={c.key}
