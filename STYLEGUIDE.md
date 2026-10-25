@@ -152,6 +152,10 @@ pdt-btn-primary pdt-btn-sm"`).
   those never need to be reused outside their surface.
 - Never introduce a new color, radius or shadow value inline — add a token
   if the existing ones don't fit, and explain why in the token's comment.
+  One exception: `.pdt-modal::backdrop` in `board/dialogs.css` sets its
+  scrim colours directly (light and dark). A `::backdrop` inherits custom
+  properties only from Chrome 122, and the extension supports Chrome 111, so
+  a token there would resolve to nothing.
 
 ## Imports
 
