@@ -34,8 +34,6 @@ function activeElementOf(node: Node): Element | null {
  */
 export function Dialog({ title, children, onClose, size = 'md', initialFocus }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
 
   // Mount-only: parents pass inline `onClose` callbacks, and re-running this
   // on every render would steal focus back to the first control.
@@ -55,7 +53,7 @@ export function Dialog({ title, children, onClose, size = 'md', initialFocus }: 
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
-      onCloseRef.current?.();
+      onClose?.();
       return;
     }
     const panel = panelRef.current;
@@ -77,10 +75,7 @@ export function Dialog({ title, children, onClose, size = 'md', initialFocus }: 
   };
 
   return (
-    <div
-      className="pdt-modal"
-      onMouseDown={(e) => e.target === e.currentTarget && onCloseRef.current?.()}
-    >
+    <div className="pdt-modal" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div
         className={`pdt-modal__panel pdt-modal__panel--${size}`}
         role="dialog"

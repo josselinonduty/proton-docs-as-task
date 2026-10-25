@@ -39,10 +39,9 @@ export function SectionNameInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const viaKeyboard = useRef(false);
 
-  // Follow renames made elsewhere (document edits) while not editing.
-  useEffect(() => {
-    if (!editing) setDraft(name);
-  }, [name, editing]);
+  // Outside editing the input shows `name`, so renames made elsewhere
+  // (document edits) appear as they happen.
+  const value = editing ? draft : name;
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -50,7 +49,7 @@ export function SectionNameInput({
     onFocusHandled?.();
   }, [autoFocus, onFocusHandled]);
 
-  const clean = draft.trim();
+  const clean = value.trim();
   const same = (a: string) => (ignoreCase ? a.toLowerCase() === clean.toLowerCase() : a === clean);
   const duplicate = clean !== name && otherNames.some(same);
   const error = !clean
@@ -77,12 +76,13 @@ export function SectionNameInput({
     <input
       ref={inputRef}
       className="pdt-column__name-input"
-      value={draft}
+      value={value}
       aria-label={t('name.label', { context: noun, name })}
       aria-invalid={error ? true : undefined}
       title={error || t('name.rename', { context: noun })}
       onFocus={() => {
         viaKeyboard.current = false;
+        setDraft(name);
         setEditing(true);
       }}
       onChange={(e) => setDraft(e.target.value)}
