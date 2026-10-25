@@ -5,6 +5,8 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["vitest/globals"]
+    // No ambient test globals: tests import `describe`, `it`, `vi`… from
+    // `vitest`, so production code can't reference them by accident.
+    "types": []
   }
 }
