@@ -2,7 +2,7 @@
  * Shared domain types for Proton Docs as Task.
  */
 
-import type { LanguageSetting } from '../i18n/languages';
+import type { LanguageSetting } from '@/i18n/languages';
 import type { DateFormat } from './dates';
 
 export type { DateFormat };

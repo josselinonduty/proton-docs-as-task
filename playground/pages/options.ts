@@ -1,2 +1,2 @@
 // The real extension page, mounted against the playground shims.
-import '../../src/entrypoints/options/main';
+import '@/entrypoints/options/main';

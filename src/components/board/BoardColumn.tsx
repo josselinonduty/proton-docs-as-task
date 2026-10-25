@@ -1,11 +1,11 @@
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { moveSection, renameSection, toggleDefaultSection } from '../../lib/model';
-import { findStatus } from '../../lib/statuses';
-import type { StatusDef, StatusKey } from '../../lib/types';
-import { Icon } from '../Icon';
-import { SectionNameInput } from '../SectionNameInput';
-import { ColorSwatches, statusStyle } from '../StatusColorPicker';
+import { moveSection, renameSection, toggleDefaultSection } from '@/lib/model';
+import { findStatus } from '@/lib/statuses';
+import type { StatusDef, StatusKey } from '@/lib/types';
+import { Icon } from '@/components/Icon';
+import { SectionNameInput } from '@/components/SectionNameInput';
+import { ColorSwatches, statusStyle } from '@/components/StatusColorPicker';
 import { useBoard } from './BoardContext';
 import { BoardCard } from './BoardCard';
 import type { LaidOutBoardColumn } from './boardLayout';

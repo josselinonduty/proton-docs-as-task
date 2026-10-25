@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { addSection } from '../../lib/model';
-import type { StatusKey } from '../../lib/types';
-import { Icon } from '../Icon';
+import { addSection } from '@/lib/model';
+import type { StatusKey } from '@/lib/types';
+import { Icon } from '@/components/Icon';
 import { useBoard } from './BoardContext';
 import { BoardColumn } from './BoardColumn';
 import type { LaidOutBoardColumn } from './boardLayout';

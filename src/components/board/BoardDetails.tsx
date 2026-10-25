@@ -12,9 +12,9 @@ import {
   subtasksOf,
   unlinkTasks,
   type BoardTask,
-} from '../../lib/model';
-import type { Suggestion } from '../../lib/suggestions';
-import { TaskDetailsPanel } from '../TaskDetailsPanel';
+} from '@/lib/model';
+import type { Suggestion } from '@/lib/suggestions';
+import { TaskDetailsPanel } from '@/components/TaskDetailsPanel';
 import { useBoard } from './BoardContext';
 import type { CardPlace } from './boardLayout';
 import type { DetailsTarget } from './useDetailsNavigation';

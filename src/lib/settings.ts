@@ -1,5 +1,5 @@
 import { storage } from '#imports';
-import { setLanguage } from '../i18n';
+import { setLanguage } from '@/i18n';
 import { DEFAULT_SETTINGS, migrateLegacySettings, withDefaults } from './defaults';
 import type { Settings } from './types';
 

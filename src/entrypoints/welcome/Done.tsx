@@ -1,10 +1,10 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { LANGUAGES } from '../../i18n/languages';
-import type { Layout, Preferences } from '../../lib/onboarding';
-import { flowSummary } from '../../lib/statuses';
-import type { StatusFlow } from '../../lib/types';
+import { LANGUAGES } from '@/i18n/languages';
+import type { Layout, Preferences } from '@/lib/onboarding';
+import { flowSummary } from '@/lib/statuses';
+import type { StatusFlow } from '@/lib/types';
 
 const DOCS_URL = 'https://docs.proton.me/';
 const COPIED_MS = 1500;

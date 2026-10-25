@@ -7,8 +7,8 @@ import {
   type DueFilter,
   type Facets,
   type FilterState,
-} from '../lib/filters';
-import type { Priority, StatusDef } from '../lib/types';
+} from '@/lib/filters';
+import type { Priority, StatusDef } from '@/lib/types';
 import { useDismiss } from './useDismiss';
 
 interface FilterPanelProps {

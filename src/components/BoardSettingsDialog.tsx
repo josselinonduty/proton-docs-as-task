@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { canChangeStatusCategory, updateStatus, type BoardModel } from '../lib/model';
-import { hasLowContrast } from '../lib/statuses';
+import { canChangeStatusCategory, updateStatus, type BoardModel } from '@/lib/model';
+import { hasLowContrast } from '@/lib/statuses';
 import {
   STATUS_CATEGORIES,
   type StatusCategory,
   type StatusDef,
   type StatusKey,
-} from '../lib/types';
+} from '@/lib/types';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { SectionNameInput } from './SectionNameInput';

@@ -1,6 +1,6 @@
 import { defineContentScript } from '#imports';
-import iconHref from '../../assets/icon.svg?inline';
-import { applyBranding, EDITOR_ORIGIN, isBrandingMessage } from '../lib/branding';
+import iconHref from '@@/assets/icon.svg?inline';
+import { applyBranding, EDITOR_ORIGIN, isBrandingMessage } from '@/lib/branding';
 
 /**
  * Runs in the top Docs shell only. The editor iframe reports whether the

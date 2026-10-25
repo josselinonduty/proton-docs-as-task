@@ -2,12 +2,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { EditableBoard } from './EditableBoard';
-import { parseDocument } from '../lib/parser';
-import { fromParseResult, type BoardModel } from '../lib/model';
-import { EMPTY_FILTERS } from '../lib/filters';
-import { MANUAL_SORT } from '../lib/sorting';
-import { DEFAULT_SETTINGS } from '../lib/defaults';
-import type { BoardView } from '../lib/types';
+import { parseDocument } from '@/lib/parser';
+import { fromParseResult, type BoardModel } from '@/lib/model';
+import { EMPTY_FILTERS } from '@/lib/filters';
+import { MANUAL_SORT } from '@/lib/sorting';
+import { DEFAULT_SETTINGS } from '@/lib/defaults';
+import type { BoardView } from '@/lib/types';
 
 const DOC = [
   '#!tasks Sprint',

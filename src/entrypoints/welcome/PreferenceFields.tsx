@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppearanceSelect } from '../../components/SettingSelect';
-import type { Preferences } from '../../lib/onboarding';
+import { AppearanceSelect } from '@/components/SettingSelect';
+import type { Preferences } from '@/lib/onboarding';
 
 interface PreferenceFieldsProps {
   /** Receives focus when the step appears, so screen readers announce it. */

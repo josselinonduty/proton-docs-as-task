@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import type { Suggestion } from '../lib/suggestions';
-import { defaultStatus } from '../lib/statuses';
-import type { DateFormat, Priority, StatusDef, StatusKey } from '../lib/types';
+import type { Suggestion } from '@/lib/suggestions';
+import { defaultStatus } from '@/lib/statuses';
+import type { DateFormat, Priority, StatusDef, StatusKey } from '@/lib/types';
 import { Combobox } from './Combobox';
 import { LabelInput } from './LabelInput';
 import { DueDateControl } from './DueDateControl';

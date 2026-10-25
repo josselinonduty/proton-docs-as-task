@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import type { SaveState } from '../../lib/types';
-import type { Command } from '../CommandPalette';
+import type { SaveState } from '@/lib/types';
+import type { Command } from '@/components/CommandPalette';
 
 interface BoardCommandsOptions {
   filtersActive: boolean;

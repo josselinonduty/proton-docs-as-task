@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react';
-import { canonicalize, matchSuggestions, type Suggestion } from '../lib/suggestions';
+import { canonicalize, matchSuggestions, type Suggestion } from '@/lib/suggestions';
 
 interface ComboboxProps {
   /** Current committed value. */

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SORT_OPTIONS, describeSort, isActiveSort, type SortState } from '../lib/sorting';
+import { SORT_OPTIONS, describeSort, isActiveSort, type SortState } from '@/lib/sorting';
 import { Icon } from './Icon';
 import { useDismiss } from './useDismiss';
 

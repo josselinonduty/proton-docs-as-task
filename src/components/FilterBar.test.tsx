@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FilterBar } from './FilterBar';
-import { buildPresets, EMPTY_FILTERS, type FilterState } from '../lib/filters';
-import { DEFAULT_STATUSES } from '../lib/statuses';
+import { buildPresets, EMPTY_FILTERS, type FilterState } from '@/lib/filters';
+import { DEFAULT_STATUSES } from '@/lib/statuses';
 
 const STATUS = [...DEFAULT_STATUSES];
 

@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from 'react';
 import type { GetDataType, GetReturnType } from '@webext-core/messaging';
-import { onMessage, type PopupCommand, type ProtocolMap } from '../lib/messaging';
+import { onMessage, type PopupCommand, type ProtocolMap } from '@/lib/messaging';
 
 export type PopupHandlers = {
   [K in PopupCommand]: (data: GetDataType<ProtocolMap[K]>) => GetReturnType<ProtocolMap[K]>;

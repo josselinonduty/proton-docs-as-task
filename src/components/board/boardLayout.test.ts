@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseDocument } from '../../lib/parser';
-import { EMPTY_FILTERS } from '../../lib/filters';
-import { MANUAL_SORT } from '../../lib/sorting';
-import { fromParseResult } from '../../lib/model';
+import { parseDocument } from '@/lib/parser';
+import { EMPTY_FILTERS } from '@/lib/filters';
+import { MANUAL_SORT } from '@/lib/sorting';
+import { fromParseResult } from '@/lib/model';
 import { layoutBoard, type LayoutInput } from './boardLayout';
 
 const DOC = [

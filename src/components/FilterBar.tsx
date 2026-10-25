@@ -6,8 +6,8 @@ import {
   matchesPreset,
   type FilterState,
   type Preset,
-} from '../lib/filters';
-import type { Priority, StatusDef, StatusKey } from '../lib/types';
+} from '@/lib/filters';
+import type { Priority, StatusDef, StatusKey } from '@/lib/types';
 import { Icon } from './Icon';
 
 interface FilterBarProps {

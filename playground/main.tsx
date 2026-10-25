@@ -1,12 +1,12 @@
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import ReactDOM from 'react-dom/client';
-import boardCss from '../src/entrypoints/proton-task.content/style.css?inline';
-import { OverlayApp } from '../src/components/OverlayApp';
-import { mergeLines } from '../src/lib/lineMerge';
-import { getSettings, setSettings, syncLanguage } from '../src/lib/settings';
-import type { ApplyResult, EditorOrigin, EditorStateMessage } from '../src/lib/bridgeProtocol';
-import type { EditorClient } from '../src/lib/editorClient';
-import type { Settings } from '../src/lib/types';
+import boardCss from '@/entrypoints/proton-task.content/style.css?inline';
+import { OverlayApp } from '@/components/OverlayApp';
+import { mergeLines } from '@/lib/lineMerge';
+import { getSettings, setSettings, syncLanguage } from '@/lib/settings';
+import type { ApplyResult, EditorOrigin, EditorStateMessage } from '@/lib/bridgeProtocol';
+import type { EditorClient } from '@/lib/editorClient';
+import type { Settings } from '@/lib/types';
 
 /** ISO date `days` from today, so due-date states stay meaningful over time. */
 function inDays(days: number): string {

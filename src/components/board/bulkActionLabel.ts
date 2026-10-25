@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import type { BulkAction } from '../../lib/model';
+import type { BulkAction } from '@/lib/model';
 
 /** Human label for a bulk action, for the undo toast + announcement. */
 export function bulkActionLabel(t: TFunction, action: BulkAction, count: number): string {

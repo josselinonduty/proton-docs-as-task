@@ -13,9 +13,9 @@ import {
   type BoardColumn,
   type BoardModel,
   type BoardTask,
-} from '../../lib/model';
-import { defaultStatus, findStatus } from '../../lib/statuses';
-import type { BoardView, StatusKey } from '../../lib/types';
+} from '@/lib/model';
+import { defaultStatus, findStatus } from '@/lib/statuses';
+import type { BoardView, StatusKey } from '@/lib/types';
 
 interface TaskActionsOptions {
   model: BoardModel;

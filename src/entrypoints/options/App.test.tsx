@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { DEFAULT_MARKERS, DEFAULT_SETTINGS } from '../../lib/defaults';
-import type { Settings } from '../../lib/types';
+import { DEFAULT_MARKERS, DEFAULT_SETTINGS } from '@/lib/defaults';
+import type { Settings } from '@/lib/types';
 
 const setSettings = vi.hoisted(() => vi.fn());
 
 vi.mock('wxt/browser', () => ({
   browser: { runtime: { getURL: (path: string) => path } },
 }));
-vi.mock('../../lib/settings', () => ({
+vi.mock('@/lib/settings', () => ({
   getSettings: async () => DEFAULT_SETTINGS,
   setSettings,
 }));

@@ -9,7 +9,7 @@
  */
 
 import { reorderColumn, type BoardColumn, type BoardModel, type BoardTask } from './model';
-import { t } from '../i18n';
+import { t } from '@/i18n';
 import { parseISODate } from './dates';
 import type { Priority } from './types';
 

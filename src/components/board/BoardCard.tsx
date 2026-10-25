@@ -5,8 +5,8 @@ import {
   parentOf,
   subtasksOf,
   type BoardTask,
-} from '../../lib/model';
-import { EditableTaskCard } from '../EditableTaskCard';
+} from '@/lib/model';
+import { EditableTaskCard } from '@/components/EditableTaskCard';
 import { useBoard } from './BoardContext';
 import type { CardPlace } from './boardLayout';
 

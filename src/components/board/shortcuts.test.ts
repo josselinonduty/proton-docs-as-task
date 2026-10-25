@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createTask } from '../../lib/model';
+import { createTask } from '@/lib/model';
 import {
   findShortcut,
   shortcutHelp,

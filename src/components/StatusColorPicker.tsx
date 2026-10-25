@@ -6,8 +6,8 @@ import {
   normalizeColor,
   STATUS_SWATCHES,
   type ColorRole,
-} from '../lib/statuses';
-import type { StatusDef } from '../lib/types';
+} from '@/lib/statuses';
+import type { StatusDef } from '@/lib/types';
 import { Icon } from './Icon';
 import { useDismiss } from './useDismiss';
 

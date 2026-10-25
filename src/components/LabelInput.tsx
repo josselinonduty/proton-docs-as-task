@@ -6,7 +6,7 @@ import {
   normalizeLabel,
   removeLabel,
   type Suggestion,
-} from '../lib/suggestions';
+} from '@/lib/suggestions';
 
 interface LabelInputProps {
   /** Current labels (stored without a leading `#`). */

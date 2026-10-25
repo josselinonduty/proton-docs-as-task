@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BulkBar } from './BulkBar';
-import { DEFAULT_STATUSES } from '../lib/statuses';
+import { DEFAULT_STATUSES } from '@/lib/statuses';
 
 const STATUS = [...DEFAULT_STATUSES];
 

@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { LabelInput } from './LabelInput';
-import type { Suggestion } from '../lib/suggestions';
+import type { Suggestion } from '@/lib/suggestions';
 
 const SUGGESTIONS: Suggestion[] = [
   { value: 'api', count: 3 },

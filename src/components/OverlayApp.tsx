@@ -1,31 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { t } from '../i18n';
-import { parseDocument } from '../lib/parser';
-import { defaultStatus, isDoneStatus } from '../lib/statuses';
-import type { EditorClient } from '../lib/editorClient';
-import type { EditorStateMessage } from '../lib/bridgeProtocol';
-import type { BoardNotice } from '../lib/boardSession';
+import { t } from '@/i18n';
+import { parseDocument } from '@/lib/parser';
+import { defaultStatus, isDoneStatus } from '@/lib/statuses';
+import type { EditorClient } from '@/lib/editorClient';
+import type { EditorStateMessage } from '@/lib/bridgeProtocol';
+import type { BoardNotice } from '@/lib/boardSession';
 import {
   addTask as addTaskToModel,
   createStarterModel,
   fromParseResult,
   countTasks,
   updateTask as updateTaskInModel,
-} from '../lib/model';
-import { toggleInList } from '../lib/session';
-import { withDefaults } from '../lib/defaults';
-import { settingsItem, setSettings as persistSettings } from '../lib/settings';
-import type { BoardView, Settings } from '../lib/types';
+} from '@/lib/model';
+import { toggleInList } from '@/lib/session';
+import { withDefaults } from '@/lib/defaults';
+import { settingsItem, setSettings as persistSettings } from '@/lib/settings';
+import type { BoardView, Settings } from '@/lib/types';
 import {
   sendMessage,
   type AddTaskResponse,
   type QuickAddTask,
   type StatusResponse,
-} from '../lib/messaging';
+} from '@/lib/messaging';
 import { EditableBoard } from './EditableBoard';
 import { Icon } from './Icon';
-import { announceBoard } from '../lib/branding';
+import { announceBoard } from '@/lib/branding';
 import { useBoardSession } from './useBoardSession';
 import { usePopupCommands } from './usePopupCommands';
 import { useSessionPrefs } from './useSessionPrefs';

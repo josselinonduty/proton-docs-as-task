@@ -1,9 +1,9 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
-import { EMPTY_FILTERS, type FilterState } from '../lib/filters';
-import { MANUAL_SORT, type SortState } from '../lib/sorting';
-import { DEFAULT_SESSION, documentKey, type SessionPrefs } from '../lib/session';
-import { readDocPrefs, writeDocPrefs } from '../lib/sessionStore';
-import type { BoardView } from '../lib/types';
+import { EMPTY_FILTERS, type FilterState } from '@/lib/filters';
+import { MANUAL_SORT, type SortState } from '@/lib/sorting';
+import { DEFAULT_SESSION, documentKey, type SessionPrefs } from '@/lib/session';
+import { readDocPrefs, writeDocPrefs } from '@/lib/sessionStore';
+import type { BoardView } from '@/lib/types';
 
 /**
  * Per-document session preferences (view, sort, filters, collapsed sets):

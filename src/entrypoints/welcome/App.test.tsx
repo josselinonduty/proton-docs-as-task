@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { DEFAULT_SETTINGS } from '../../lib/defaults';
+import { DEFAULT_SETTINGS } from '@/lib/defaults';
 
 const tabs = vi.hoisted(() => ({
   query: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('wxt/browser', () => ({
     runtime: { openOptionsPage: vi.fn() },
   },
 }));
-vi.mock('../../lib/settings', () => ({
+vi.mock('@/lib/settings', () => ({
   getSettings: async () => DEFAULT_SETTINGS,
   setSettings,
 }));
