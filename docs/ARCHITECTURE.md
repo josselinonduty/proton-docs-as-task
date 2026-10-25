@@ -6,8 +6,11 @@ extension:
 
 1. **Bridges to Proton's editor.** A small script runs in the editor frame's own
    JavaScript world ([`editorBridge.ts`](../src/lib/editorBridge.ts)) and
-   attaches to the Lexical editor Proton uses. It talks to the content script
-   through DOM events ([`bridgeProtocol.ts`](../src/lib/bridgeProtocol.ts)).
+   attaches to the Lexical editor Proton uses, re-attaching when Proton
+   remounts it (it watches the DOM, it doesn't poll). It talks to the content
+   script through DOM events ([`bridgeProtocol.ts`](../src/lib/bridgeProtocol.ts));
+   any page script can fire those, so both sides check each payload's shape
+   and drop the rest.
 2. **Reads the editor state**, not the DOM. Each Lexical update is turned into
    plain text lines (headings, check-list items and their checked state) by
    [`editorDoc.ts`](../src/lib/editorDoc.ts), and tagged with its origin: the
@@ -46,6 +49,19 @@ docs.proton.me  (outer shell frame)    ◄── shell-branding: favicon while a
     └── #shadow-root (pdt-host)        ── React board overlay (isolated world)
 ```
 
+The content scripts also load in the Docs shell frame. Without an editor
+there, the board never mounts: the content script asks the bridge a few times,
+backing off, then waits for the bridge to announce an editor.
+
+The popup and the background talk to the content script through typed
+extension messages ([`messaging.ts`](../src/lib/messaging.ts), one
+`ProtocolMap` on [`@webext-core/messaging`](https://webext-core.aklinker1.io/messaging/installation)):
+the popup asks the tab for the board's status, shows or hides it, and adds
+tasks; the board asks the background to open the options page. A tab message
+reaches every frame, and the first answer wins. Only the editor frame
+registers the popup's handlers, so it is the one that answers; a tab with no
+board rejects, which the popup treats as "no board here".
+
 Everything runs locally. The extension asks only for the `storage` permission
 (settings) and host access to the two Proton Docs origins. It makes **no
 network requests** and reads nothing beyond the open document.
@@ -83,7 +99,7 @@ src/
    ├─ settings.ts / defaults.ts   # stored settings and migrations
    ├─ onboarding.ts               # first-run layouts and presets
    ├─ branding.ts / platform.ts   # shell icon; OS-aware shortcut labels
-   ├─ messaging.ts                # popup ↔ content script contract
+   ├─ messaging.ts                # popup / background ↔ content script messages
    └─ types.ts
 playground/                       # dev-only harness: real UI on a fake Proton page
 scripts/generate-screenshots      # store and README images from the playground
