@@ -216,7 +216,8 @@ const selectView = (page, label) => page.locator(`[role="tab"]:has-text("${label
 const openTask = (page, title) =>
   page.locator(`article.pdt-taskcard:has-text("${title}") .pdt-card__title`).first().click();
 const details = (page) => page.locator('aside.pdt-details');
-const dialog = (page) => page.locator('[role="dialog"]').last();
+// The open modal's panel: the <dialog> element itself covers the viewport.
+const dialog = (page) => page.locator('dialog[open] > *').last();
 
 async function openBoardSettings(page) {
   await page.locator('button[aria-haspopup="menu"][aria-label="More actions"]').click();
