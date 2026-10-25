@@ -26,10 +26,10 @@ export default defineConfig(
       'react-hooks': reactHooks,
     },
     rules: {
-      // The two long-stable, high-signal hook rules. (react-hooks v7's full
-      // `recommended` set adds opinionated compiler-style rules we don't opt in to.)
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      // react-hooks v7's full set: the rules of hooks plus the compiler-backed
+      // checks (refs read in render, impure render, setState in effects, …).
+      // We don't run the React Compiler; the rules still catch real bugs.
+      ...reactHooks.configs.flat['recommended-latest'].rules,
       // `t` is the translation function almost everywhere; don't let a local hide it.
       '@typescript-eslint/no-shadow': 'error',
     },
