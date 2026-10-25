@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   $createParagraphNode,
   $createTextNode,
@@ -23,7 +23,7 @@ import {
   startEditorBridge,
   type LexicalEditorLike,
 } from './editorBridge';
-import { connectEditor, type EditorClient } from './editorClient';
+import { connectEditor, HELLO_DELAYS_MS, type EditorClient } from './editorClient';
 import {
   REQUEST_EVENT,
   RESPONSE_EVENT,
@@ -285,5 +285,105 @@ describe('findLexicalEditor', () => {
     root.className = 'DocumentEditor';
     expect(findLexicalEditor(document)).not.toBeNull();
     editor.setRootElement(null);
+  });
+});
+
+describe('finding the editor', () => {
+  const editors: LexicalEditor[] = [];
+  let stopBridge: (() => void) | undefined;
+  let client: EditorClient | undefined;
+
+  /** Mount a Proton-like document editor holding `lines`. */
+  function mountEditor(lines: string[]) {
+    const root = document.createElement('div');
+    root.contentEditable = 'true';
+    root.setAttribute('data-lexical-editor', 'true');
+    root.className = 'DocumentEditor';
+    document.body.append(root);
+    const editor = protonLikeEditor();
+    editor.setRootElement(root);
+    seedParagraphs(editor, lines);
+    editors.push(editor);
+    return { editor, root };
+  }
+
+  /** Count the `hello`s the client sends. */
+  function countHellos() {
+    const hellos: number[] = [];
+    const onRequest = (event: Event) => {
+      if (JSON.parse((event as CustomEvent<string>).detail).type === 'hello') {
+        hellos.push(Date.now());
+      }
+    };
+    document.addEventListener(REQUEST_EVENT, onRequest);
+    return { hellos, stop: () => document.removeEventListener(REQUEST_EVENT, onRequest) };
+  }
+
+  afterEach(() => {
+    client?.stop();
+    stopBridge?.();
+    client = undefined;
+    stopBridge = undefined;
+    editors.splice(0).forEach((editor) => editor.setRootElement(null));
+    document.body.innerHTML = '';
+    vi.useRealTimers();
+  });
+
+  it('re-attaches when Proton remounts the editor', async () => {
+    const first = mountEditor(DOC);
+    stopBridge = startEditorBridge(document);
+    client = connectEditor(document);
+    await client.ready;
+
+    first.root.remove();
+    const next = [...DOC, '- [ ] four'];
+    const second = mountEditor(next);
+    await vi.waitFor(() => expect(client!.state?.text).toBe(next.join('\n')));
+    expect(client.state?.origin).toBe('initial');
+
+    // Writes now go to the new editor.
+    const ticked = next.map((line) => (line === '- [ ] four' ? '- [x] four' : line));
+    expect(client.apply(next, ticked)).toEqual({ ok: true, lines: ticked });
+    expect(readEditorText(lexical(second.editor))).toBe(ticked.join('\n'));
+  });
+
+  it('connects to an editor that mounts after the client stopped asking', async () => {
+    vi.useFakeTimers();
+    const counter = countHellos();
+    stopBridge = startEditorBridge(document);
+    client = connectEditor(document);
+    vi.advanceTimersByTime(HELLO_DELAYS_MS.reduce((a, b) => a + b, 0) + 60_000);
+    counter.stop();
+    expect(counter.hellos).toHaveLength(HELLO_DELAYS_MS.length + 1);
+    expect(client.state).toBeNull();
+
+    mountEditor(DOC);
+    // Let the bridge's MutationObserver see the new editor.
+    await vi.advanceTimersByTimeAsync(200);
+    expect(client.state).toEqual({ text: DOC.join('\n'), editable: true, origin: 'initial' });
+  });
+
+  it('backs off between hellos while no editor answers', () => {
+    vi.useFakeTimers();
+    const counter = countHellos();
+    stopBridge = startEditorBridge(document);
+    const start = Date.now();
+    client = connectEditor(document);
+    vi.advanceTimersByTime(60_000);
+    counter.stop();
+    const gaps = counter.hellos.map((at, i) => at - (counter.hellos[i - 1] ?? start));
+    expect(gaps).toEqual([0, ...HELLO_DELAYS_MS]);
+  });
+
+  it('stops asking once the bridge reports a state', () => {
+    vi.useFakeTimers();
+    mountEditor(DOC);
+    stopBridge = startEditorBridge(document);
+    const counter = countHellos();
+    client = connectEditor(document);
+    vi.advanceTimersByTime(60_000);
+    counter.stop();
+    expect(counter.hellos).toHaveLength(1);
+    expect(client.state?.text).toBe(DOC.join('\n'));
   });
 });
