@@ -19,11 +19,17 @@ import { HeadingNode } from '@lexical/rich-text';
 import {
   applyLines,
   findLexicalEditor,
+  readEditorText,
   startEditorBridge,
   type LexicalEditorLike,
 } from './editorBridge';
 import { connectEditor, type EditorClient } from './editorClient';
-import type { EditorStateMessage } from './bridgeProtocol';
+import {
+  REQUEST_EVENT,
+  RESPONSE_EVENT,
+  STATE_EVENT,
+  type EditorStateMessage,
+} from './bridgeProtocol';
 
 /** Proton replaces Lexical's ListNode with its own `custom-list` node. */
 class CustomListNode extends ListNode {
@@ -237,6 +243,27 @@ describe('editor bridge ↔ client', () => {
     editor.setEditable(false);
     expect(states.at(-1)?.editable).toBe(false);
     expect(client.apply(DOC, ['#!tasks'])).toEqual({ ok: false, reason: 'readonly' });
+  });
+
+  it('drops malformed payloads from other page scripts', () => {
+    const responses: unknown[] = [];
+    const onResponse = (event: Event) => responses.push((event as CustomEvent).detail);
+    document.addEventListener(RESPONSE_EVENT, onResponse);
+    const request = (detail: unknown) =>
+      document.dispatchEvent(new CustomEvent(REQUEST_EVENT, { detail }));
+    request('{oops');
+    request(JSON.stringify({ id: 1, type: 'apply', base: DOC }));
+    request(JSON.stringify({ id: 1, type: 'apply', base: DOC, target: 'everything' }));
+    document.removeEventListener(RESPONSE_EVENT, onResponse);
+    expect(responses).toEqual([]);
+    expect(readEditorText(lexical(editor))).toBe(DOC.join('\n'));
+
+    const seen = states.length;
+    document.dispatchEvent(
+      new CustomEvent(STATE_EVENT, { detail: JSON.stringify({ text: 'forged' }) }),
+    );
+    expect(states).toHaveLength(seen);
+    expect(client.state?.text).toBe(DOC.join('\n'));
   });
 });
 

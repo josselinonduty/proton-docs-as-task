@@ -19,8 +19,9 @@ import {
   REQUEST_EVENT,
   RESPONSE_EVENT,
   STATE_EVENT,
+  isBridgeRequest,
+  readDetail,
   type ApplyResult,
-  type BridgeRequest,
   type BridgeResponse,
   type EditorOrigin,
   type EditorStateMessage,
@@ -304,12 +305,8 @@ export function startEditorBridge(doc: Document = document): () => void {
   };
 
   const onRequest = (event: Event) => {
-    let request: BridgeRequest;
-    try {
-      request = JSON.parse(String((event as CustomEvent).detail)) as BridgeRequest;
-    } catch {
-      return;
-    }
+    const request = readDetail(event);
+    if (!isBridgeRequest(request)) return;
     attach();
     let result: BridgeResponse['result'];
     if (request.type === 'hello') {
