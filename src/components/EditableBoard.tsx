@@ -64,7 +64,7 @@ import {
   type StatusKey,
 } from '../lib/types';
 import { EditableTaskCard } from './EditableTaskCard';
-import { TaskDetailsPanel, type DetailsFocus } from './TaskDetailsPanel';
+import { TaskDetailsPanel } from './TaskDetailsPanel';
 import { SectionNameInput } from './SectionNameInput';
 import { FilterPanel } from './FilterPanel';
 import { FilterBar } from './FilterBar';
@@ -83,6 +83,9 @@ import { useStatusActions } from './useStatusActions';
 import { isTaskShown, layoutBoard, type LaidOutBoardColumn } from './board/boardLayout';
 import { useNow } from './board/useNow';
 import { useBoardOverlay } from './board/useBoardOverlay';
+import { useBoardSelection } from './board/useBoardSelection';
+import { useDetailsNavigation } from './board/useDetailsNavigation';
+import { useBoardDnd } from './board/useBoardDnd';
 
 interface EditableBoardProps {
   model: BoardModel;
@@ -184,31 +187,24 @@ export function EditableBoard(props: EditableBoardProps) {
   } = useBoardOverlay();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
-  // Outside the overlay union: both stack on top of an open overlay.
+  // Outside the overlay union, since each stacks on top of an open overlay.
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [details, setDetails] = useState<{ id: string; focus: DetailsFocus; nonce: number } | null>(
-    null,
-  );
-  const [trail, setTrail] = useState<string[]>([]);
+  const [pendingStatusDelete, setPendingStatusDelete] = useState<PendingStatusDelete | null>(null);
+  const selection = useBoardSelection();
+  const { selectionMode, selected } = selection;
+  const detailsNav = useDetailsNavigation(model.tasks);
+  const { details } = detailsNav;
+  const dnd = useBoardDnd();
   const [blockedNotice, setBlockedNotice] = useState<string | null>(null);
   const [focusSection, setFocusSection] = useState<string | null>(null);
   const [focusStatus, setFocusStatus] = useState<StatusKey | null>(null);
-  const [pendingStatusDelete, setPendingStatusDelete] = useState<PendingStatusDelete | null>(null);
   const [colorMenuFor, setColorMenuFor] = useState<StatusKey | null>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
 
-  const draggedId = useRef<string | null>(null);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ key: string; beforeId: string | null } | null>(
-    null,
-  );
   const boardRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const lastSelect = useRef<{ id: string; colKey: string } | null>(null);
 
   // Focus the board once it opens so keyboard shortcuts fire immediately.
   // Without this, focus stays outside the shadow root (on the page body) and
@@ -219,11 +215,6 @@ export function EditableBoard(props: EditableBoardProps) {
 
   useDismiss(menuOpen, [menuRef], () => setMenuOpen(false), { escape: true });
   useDismiss(colorMenuFor !== null, [colorMenuRef], () => setColorMenuFor(null));
-
-  // The task shown in the details panel was deleted (here or elsewhere).
-  useEffect(() => {
-    if (details && !model.tasks.some((task) => task.id === details.id)) setDetails(null);
-  }, [details, model]);
 
   useEffect(() => {
     if (!blockedNotice) return;
@@ -312,7 +303,7 @@ export function EditableBoard(props: EditableBoardProps) {
     announce(t('board.deleted', { title: taskName(task) }));
     closeOverlay('deleteCard');
     // The card (and maybe the details panel) is gone; keep keyboard focus on the board.
-    if (details?.id === task.id) setDetails(null);
+    if (details?.id === task.id) detailsNav.close();
     requestAnimationFrame(() => boardRef.current?.focus());
   };
 
@@ -333,39 +324,8 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   // ---- Drag and drop (disabled while a non-manual sort is active) ----------
-  const endDrag = () => {
-    draggedId.current = null;
-    setDraggingId(null);
-    setDropTarget(null);
-  };
-
-  /** Only update on change so hovering does not re-render on every dragover. */
-  const hoverTarget = (key: string, beforeId: string | null) =>
-    setDropTarget((prev) =>
-      prev?.key === key && prev.beforeId === beforeId ? prev : { key, beforeId },
-    );
-
-  /** Pointer position alone decides the slot: first remaining card whose midpoint is below it. */
-  const cardBefore = (container: HTMLElement, y: number): string | null => {
-    for (const card of container.querySelectorAll<HTMLElement>('[data-task-id]')) {
-      if (card.dataset.taskId === draggedId.current) continue;
-      const { top, height } = card.getBoundingClientRect();
-      if (y < top + height / 2) return card.dataset.taskId ?? null;
-    }
-    return null;
-  };
-
-  // Hiding the source synchronously in dragstart makes browsers cancel the drag.
-  const startDrag = (id: string) => {
-    draggedId.current = id;
-    setTimeout(() => draggedId.current === id && setDraggingId(id));
-  };
-
-  const handleDrop = (col: BoardColumn) => {
-    const id = draggedId.current;
-    const beforeId = dropTarget?.key === col.key ? dropTarget.beforeId : null;
-    endDrag();
-    if (!id || sortActive) return;
+  const handleDrop = (col: BoardColumn, id: string, beforeId: string | null) => {
+    if (sortActive) return;
     const dragged = model.tasks.find((task) => task.id === id);
     if (!dragged) return;
     const inThisColumn =
@@ -389,10 +349,8 @@ export function EditableBoard(props: EditableBoardProps) {
   };
 
   /** Swimlane drop: a cell fixes both status and section at once. */
-  const handleSwimlaneDrop = (section: string, status: StatusKey) => {
-    const id = draggedId.current;
-    endDrag();
-    if (!id || sortActive) return;
+  const handleSwimlaneDrop = (section: string, status: StatusKey, id: string) => {
+    if (sortActive) return;
     const dragged = model.tasks.find((task) => task.id === id);
     if (!dragged) return;
     if (dragged.status !== status && !allowStatus(dragged, status)) return;
@@ -472,52 +430,20 @@ export function EditableBoard(props: EditableBoardProps) {
     if (skipped) {
       setBlockedNotice(t('board.skipped', { count: skipped }));
     }
-    if (action.kind === 'delete') {
-      setSelected(new Set());
-      setSelectionMode(false);
-    }
+    if (action.kind === 'delete') selection.leave();
   };
 
   const selectAllVisible = () => {
     const ids = new Set<string>();
     for (const task of model.tasks) if (passesView(task)) ids.add(task.id);
-    setSelected(ids);
-    setSelectionMode(true);
+    selection.select(ids);
     announce(t('board.selectedCount', { count: ids.size }));
   };
 
-  const exitSelection = () => {
-    setSelectionMode(false);
-    setSelected(new Set());
-    lastSelect.current = null;
-  };
+  const exitSelection = selection.exit;
 
-  const toggleSelect = (
-    task: BoardTask,
-    colKey: string,
-    colVisibleIds: string[],
-    shift: boolean,
-  ) => {
-    setSelectionMode(true);
-    setSelected((prev) => {
-      const next = new Set(prev);
-      const anchor = lastSelect.current;
-      if (shift && anchor && anchor.colKey === colKey) {
-        const a = colVisibleIds.indexOf(anchor.id);
-        const b = colVisibleIds.indexOf(task.id);
-        if (a >= 0 && b >= 0) {
-          const [lo, hi] = a < b ? [a, b] : [b, a];
-          for (let i = lo; i <= hi; i++) next.add(colVisibleIds[i]!);
-          lastSelect.current = { id: task.id, colKey };
-          return next;
-        }
-      }
-      if (next.has(task.id)) next.delete(task.id);
-      else next.add(task.id);
-      lastSelect.current = { id: task.id, colKey };
-      return next;
-    });
-  };
+  const toggleSelect = (task: BoardTask, colKey: string, colVisibleIds: string[], shift: boolean) =>
+    selection.toggle(task.id, colKey, colVisibleIds, shift);
 
   // ---- Section management -------------------------------------------------
   const requestSectionDelete = (name: string) => {
@@ -627,27 +553,12 @@ export function EditableBoard(props: EditableBoardProps) {
     setFocusedCardId(id);
   };
 
-  const openDetails = (id: string, focus: DetailsFocus = 'panel') => {
-    setTrail([]);
-    setDetails((d) => ({ id, focus, nonce: (d?.nonce ?? 0) + 1 }));
-  };
-
-  /** Follow a link: open the task in the panel, remembering where we came from. */
-  const openLinked = (id: string) => {
-    if (details) setTrail((prev) => [...prev, details.id]);
-    setDetails((d) => ({ id, focus: 'panel', nonce: (d?.nonce ?? 0) + 1 }));
-  };
-
-  const goBack = () => {
-    const rest = trail.filter((id) => model.tasks.some((task) => task.id === id));
-    const id = rest.pop();
-    setTrail(rest);
-    if (id) setDetails((d) => ({ id, focus: 'panel', nonce: (d?.nonce ?? 0) + 1 }));
-  };
+  const openDetails = detailsNav.open;
+  const openLinked = detailsNav.openLinked;
 
   const closeDetails = () => {
-    if (details) setFocusTaskId(details.id);
-    setDetails(null);
+    const id = detailsNav.close();
+    if (id) setFocusTaskId(id);
   };
 
   const anyOverlayOpen =
@@ -880,7 +791,7 @@ export function EditableBoard(props: EditableBoardProps) {
                   hint={`${mod} A`}
                   onClick={() => {
                     if (selectionMode) exitSelection();
-                    else setSelectionMode(true);
+                    else selection.start();
                     setMenuOpen(false);
                   }}
                 />
@@ -1118,7 +1029,7 @@ export function EditableBoard(props: EditableBoardProps) {
                 announce(t(id ? 'board.parentSet' : 'board.parentRemoved'));
               },
             }}
-            onBack={trail.length ? goBack : undefined}
+            onBack={detailsNav.canGoBack ? detailsNav.goBack : undefined}
             onOpenLinked={openLinked}
             onLink={(kind, id) => {
               onChange(linkTasks(model, detailsTask.id, id, kind), t('board.undo.linked'));
@@ -1154,7 +1065,7 @@ export function EditableBoard(props: EditableBoardProps) {
           onAction={runBulk}
           onRequestDelete={() => openOverlay({ kind: 'deleteBulk' })}
           onSelectAll={selectAllVisible}
-          onClear={() => setSelected(new Set())}
+          onClear={selection.clear}
           onExit={exitSelection}
         />
       )}
@@ -1314,8 +1225,8 @@ export function EditableBoard(props: EditableBoardProps) {
         onOpen={() => openDetails(task.id)}
         onMoveWithin={(delta) => moveWithin(visibleTasks, colLabel, task, delta)}
         onDragStartCard={dragStart}
-        dragging={draggingId === task.id}
-        onDragEndCard={endDrag}
+        dragging={dnd.draggingId === task.id}
+        onDragEndCard={dnd.end}
       />
     );
   }
@@ -1331,17 +1242,7 @@ export function EditableBoard(props: EditableBoardProps) {
               className={`pdt-column ${collapsed ? 'pdt-column--collapsed' : ''} ${status?.bg ? 'pdt-column--tinted' : ''} ${colorMenuFor === col.key ? 'pdt-column--menu-open' : ''}`}
               style={status ? statusStyle(status) : undefined}
               key={col.key}
-              onDragOver={(e) => {
-                e.preventDefault();
-                if (draggedId.current) hoverTarget(col.key, cardBefore(e.currentTarget, e.clientY));
-              }}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropTarget(null);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                handleDrop(col);
-              }}
+              {...dnd.column(col.key, (id, beforeId) => handleDrop(col, id, beforeId))}
             >
               <div className="pdt-column__head">
                 <button
@@ -1455,15 +1356,15 @@ export function EditableBoard(props: EditableBoardProps) {
                 <div className="pdt-column__body" role="list" aria-label={col.label}>
                   {visibleTasks.map((task) => (
                     <Fragment key={task.id}>
-                      {dropTarget?.key === col.key && dropTarget.beforeId === task.id && (
+                      {dnd.dropTarget?.key === col.key && dnd.dropTarget.beforeId === task.id && (
                         <DropPlaceholder />
                       )}
                       {renderCard(task, col.key, col.label, visibleIds, visibleTasks, () =>
-                        startDrag(task.id),
+                        dnd.start(task.id),
                       )}
                     </Fragment>
                   ))}
-                  {dropTarget?.key === col.key && dropTarget.beforeId === null && (
+                  {dnd.dropTarget?.key === col.key && dnd.dropTarget.beforeId === null && (
                     <DropPlaceholder />
                   )}
 
@@ -1665,18 +1566,7 @@ export function EditableBoard(props: EditableBoardProps) {
                         className={`pdt-swimlane__cell ${c.bg ? 'pdt-swimlane__cell--tinted' : ''}`}
                         style={statusStyle(c)}
                         role="cell"
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (draggedId.current) hoverTarget(cellCol.key, null);
-                        }}
-                        onDragLeave={(e) => {
-                          if (!e.currentTarget.contains(e.relatedTarget as Node | null))
-                            setDropTarget(null);
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          handleSwimlaneDrop(section, c.key);
-                        }}
+                        {...dnd.cell(cellCol.key, (id) => handleSwimlaneDrop(section, c.key, id))}
                       >
                         {visibleTasks.map((task) =>
                           renderCard(
@@ -1685,10 +1575,10 @@ export function EditableBoard(props: EditableBoardProps) {
                             cellCol.label,
                             visibleIds,
                             visibleTasks,
-                            () => startDrag(task.id),
+                            () => dnd.start(task.id),
                           ),
                         )}
-                        {dropTarget?.key === cellCol.key && <DropPlaceholder />}
+                        {dnd.dropTarget?.key === cellCol.key && <DropPlaceholder />}
                       </div>
                     );
                   })}
