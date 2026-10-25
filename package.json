@@ -63,5 +63,9 @@
     "vitest": "5.0.5",
     "wxt": "0.21.4",
     "yjs": "13.6.33"
+  },
+  "overrides": {
+    "happy-dom": "21.0.4",
+    "vite": "$vite"
   }
 }
