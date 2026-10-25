@@ -3,22 +3,22 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ApplyResult, EditorStateMessage } from '../lib/bridgeProtocol';
 import type { EditorClient } from '../lib/editorClient';
-import type { AddTaskResponse, ContentMessage } from '../lib/messaging';
+import type { AddTaskResponse, QuickAddTask } from '../lib/messaging';
 import { DEFAULT_SETTINGS } from '../lib/defaults';
 
-const messageListeners = vi.hoisted(() => [] as Array<(message: ContentMessage) => unknown>);
+/** The popup command listeners the overlay registered, by message type. */
+const messageListeners = vi.hoisted(
+  () => new Map<string, (message: { data: unknown }) => unknown>(),
+);
 
-vi.mock('wxt/browser', () => ({
-  browser: {
-    runtime: {
-      sendMessage: vi.fn(),
-      onMessage: {
-        addListener: (fn: (message: ContentMessage) => unknown) => messageListeners.push(fn),
-        removeListener: (fn: (message: ContentMessage) => unknown) =>
-          messageListeners.splice(messageListeners.indexOf(fn), 1),
-      },
+vi.mock('@webext-core/messaging', () => ({
+  defineExtensionMessaging: () => ({
+    sendMessage: vi.fn(),
+    onMessage: (type: string, fn: (message: { data: unknown }) => unknown) => {
+      messageListeners.set(type, fn);
+      return () => messageListeners.delete(type);
     },
-  },
+  }),
 }));
 vi.mock('../lib/settings', () => ({
   settingsItem: { watch: () => () => {} },
@@ -108,7 +108,10 @@ function setup(lines = DOC) {
 function addTaskFromPopup(title: string): Promise<AddTaskResponse> {
   let response!: Promise<AddTaskResponse>;
   act(() => {
-    response = messageListeners.at(-1)!({ type: 'add-task', title }) as Promise<AddTaskResponse>;
+    const data: QuickAddTask = { title };
+    response = Promise.resolve(
+      messageListeners.get('add-task')!({ data }),
+    ) as Promise<AddTaskResponse>;
   });
   return response;
 }
@@ -116,7 +119,7 @@ function addTaskFromPopup(title: string): Promise<AddTaskResponse> {
 afterEach(() => {
   vi.useRealTimers();
   cleanup();
-  messageListeners.length = 0;
+  messageListeners.clear();
 });
 
 describe('OverlayApp document sync', () => {

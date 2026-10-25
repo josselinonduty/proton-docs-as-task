@@ -1,15 +1,15 @@
 /**
- * Message contract between the popup and the in-page content script.
- * Only the frame that actually hosts the editor registers a listener, so a
- * response identifies the meaningful frame.
+ * Extension message contract: popup → content script (a tab message) and
+ * content script → background.
+ *
+ * A tab message reaches every frame of the tab (the content script runs with
+ * `allFrames`), and the first frame to answer wins. Only the frame that hosts
+ * the editor registers the popup handlers (`usePopupCommands`), and a frame
+ * with no handler for a type stays silent, so the answer always comes from the
+ * editor frame.
  */
 
-export type ContentMessage =
-  | { type: 'get-status' }
-  | { type: 'toggle-board' }
-  | { type: 'set-board-visible'; visible: boolean }
-  /** Popup quick-add: write a task into the active document. */
-  | { type: 'add-task'; title: string; section?: string; due?: string };
+import { defineExtensionMessaging } from '@webext-core/messaging';
 
 export interface StatusResponse {
   ok: true;
@@ -20,6 +20,13 @@ export interface StatusResponse {
   boardTitle?: string;
   /** Existing section names, for popup quick-add suggestions. */
   sections?: string[];
+}
+
+/** Popup quick-add: a task to write into the active document. */
+export interface QuickAddTask {
+  title: string;
+  section?: string;
+  due?: string;
 }
 
 export interface AddTaskResponse {
@@ -35,7 +42,18 @@ export interface AddTaskResponse {
   error?: 'empty' | 'not-a-board' | 'read-only' | 'write-failed';
 }
 
-/** The response the content script sends back for a given message. */
-export type ResponseTo<M extends ContentMessage> = M extends { type: 'add-task' }
-  ? AddTaskResponse
-  : StatusResponse;
+export interface ProtocolMap {
+  // Popup → editor frame.
+  'get-status'(): StatusResponse;
+  'toggle-board'(): StatusResponse;
+  'set-board-visible'(visible: boolean): StatusResponse;
+  'add-task'(task: QuickAddTask): AddTaskResponse;
+  // Board → background: `openOptionsPage` isn't available in content scripts.
+  // Resolves true once the options page is open.
+  'open-options'(): boolean;
+}
+
+/** The messages the popup sends to the editor frame. */
+export type PopupCommand = 'get-status' | 'toggle-board' | 'set-board-visible' | 'add-task';
+
+export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

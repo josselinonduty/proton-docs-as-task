@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { browser } from 'wxt/browser';
 import { t } from '../i18n';
 import { parseDocument } from '../lib/parser';
 import { defaultStatus, isDoneStatus } from '../lib/statuses';
@@ -18,7 +17,12 @@ import { toggleInList } from '../lib/session';
 import { withDefaults } from '../lib/defaults';
 import { settingsItem, setSettings as persistSettings } from '../lib/settings';
 import type { BoardView, Settings } from '../lib/types';
-import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/messaging';
+import {
+  sendMessage,
+  type AddTaskResponse,
+  type QuickAddTask,
+  type StatusResponse,
+} from '../lib/messaging';
 import { EditableBoard } from './EditableBoard';
 import { Icon } from './Icon';
 import { announceBoard } from '../lib/branding';
@@ -111,7 +115,10 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   // Content scripts can't call `openOptionsPage` directly, so hand it off to
   // the background script.
   const openSettingsPage = useCallback(
-    () => void browser.runtime.sendMessage({ type: 'open-options' }),
+    () =>
+      void sendMessage('open-options').catch(() => {
+        /* the background is unreachable while the extension reloads */
+      }),
     [],
   );
 
@@ -153,7 +160,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
 
   // Popup quick-add: write a task into the active document, whether or not the
   // board is open. Reports success only once the task is in the document.
-  const addTaskFromPopup = (title: string, section?: string, due?: string): AddTaskResponse => {
+  const addTaskFromPopup = ({ title, section, due }: QuickAddTask): AddTaskResponse => {
     const clean = title.trim();
     if (!clean) return { ok: true, added: false, error: 'empty' };
 
@@ -191,38 +198,32 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
     return { ok: true, added: true, section: targetSection };
   };
 
-  // Respond to popup commands. Only this (editor) frame registers a listener.
-  usePopupCommands((message: ContentMessage) => {
+  // Respond to popup commands. Only this (editor) frame registers listeners.
+  const status = (nextVisible = visible): StatusResponse => {
     const counts = model ? countTasks(model) : { total: result.tasks.length, done: 0 };
     const doneCount = model
       ? counts.done
       : result.tasks.filter((task) => isDoneStatus(result.statuses, task.status)).length;
-    const status = (): StatusResponse => ({
+    return {
       ok: true,
       activated: result.activated,
-      visible,
+      visible: nextVisible,
       taskCount: counts.total,
       doneCount,
       boardTitle: model?.title ?? result.boardTitle,
       sections: model ? model.sections : result.sections,
-    });
-
-    switch (message?.type) {
-      case 'get-status':
-        return status();
-      case 'toggle-board':
-        if (visible) closeBoard();
-        else openBoard();
-        return { ...status(), visible: !visible };
-      case 'set-board-visible':
-        if (message.visible) openBoard();
-        else closeBoard();
-        return { ...status(), visible: message.visible };
-      case 'add-task':
-        return addTaskFromPopup(message.title, message.section, message.due);
-      default:
-        return undefined;
-    }
+    };
+  };
+  const setBoardVisible = (next: boolean): StatusResponse => {
+    if (next) openBoard();
+    else closeBoard();
+    return status(next);
+  };
+  usePopupCommands({
+    'get-status': () => status(),
+    'toggle-board': () => setBoardVisible(!visible),
+    'set-board-visible': setBoardVisible,
+    'add-task': addTaskFromPopup,
   });
 
   if (!settings.enabled) return null;

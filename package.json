@@ -32,6 +32,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@webext-core/messaging": "4.0.0",
     "i18next": "26.5.10",
     "react": "19.3.1",
     "react-dom": "19.3.1",
