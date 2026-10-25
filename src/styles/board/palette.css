@@ -1,0 +1,62 @@
+/* Command palette (Ctrl+K). */
+.pdt-palette__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483002;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  background: var(--pdt-backdrop);
+}
+.pdt-palette {
+  width: min(560px, 92vw);
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--pdt-background-elevated);
+  border-radius: var(--pdt-radius-lg);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-palette__input {
+  padding: var(--pdt-space-4);
+  border: none;
+  border-bottom: 1px solid var(--pdt-border-weak);
+  background: transparent;
+  color: var(--pdt-text-norm);
+  font: inherit;
+  font-size: var(--pdt-text-lg);
+  outline: none;
+}
+.pdt-palette__list {
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+.pdt-palette__item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--pdt-space-3);
+  padding: 8px 12px;
+  border-radius: var(--pdt-radius-md);
+  cursor: pointer;
+}
+.pdt-palette__item.is-active {
+  background: var(--pdt-interaction-hover);
+}
+.pdt-palette__item.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pdt-palette__item-hint {
+  color: var(--pdt-text-weak);
+  font-size: var(--pdt-text-xs);
+}
+.pdt-palette__empty {
+  padding: var(--pdt-space-4);
+  color: var(--pdt-text-weak);
+  text-align: center;
+}

@@ -1,0 +1,19 @@
+/* ---------- Banner ---------- */
+.pdt-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-2);
+  padding: var(--pdt-space-2) var(--pdt-space-5);
+  background: var(--pdt-signal-warning-weak);
+  border-bottom: 1px solid var(--pdt-border-weak);
+  color: var(--pdt-text-norm);
+}
+.pdt-banner--info {
+  background: var(--pdt-signal-info-weak);
+}
+.pdt-banner__actions {
+  display: flex;
+  gap: var(--pdt-space-2);
+}

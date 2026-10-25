@@ -1,0 +1,83 @@
+/* ==========================================================================
+ * Floating feedback: undo toast, bulk bar
+ * ======================================================================== */
+/* Proton notifications: inverted surface, regular radius, bottom-center. */
+.pdt-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2147483001;
+  display: flex;
+  align-items: center;
+  gap: var(--pdt-space-4);
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px var(--pdt-space-4);
+  background: var(--pdt-background-invert);
+  color: var(--pdt-text-invert);
+  border-radius: var(--pdt-radius-md);
+  box-shadow: var(--pdt-shadow-lg);
+}
+/* Sit above the bulk-action bar instead of covering it. */
+.pdt-board--selecting .pdt-toast {
+  bottom: 84px;
+}
+.pdt-toast__undo,
+.pdt-toast__undo:hover {
+  color: inherit;
+  font-weight: var(--pdt-font-weight-bold);
+}
+
+.pdt-bulkbar {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pdt-space-2);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: var(--pdt-space-2) var(--pdt-space-3);
+  background: var(--pdt-background-elevated);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-lg);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-bulkbar__count {
+  padding: 0 var(--pdt-space-2);
+  white-space: nowrap;
+}
+.pdt-bulkbar__group,
+.pdt-bulkbar__right,
+.pdt-bulkbar__label,
+.pdt-bulkbar__due {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.pdt-bulkbar__right {
+  margin-left: auto;
+  padding-left: var(--pdt-space-2);
+  border-left: 1px solid var(--pdt-border-weak);
+}
+.pdt-bulkbar__select,
+.pdt-bulkbar__label-input {
+  width: auto;
+  min-width: 104px;
+  max-width: 140px;
+}
+.pdt-bulkbar__label-input {
+  min-height: var(--pdt-control-sm);
+  padding: 3px 8px;
+}
+.pdt-bulkbar__due {
+  min-width: 140px;
+}
+.pdt-bulkbar__due .pdt-duedate__trigger {
+  min-height: var(--pdt-control-sm);
+  padding: 3px 8px;
+}

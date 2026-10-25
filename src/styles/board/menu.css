@@ -1,0 +1,112 @@
+/* ---------- Menus & popovers ---------- */
+.pdt-menu,
+.pdt-filter,
+.pdt-sortmenu {
+  position: relative;
+}
+.pdt-menu__panel,
+.pdt-sortmenu__panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--pdt-space-1);
+  background: var(--pdt-background-elevated);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-md);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-sortmenu__panel {
+  left: 0;
+  right: auto;
+}
+.pdt-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pdt-space-3);
+  min-height: var(--pdt-control-md);
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--pdt-radius-sm);
+  background: transparent;
+  color: var(--pdt-text-norm);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pdt-menu__item:hover {
+  background: var(--pdt-interaction-hover);
+}
+.pdt-menu__item:focus-visible {
+  outline: none;
+  border-color: var(--pdt-focus-outline);
+  box-shadow: 0 0 0 3px var(--pdt-focus-ring);
+}
+.pdt-menu__item.is-active {
+  color: var(--pdt-primary);
+  font-weight: var(--pdt-font-weight-medium);
+}
+.pdt-menu__sep {
+  height: 1px;
+  margin: var(--pdt-space-1) 0;
+  background: var(--pdt-border-weak);
+}
+.pdt-sortmenu__dir,
+.pdt-sortmenu__foot {
+  display: flex;
+  gap: 6px;
+  padding: var(--pdt-space-2);
+  border-top: 1px solid var(--pdt-border-weak);
+}
+
+.pdt-filter__panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  width: 320px;
+  max-height: 65vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-4);
+  padding: var(--pdt-space-4);
+  background: var(--pdt-background-elevated);
+  border: 1px solid var(--pdt-border-weak);
+  border-radius: var(--pdt-radius-md);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-filter__group {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.pdt-filter__group legend {
+  margin-bottom: 6px;
+  padding: 0;
+}
+.pdt-filter__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.pdt-filter__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.pdt-filter__opt input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--pdt-interaction-norm);
+}
+.pdt-filter__foot {
+  border-top: 1px solid var(--pdt-border-weak);
+  padding-top: var(--pdt-space-3);
+}

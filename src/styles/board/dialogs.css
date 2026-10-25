@@ -1,0 +1,53 @@
+/* ==========================================================================
+ * Dialogs: modal, command palette, shortcut reference
+ * ======================================================================== */
+.pdt-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pdt-space-4);
+  background: var(--pdt-backdrop);
+}
+.pdt-modal__panel {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pdt-space-3);
+  padding: var(--pdt-space-6);
+  background: var(--pdt-background-elevated);
+  border-radius: var(--pdt-radius-lg);
+  box-shadow: var(--pdt-shadow-lg);
+}
+.pdt-modal__panel--lg {
+  max-width: 640px;
+}
+.pdt-modal__panel:focus {
+  outline: none;
+}
+.pdt-modal__title {
+  margin: 0 0 var(--pdt-space-1);
+  font-size: var(--pdt-text-xl);
+  font-weight: var(--pdt-font-weight-bold);
+  line-height: 28px;
+}
+.pdt-modal__text {
+  margin: 0;
+  color: var(--pdt-text-weak);
+}
+.pdt-modal__choice {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--pdt-space-2);
+}
+.pdt-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--pdt-space-2);
+  margin-top: var(--pdt-space-2);
+}
