@@ -151,6 +151,15 @@
 .pdt-btn-icon[aria-haspopup][aria-expanded='true'] {
   background: var(--pdt-interaction-active);
 }
+/* Toggle state (e.g. the section shown in the List view). */
+.pdt-btn-icon[aria-pressed='true'] {
+  background: var(--pdt-interaction-norm);
+  color: var(--pdt-text-invert);
+}
+.pdt-btn-icon[aria-pressed='true']:hover {
+  background: var(--pdt-interaction-norm-hover);
+  color: var(--pdt-text-invert);
+}
 
 /* Small (`button-small`), 28px. */
 .pdt-btn-sm {
