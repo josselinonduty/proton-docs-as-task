@@ -5,3 +5,4 @@ package-lock.json
 CHANGELOG.md
 stats.html
 stats-*.json
+.claude
