@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/josselinonduty/proton-docs-as-task/security/advisories/new
+    about: Report anything exploitable privately. Please do not open a public issue.
+  - name: Problem with Proton Docs itself
+    url: https://proton.me/support/contact
+    about: This extension is unofficial. Bugs in Proton Docs, Drive or your account belong with Proton.
