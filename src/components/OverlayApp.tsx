@@ -24,6 +24,7 @@ import type { AddTaskResponse, ContentMessage, StatusResponse } from '../lib/mes
 import { EditableBoard } from './EditableBoard';
 import { Icon } from './Icon';
 import { announceBoard } from '../lib/branding';
+import { usePopupCommands } from './usePopupCommands';
 import { useSessionPrefs } from './useSessionPrefs';
 
 interface OverlayAppProps {
@@ -405,7 +406,7 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
   );
 
   // Respond to popup commands. Only this (editor) frame registers a listener.
-  useEffect(() => {
+  usePopupCommands((message: ContentMessage) => {
     const counts = model ? countTasks(model) : { total: result.tasks.length, done: 0 };
     const doneCount = model
       ? counts.done
@@ -420,30 +421,23 @@ export function OverlayApp({ client, initialState, host, initialSettings }: Over
       sections: model ? model.sections : result.sections,
     });
 
-    const handler = (
-      message: ContentMessage,
-    ): Promise<StatusResponse | AddTaskResponse> | undefined => {
-      switch (message?.type) {
-        case 'get-status':
-          return Promise.resolve(status());
-        case 'toggle-board':
-          if (visible) closeBoard();
-          else openBoard();
-          return Promise.resolve({ ...status(), visible: !visible });
-        case 'set-board-visible':
-          if (message.visible) openBoard();
-          else closeBoard();
-          return Promise.resolve({ ...status(), visible: message.visible });
-        case 'add-task':
-          return Promise.resolve(addTaskFromPopup(message.title, message.section, message.due));
-        default:
-          return undefined;
-      }
-    };
-
-    browser.runtime.onMessage.addListener(handler);
-    return () => browser.runtime.onMessage.removeListener(handler);
-  }, [result, visible, model, openBoard, closeBoard, addTaskFromPopup]);
+    switch (message?.type) {
+      case 'get-status':
+        return status();
+      case 'toggle-board':
+        if (visible) closeBoard();
+        else openBoard();
+        return { ...status(), visible: !visible };
+      case 'set-board-visible':
+        if (message.visible) openBoard();
+        else closeBoard();
+        return { ...status(), visible: message.visible };
+      case 'add-task':
+        return addTaskFromPopup(message.title, message.section, message.due);
+      default:
+        return undefined;
+    }
+  });
 
   if (!settings.enabled) return null;
 
